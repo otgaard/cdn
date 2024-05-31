@@ -1,1 +1,1 @@
-CDNs used for testing, hosted via cdn.jsdelivr.net
+Packages used for testing, hosted by cdn.jsdelivr.net
