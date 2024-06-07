@@ -3073,7 +3073,7 @@ var RenderApp = class {
       const sW = this.width / controls.resolution[0];
       const sH = this.height / controls.resolution[1];
       const factor = Math.sqrt(sW * sW + sH * sH);
-      this.ctx[0].pointSize.value = controls.pointSize * factor * (1 + 0.5 * this.transition_);
+      this.ctx[0].pointSize.value = controls.pointSize * factor * (1 + 0.8 * this.transition_);
       const another = lerp(1, 0.8, this.transition_);
       const rndVector = (scale = 1) => {
         return new Vec3(this.rnd.random(-1, 1), this.rnd.random(-1, 1), this.rnd.random(-1, 1)).mulScalar(scale);
@@ -3253,24 +3253,30 @@ function setupTriggerAccordion(accordionName = accordions[1]) {
     console.error("Trigger accordion not found");
     return;
   }
-  const observer2 = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting && !triggerState.isTriggered) {
-        triggerState.isTriggered = true;
-        const n = names[activeIndex];
-        list[0]?.initiateLerp(JSON.parse(configurations[n]), n);
-      } else {
-        if (!entry.isIntersecting && triggerState.isTriggered) {
-          triggerState.isTriggered = false;
-          list[0]?.initiateLerp(JSON.parse(configurations.base), "base");
-        }
-      }
-    });
-  }, {
-    root: null,
-    threshold: 0.1
-  });
-  observer2.observe(targetAccordion);
+  let wasInViewport = false;
+  function checkAccordionVisibility() {
+    const isInViewport = isElementInViewport(accordionName);
+    if (isInViewport && !wasInViewport) {
+      triggerState.isTriggered = true;
+      const n = names[activeIndex];
+      list[0]?.initiateLerp(JSON.parse(configurations[n]), n);
+    } else if (!isInViewport && wasInViewport) {
+      triggerState.isTriggered = false;
+      list[0]?.initiateLerp(JSON.parse(configurations.base), "base");
+    }
+    wasInViewport = isInViewport;
+  }
+  window.addEventListener("scroll", checkAccordionVisibility);
+  checkAccordionVisibility();
+}
+function isElementInViewport(elementId) {
+  const elem = document.getElementById(elementId);
+  if (!elem) {
+    console.error(`Element with ID '${elementId}' not found.`);
+    return false;
+  }
+  const rect = elem.getBoundingClientRect();
+  return rect.top >= 0 && rect.left >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && rect.right <= (window.innerWidth || document.documentElement.clientWidth);
 }
 if (mainCanvas.valid) {
   setupTriggerAccordion();
@@ -3384,10 +3390,14 @@ function setupStyleWatcher() {
     mutations.forEach(function(mutation) {
       if (mutation.type === "attributes" && mutation.attributeName === "style") {
         const textColor = mainElement.style.getPropertyValue("--color--text");
-        if (textColor && list[0]) {
+        if (textColor && (list[0] != null || list[1] != null)) {
           const col = colorStringToArray(textColor);
-          if (col && Array.isArray(col) && col.length > 3)
-            list[0].colour = col.slice(0, 3);
+          if (col && Array.isArray(col) && col.length > 3) {
+            if (list[0])
+              list[0].colour = col.slice(0, 3);
+            else if (list[1])
+              list[1].colour = col.slice(0, 3);
+          }
         }
       }
     });
