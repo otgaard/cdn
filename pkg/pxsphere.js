@@ -2808,7 +2808,7 @@ var RenderApp = class {
   // The active, current controls
   controlTarget = null;
   // The target controls for lerp
-  targetName = "";
+  targetName_ = "";
   controlSource = null;
   sourceName = "none";
   controlTime = 0;
@@ -2864,6 +2864,9 @@ var RenderApp = class {
   }
   get currName() {
     return this.sourceName;
+  }
+  get targetName() {
+    return this.targetName_;
   }
   load(name) {
     setControls(this.controls, JSON.parse(configurations[name]));
@@ -2927,7 +2930,7 @@ var RenderApp = class {
   initiateLerp(target, name) {
     if (this.sourceName === name)
       return;
-    this.targetName = name;
+    this.targetName_ = name;
     this.controlTarget = target;
     this.controlTime = 0;
     this.targetArrays = {
@@ -3147,7 +3150,7 @@ var RenderApp = class {
       this.controls = { ...this.controls, ...JSON.parse(JSON.stringify(this.controlTarget)) };
       this.controlSource = this.controlTarget;
       this.currArrays = this.targetArrays;
-      this.sourceName = this.targetName;
+      this.sourceName = this.targetName_;
       this.controlTarget = null;
       this.controlTime = 0;
     }
@@ -3215,9 +3218,6 @@ var render = () => {
   window.requestAnimationFrame(render);
 };
 window.requestAnimationFrame(render);
-var triggerState = {
-  isTriggered: false
-};
 function setupSlideTransitionObserver() {
   const swiperWrapper = document.getElementById("ai-accordion")?.parentElement?.parentElement ?? null;
   if (!swiperWrapper) {
@@ -3253,18 +3253,20 @@ function setupTriggerAccordion(accordionName = accordions[1]) {
     console.error("Trigger accordion not found");
     return;
   }
-  let wasInViewport = false;
+  let lastUpdate = performance.now();
   function checkAccordionVisibility() {
+    if (performance.now() - lastUpdate < 100)
+      return;
     const isInViewport = isElementInViewport(accordionName);
-    if (isInViewport && !wasInViewport) {
-      triggerState.isTriggered = true;
+    if (list[0] != null) {
       const n = names[activeIndex];
-      list[0]?.initiateLerp(JSON.parse(configurations[n]), n);
-    } else if (!isInViewport && wasInViewport) {
-      triggerState.isTriggered = false;
-      list[0]?.initiateLerp(JSON.parse(configurations.base), "base");
+      if (isInViewport && list[0]?.targetName !== n) {
+        list[0]?.initiateLerp(JSON.parse(configurations[n]), n);
+      } else if (!isInViewport && list[0]?.targetName !== "base") {
+        list[0]?.initiateLerp(JSON.parse(configurations.base), "base");
+      }
     }
-    wasInViewport = isInViewport;
+    lastUpdate = performance.now();
   }
   window.addEventListener("scroll", checkAccordionVisibility);
   checkAccordionVisibility();
@@ -3339,20 +3341,6 @@ document.addEventListener("scroll", function() {
 function updateAnimation(scrollFraction) {
   if (list[0])
     list[0].transition = scrollFraction;
-}
-function lerpColor(color1, color2, fraction) {
-  const c1 = hexToRGB(color1);
-  const c2 = hexToRGB(color2);
-  const r = Math.round(c1.r + (c2.r - c1.r) * fraction);
-  const g = Math.round(c1.g + (c2.g - c1.g) * fraction);
-  const b = Math.round(c1.b + (c2.b - c1.b) * fraction);
-  return `rgb(${r}, ${g}, ${b})`;
-}
-function hexToRGB(hex) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return { r, g, b };
 }
 function colorStringToArray(color) {
   if (!color)
