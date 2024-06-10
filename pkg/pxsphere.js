@@ -1837,7 +1837,6 @@ function setControls(obj, data) {
   }
 }
 var INTRO_DURATION = 4;
-var BACKGROUND_COLOUR = [34 / 255.99, 46 / 255.99, 55 / 255.99];
 var K_EMISSION_FACTOR = 0.02;
 var K_EVOLUTION_FACTOR = 0.1;
 var LAYER_AXES = [
@@ -1950,11 +1949,7 @@ var RenderApp = class {
       this.gl.deleteVertexArray(this.planePoints[0]);
       this.gl.deleteBuffer(this.planePoints[1]);
     }
-    const sampleRadii = Object.values(configurations).map((e) => JSON.parse(e).sampleRadius).filter((e) => e !== void 0);
-    const uniqueRadii = [...new Set(sampleRadii)];
-    console.log("Unique radii:", uniqueRadii);
-    const pointsMap = loadPoints(this.gl, dict);
-    this.points = pointsMap;
+    this.points = loadPoints(this.gl, dict);
     if (this.points == null)
       return;
     const W = Math.floor(this.width / 32);
@@ -2301,7 +2296,7 @@ function setupSlideTransitionObserver() {
     mutations.forEach(function(mutation) {
       if (mutation.type === "attributes" && mutation.attributeName === "class") {
         slides.forEach((slide, index) => {
-          if (slide.classList.contains("swiper-slide-active") && isElementInView(slides[index]) && performance.now() - lastTrigger > 100) {
+          if (slide.classList.contains("swiper-slide-active") && isElementInView(slides[index]) && performance.now() - lastTrigger > 40) {
             activeIndex = index;
             const n = names[index];
             if (list[0]?.targetName !== n) {
@@ -2330,19 +2325,22 @@ function setupTriggerAccordion(accordionName = accordions[1]) {
     return () => {
     };
   }
-  const docBody = document.documentElement || document.body;
   let lastUpdate = performance.now();
+  const docBody = document.documentElement || document.body;
+  let lastScrollTop = 0;
   function checkAccordionVisibility() {
-    window.addEventListener("scroll", function() {
-      if (window.scrollY === 0) {
-        console.log("Scrolled to the top of the document.");
-        lastUpdate -= 101;
-      }
-      if (window.innerHeight + window.scrollY >= docBody.scrollHeight) {
-        console.log("Scrolled to the bottom of the document.");
-        lastUpdate -= 101;
-      }
-    });
+    const currentScrollTop = window.scrollY;
+    const atTop = currentScrollTop === 0;
+    const atBottom = window.innerHeight + currentScrollTop >= docBody.scrollHeight;
+    if (atBottom && currentScrollTop > lastScrollTop) {
+      console.log("Attempted to scroll down at the bottom of the document.");
+      lastUpdate -= 1e3;
+    }
+    if (atTop && currentScrollTop < lastScrollTop) {
+      console.log("Attempted to scroll up at the top of the document.");
+      lastUpdate -= 1e3;
+    }
+    lastScrollTop = currentScrollTop;
     if (performance.now() - lastUpdate < 100)
       return;
     const isInViewport = isElementInView(targetAccordion);
@@ -2357,8 +2355,8 @@ function setupTriggerAccordion(accordionName = accordions[1]) {
     }
     lastUpdate = performance.now();
   }
-  window.addEventListener("scroll", checkAccordionVisibility);
   checkAccordionVisibility();
+  window.addEventListener("scroll", checkAccordionVisibility);
   return () => {
     window.removeEventListener("scroll", checkAccordionVisibility);
   };
