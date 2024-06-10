@@ -2334,12 +2334,12 @@ function setupTriggerAccordion(accordionName = accordions[1]) {
     const atTop = currentScrollTop === 0;
     const atBottom = window.innerHeight + currentScrollTop >= docBody.scrollHeight;
     if (atBottom && currentScrollTop > lastScrollTop) {
-      console.log("Attempted to scroll down at the bottom of the document.");
-      lastUpdate -= 1e3;
+      list[0]?.initiateLerp(JSON.parse(configurations.base), "base");
+      lastUpdate = performance.now();
     }
     if (atTop && currentScrollTop < lastScrollTop) {
-      console.log("Attempted to scroll up at the top of the document.");
-      lastUpdate -= 1e3;
+      list[0]?.initiateLerp(JSON.parse(configurations.base), "base");
+      lastUpdate = performance.now();
     }
     lastScrollTop = currentScrollTop;
     if (performance.now() - lastUpdate < 30)
