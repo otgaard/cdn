@@ -2112,6 +2112,7 @@ var RenderApp = class {
     const data = [this.currArrays, this.targetArrays];
     if (this.controlTarget)
       this.controlTime += dt2;
+    const camZDistance = 3 - 0.1 * smoothstep(0.7, 1, this.transition_);
     const ct = smoothstep(0, 1, this.controlTime);
     const passOpacity = [1 - ct, ct];
     for (let p = 0; p < passes.length; ++p) {
@@ -2164,7 +2165,7 @@ var RenderApp = class {
         );
         const mv = Mat4.mul(
           Mat4.makeIdentity(),
-          Mat4.lookAt([0, 0, 3], [0, 0, 0], [0, 1, 0]),
+          Mat4.lookAt([0, 0, camZDistance], [0, 0, 0], [0, 1, 0]),
           model
         );
         this.ctx[0].mv.value = mv;
@@ -2296,7 +2297,7 @@ function setupSlideTransitionObserver() {
     mutations.forEach(function(mutation) {
       if (mutation.type === "attributes" && mutation.attributeName === "class") {
         slides.forEach((slide, index) => {
-          if (slide.classList.contains("swiper-slide-active") && isElementInView(slides[index]) && performance.now() - lastTrigger > 40) {
+          if (slide.classList.contains("swiper-slide-active") && isElementInView(slides[index]) && performance.now() - lastTrigger > 30) {
             activeIndex = index;
             const n = names[index];
             if (list[0]?.targetName !== n) {
@@ -2341,7 +2342,7 @@ function setupTriggerAccordion(accordionName = accordions[1]) {
       lastUpdate -= 1e3;
     }
     lastScrollTop = currentScrollTop;
-    if (performance.now() - lastUpdate < 100)
+    if (performance.now() - lastUpdate < 30)
       return;
     const isInViewport = isElementInView(targetAccordion);
     if (list[0] != null) {
