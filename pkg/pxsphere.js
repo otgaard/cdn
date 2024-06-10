@@ -1,31 +1,2485 @@
-var y=class r extends Float32Array{static size=3;constructor(e,t,n){super(r.size),this.set(e??0,t,n)}static fromBuffer(e,t){return new Float32Array(e,t,3)}static create(){return new r}clone(){return new r(this)}put(e,t,n){return this[0]=e,this[1]=t,this[2]=n,this}set(e,t,n){return typeof e=="number"?(this[0]=e,this[1]=t??0,this[2]=n??0):super.set(e),this}static set(e,t,n,i){return e[0]=t,e[1]=n,e[2]=i,e}copy(e){return this.set(e),this}static copy(e,t){return e.set(t),e}add(e){return this[0]+=e[0],this[1]+=e[1],this[2]+=e[2],this}static add(e,t,n){return n=n??new r,n[0]=e[0]+t[0],n[1]=e[1]+t[1],n[2]=e[2]+t[2],n}addScalar(e){return this[0]+=e,this[1]+=e,this[2]+=e,this}static addScalar(e,t,n){return n=n??new r,n[0]=e[0]+t,n[1]=e[1]+t,n[2]=e[2]+t,n}sub(e){return this[0]-=e[0],this[1]-=e[1],this[2]-=e[2],this}static sub(e,t,n){return n=n??new r,n[0]=e[0]-t[0],n[1]=e[1]-t[1],n[2]=e[2]-t[2],n}subScalar(e){return this[0]-=e,this[1]-=e,this[2]-=e,this}static subScalar(e,t,n){return n=n??new r,n[0]-=t,n[1]-=t,n[2]-=t,n}mul(e){return this[0]*=e[0],this[1]*=e[1],this[2]*=e[2],this}static mul(e,t,n){return n=n??new r,n[0]=e[0]*t[0],n[1]=e[1]*t[1],n[2]=e[2]*t[2],n}mulScalar(e){return this[0]*=e,this[1]*=e,this[2]*=e,this}static mulScalar(e,t,n){return n=n??new r,n[0]=e[0]*t,n[1]=e[1]*t,n[2]=e[2]*t,n}div(e){return this[0]/=e[0],this[1]/=e[1],this[2]/=e[2],this}static div(e,t,n){return n=n??new r,n[0]=e[0]/t[0],n[1]=e[1]/t[1],n[2]=e[2]/t[2],n}divScalar(e){return this[0]/=e,this[1]/=e,this[2]/=e,this}static divScalar(e,t,n){return n=n??new r,n[0]=e[0]/t,n[1]=e[1]/t,n[2]=e[2]/t,n}dot(e){return this.x*e[0]+this.y*e[1]+this.z*e[2]}static dot(e,t){return e[0]*t[0]+e[1]*t[1]+e[2]*t[2]}dotScalar(e,t,n){return this.x*e+this.y*t+this.z*n}static dotScalar(e,t,n,i){return e[0]*t+e[1]*n+e[2]*i}normalise(){return this.mulScalar(1/this.len())}static normalise(e){if(Array.isArray(e)||e instanceof Float32Array){let t=1/r.len(e);for(let n=0;n!==3;++n)e[n]*=t;return e}else if(e instanceof r)return e.mulScalar(1/e.len())}cross(e){let t=this.x,n=this.y,i=this.z;return this.x=n*e[2]-i*e[1],this.y=i*e[0]-t*e[2],this.z=t*e[1]-n*e[0],this}static cross(e,t,n){return n=n??new r,n[0]=e[1]*t[2]-e[2]*t[1],n[1]=e[2]*t[0]-e[0]*t[2],n[2]=e[0]*t[1]-e[1]*t[0],n}static crossF(e,t,n,i){e[t]=n[1]*i[2]-n[2]*i[1],e[t+1]=n[2]*i[0]-n[0]*i[2],e[t+2]=n[0]*i[1]-n[1]*i[0]}lenSq(){return this.dot(this)}static lenSq(e){return r.dot(e,e)}len(){return Math.sqrt(this.lenSq())}static len(e){return Math.sqrt(r.dot(e,e))}get x(){return this[0]}set x(e){this[0]=e}get y(){return this[1]}set y(e){this[1]=e}get z(){return this[2]}set z(e){this[2]=e}};var ne=Math.PI,Je=2*ne,$e=ne/2;function N(r,e,t=1e-6){return Math.abs(r-e)<t}function C(r,e,t){return r<e?e:r>t?t:r}function z(r,e,t){return t=C((t-r)/(e-r),0,1),t*t*(3-2*t)}function D(r,e,t){return(1-t)*r+t*e}function ie(r,e,t,n){let i=1-n;for(let s=0;s!==t.length;++s)t[s]=i*r[s]+n*e[s]}var P=class r extends Float32Array{static size=2;constructor(e,t){super(r.size),this.set(e??0,t??(typeof e=="number"?e:void 0))}static create(){return new r}clone(){return new r(this)}put(e,t){return this[0]=e,this[1]=t,this}set(e,t){return typeof e=="number"?(this[0]=e,this[1]=t??0):super.set(e),this}static set(e,t,n){return e[0]=t,e[1]=n,e}copy(e){return this.set(e),this}static copy(e,t){return e.set(t),e}add(e){return this[0]+=e[0],this[1]+=e[1],this}static add(e,t,n){return n=n??new r,n[0]=e[0]+t[0],n[1]=e[1]+t[1],n}addScalar(e){return this[0]+=e,this[1]+=e,this}static addScalar(e,t,n){return n=n??new r,n[0]=e[0]+t,n[1]=e[1]+t,n}addScaled(e,t){return this[0]+=e[0]*t,this[1]+=e[1]*t,this}static addScaled(e,t,n,i){return i=i??new r,i[0]=e[0]+t[0]*n,i[1]=e[1]+t[1]*n,i}sub(e){return this[0]-=e[0],this[1]-=e[1],this}static sub(e,t,n){return n=n??new r,n[0]=e[0]-t[0],n[1]=e[1]-t[1],n}subScalar(e){return this[0]-=e,this[1]-=e,this}static subScalar(e,t,n){return n=n??new r,n[0]-=t,n[1]-=t,n}mul(e){return this[0]*=e[0],this[1]*=e[1],this}static mul(e,t,n){return n=n??new r,n[0]=e[0]*t[0],n[1]=e[1]*t[1],n}mulScalar(e){return this[0]*=e,this[1]*=e,this}static mulScalar(e,t,n){return n=n??new r,n[0]=e[0]*t,n[1]=e[1]*t,n}div(e){return this[0]/=e[0],this[1]/=e[1],this}static div(e,t,n){return n=n??new r,n[0]=e[0]/t[0],n[1]=e[1]/t[1],n}divScalar(e){return this[0]/=e,this[1]/=e,this}static divScalar(e,t,n){return n=n??new r,n[0]=e[0]/t,n[1]=e[1]/t,n}dot(e){return this.x*e[0]+this.y*e[1]}static dot(e,t){return e[0]*t[0]+e[1]*t[1]}static perp(e){return new r(-e.y,e.x)}dotScalar(e,t){return this.x*e+this.y*t}static dotScalar(e,t,n){return e[0]*t+e[1]*n}normalise(){return this.mulScalar(1/this.len)}static normalise(e){if(Array.isArray(e)||e instanceof Float32Array){let t=1/r.len(e);return e[0]*=t,e[1]*=t,e}else if(e instanceof r)return e.mulScalar(1/e.len)}static kross(e,t){return e[0]*t[1]-e[1]*t[0]}static reflect(e,t){let n=2*r.dot(e,t),i=r.mulScalar(t,n);return r.sub(e,i)}clamp(e,t){return this.x=C(this.x,e,t),this.y=C(this.x,e,t),this}apply(e){return this.x=e(this.x),this.y=e(this.y),this}static distSq(e,t){return Math.pow(t[0]-e[0],2)+Math.pow(t[1]-e[1],2)}static dist(e,t){return Math.sqrt(r.distSq(e,t))}lenSq(){return this.dot(this)}static lenSq(e){return r.dot(e,e)}get len(){return Math.sqrt(this.lenSq())}static len(e){return Math.sqrt(r.dot(e,e))}invert(){return this.x=1/this.x,this.y=1/this.y,this}get x(){return this[0]}set x(e){this[0]=e}get y(){return this[1]}set y(e){this[1]=e}};function ve(r,e,t){let n=t&&t.state;n&&(typeof n=="object"&&e.copy(n,e),r.state=()=>e.copy(e,{}))}function Ve(r,e){let t=()=>(r.next()>>>0)/4294967296;return t.double=()=>{let n,i,s;do n=r.next()>>>11,i=(r.next()>>>0)/4294967296,s=(n+i)/(1<<21);while(s===0);return s},t.int32=()=>r.next()|0,t.quick=t,ve(t,r,e),t}var H=Le;function Le(r,e){let t=new K(r);return Ve(t,e)}var K=class{constructor(e){e==null&&(e=+new Date);let t="";this.x=0,this.y=0,this.z=0,this.w=0,e===(e|0)?this.x=e:t+=e;for(let n=0;n<t.length+64;n++)this.x^=t.charCodeAt(n)|0,this.next()}next(){let{x:e,y:t,z:n,w:i}=this,s=e^e<<11;return this.x=t,this.y=n,this.z=i,this.w=i^(i>>>19^s^s>>>8)}copy(e,t){return t.x=e.x,t.y=e.y,t.z=e.z,t.w=e.w,t}};function se(r,e,t){e=Math.floor(e),t=Math.floor(t);let n=new Float32Array(2*e*t);for(let s=0;s<t;++s)for(let o=0;o<e;++o){let c=2*(s*e+o);n[c]=o/e,n[c+1]=s/t}let i=r.createVertexArray();if(i!=null){r.bindVertexArray(i);let s=r.createBuffer();return s==null?null:(r.bindBuffer(r.ARRAY_BUFFER,s),r.bufferData(r.ARRAY_BUFFER,n,r.STATIC_DRAW),r.enableVertexAttribArray(0),r.vertexAttribPointer(0,2,r.FLOAT,!1,0,0),r.bindVertexArray(null),[i,s,n.length/2])}return null}function oe(r,e){let t=new Map;for(let[n,i]of e){let s=new Float32Array(i),o=r.createVertexArray();if(o!=null){r.bindVertexArray(o);let c=r.createBuffer();if(c==null)return null;r.bindBuffer(r.ARRAY_BUFFER,c),r.bufferData(r.ARRAY_BUFFER,s,r.STATIC_DRAW),r.enableVertexAttribArray(0),r.vertexAttribPointer(0,3,r.FLOAT,!1,0,0),r.bindVertexArray(null),t.set(Number(n),[o,c,s.length/3])}}return t}var G=new Map;function Q(r,e,t){let n=[[e,r.VERTEX_SHADER,"vertex"],[t,r.FRAGMENT_SHADER,"fragment"]],i=[],s=r.createProgram();if(s==null)return"Failed to create shader program";for(let o=0;o!==n.length;++o){let c=r.createShader(n[o][1]);if(c==null)return`Failed to create ${n[o][2]} shader`;let h=n[o][0];if(h.includes("#version")||(console.log("inserting version"),h=`#version 300 es
-${h}`),r.shaderSource(c,h),r.compileShader(c),r.getShaderParameter(c,r.COMPILE_STATUS)===!0)i.push(c),r.attachShader(s,c);else{i.forEach(b=>{r.deleteShader(b)});let f=r.getShaderInfoLog(c)??"unknown";return`Failed to create ${n[o][2]} shader with error:
-${f}`}}if(r.linkProgram(s),i.forEach(o=>{r.deleteShader(o)}),r.getProgramParameter(s,r.LINK_STATUS)===!0)return s;{let o=r.getProgramInfoLog(s)??"unknown";return r.deleteProgram(s),`Failed to create program with error:
-${o}`}}var S=class r extends Float32Array{static size=9;constructor(){super(r.size)}static create(e){let t=new r;return e!=null&&t.set(e),t}static idx(e,t){return 3*t+e}static set(e,t,n,i){e[r.idx(t,n)]=i}static get(e,t,n){return e[r.idx(t,n)]}static fromMat4Rotation(e){let t=r.create();return r.setColumn(t,0,u.getColumn(e,0)),r.setColumn(t,1,u.getColumn(e,1)),r.setColumn(t,2,u.getColumn(e,2)),t}copyMat4Rotation(e){return r.setColumn(this,0,u.getColumn(e,0)),r.setColumn(this,1,u.getColumn(e,1)),r.setColumn(this,2,u.getColumn(e,2)),this}static getColumn(e,t){return[e[r.idx(0,t)],e[r.idx(1,t)],e[r.idx(2,t)]]}static setColumn(e,t,n){e[r.idx(0,t)]=n[0],e[r.idx(1,t)]=n[1],e[r.idx(2,t)]=n[2]??(t===2?1:0)}static makeTranslation(e,t){let n=r.makeIdentity();return n[r.idx(0,2)]=e,n[r.idx(1,2)]=t,n}static translate(e,t,n){if(typeof n=="number")e[r.idx(0,2)]=t,e[r.idx(1,2)]=n;else{let i=t;e[r.idx(0,2)]=i[0],e[r.idx(1,2)]=i[1]}return e}static makeIdentity(){let e=r.create();return e[r.idx(0,0)]=1,e[r.idx(1,1)]=1,e[r.idx(2,2)]=1,e}static makeRotation(e){let[t,n]=[Math.cos(e),Math.sin(e)],i=r.create();return r.set(i,0,0,t),r.set(i,0,1,-n),r.set(i,1,0,n),r.set(i,1,1,t),r.set(i,2,2,1),i}static rotate(e,t){let[n,i]=[Math.cos(t),Math.sin(t)];return r.set(e,0,0,n),r.set(e,0,1,-i),r.set(e,1,0,i),r.set(e,1,1,n),r.set(e,2,2,1),e}static makeScale(e){let t=r.create();return r.set(t,0,0,e[0]),r.set(t,1,1,e[1]),r.set(t,2,2,1),t}static scale(e,t){return r.set(e,0,0,t[0]),r.set(e,1,1,t[1]),r.set(e,2,2,1),e}static scaleBy(e,t){return r.set(e,0,0,r.get(e,0,0)*t[0]),r.set(e,0,1,r.get(e,0,1)*t[1]),r.set(e,1,0,r.get(e,1,0)*t[0]),r.set(e,1,1,r.get(e,1,1)*t[1]),e}static makeTransform(e,t,n){let i=r.create();return r.set(i,0,0,t[0]*Math.cos(n)),r.set(i,0,1,-t[1]*Math.sin(n)),r.set(i,1,0,t[0]*Math.sin(n)),r.set(i,1,1,t[1]*Math.cos(n)),r.set(i,0,2,e[0]),r.set(i,1,2,e[1]),r.set(i,2,2,1),i}mul2(e){let t=e[0],n=e[1];return e[0]=r.get(this,0,0)*t+r.get(this,0,1)*n,e[1]=r.get(this,1,0)*t+r.get(this,1,1)*n,e}transform2(e){let t=e[0],n=e[1];return e[0]=r.get(this,0,0)*t+r.get(this,0,1)*n+r.get(this,0,2),e[1]=r.get(this,1,0)*t+r.get(this,1,1)*n+r.get(this,1,2),e}static transform2(e,t,n,i){let s=t[0],o=t[1],c=i??0;return n[c]=r.get(e,0,0)*s+r.get(e,0,1)*o+r.get(e,0,2),n[c+1]=r.get(e,1,0)*s+r.get(e,1,1)*o+r.get(e,1,2),n}static mul(e,t,n){return r.set(e,0,0,r.get(t,0,0)*r.get(n,0,0)+r.get(t,0,1)*r.get(n,1,0)+r.get(t,0,2)*r.get(n,2,0)),r.set(e,0,1,r.get(t,0,0)*r.get(n,0,1)+r.get(t,0,1)*r.get(n,1,1)+r.get(t,0,2)*r.get(n,2,1)),r.set(e,0,2,r.get(t,0,0)*r.get(n,0,2)+r.get(t,0,1)*r.get(n,1,2)+r.get(t,0,2)*r.get(n,2,2)),r.set(e,1,0,r.get(t,1,0)*r.get(n,0,0)+r.get(t,1,1)*r.get(n,1,0)+r.get(t,1,2)*r.get(n,2,0)),r.set(e,1,1,r.get(t,1,0)*r.get(n,0,1)+r.get(t,1,1)*r.get(n,1,1)+r.get(t,1,2)*r.get(n,2,1)),r.set(e,1,2,r.get(t,1,0)*r.get(n,0,2)+r.get(t,1,1)*r.get(n,1,2)+r.get(t,1,2)*r.get(n,2,2)),r.set(e,2,0,r.get(t,2,0)*r.get(n,0,0)+r.get(t,2,1)*r.get(n,1,0)+r.get(t,2,2)*r.get(n,2,0)),r.set(e,2,1,r.get(t,2,0)*r.get(n,0,1)+r.get(t,2,1)*r.get(n,1,1)+r.get(t,2,2)*r.get(n,2,1)),r.set(e,2,2,r.get(t,2,0)*r.get(n,0,2)+r.get(t,2,1)*r.get(n,1,2)+r.get(t,2,2)*r.get(n,2,2)),e}static inverse(e,t=1e-4){let n=r.create();n[0]=e[4]*e[8]-e[5]*e[7],n[1]=e[2]*e[7]-e[1]*e[8],n[2]=e[1]*e[5]-e[2]*e[4],n[3]=e[5]*e[6]-e[3]*e[8],n[4]=e[0]*e[8]-e[2]*e[6],n[5]=e[2]*e[3]-e[0]*e[5],n[6]=e[3]*e[7]-e[4]*e[6],n[7]=e[1]*e[6]-e[0]*e[7],n[8]=e[0]*e[4]-e[1]*e[3];let i=e[0]*n[0]+e[1]*n[3]+e[2]*n[6];if(Math.abs(i)>t){let s=1/i;return n[0]*=s,n[1]*=s,n[2]*=s,n[3]*=s,n[4]*=s,n[5]*=s,n[6]*=s,n[7]*=s,n[8]*=s,n}return r.create()}static transpose(e){let t=r.idx,n=e[t(0,1)];return e[t(0,1)]=e[t(1,0)],e[t(1,0)]=n,n=e[t(0,2)],e[t(0,2)]=e[t(2,0)],e[t(2,0)]=n,n=e[t(1,2)],e[t(1,2)]=e[t(2,1)],e[t(2,1)]=n,e}};var u=class r extends Float32Array{static size=16;constructor(){super(r.size)}static create(e){let t=new r;return e!=null&&t.set(e),t}static fromMat3(e){let t=r.makeIdentity();return r.set(t,0,0,S.get(e,0,0)),r.set(t,0,1,S.get(e,0,1)),r.set(t,0,3,S.get(e,0,2)),r.set(t,1,0,S.get(e,1,0)),r.set(t,1,1,S.get(e,1,1)),r.set(t,1,3,S.get(e,1,2)),t}static idx(e,t){return 4*t+e}static set(e,t,n,i){e[r.idx(t,n)]=i}static get(e,t,n){return e[r.idx(t,n)]}static makePerspective(e,t,n,i){let s=r.create(),o=Math.tan(e*Math.PI/360);return s[r.idx(0,0)]=1/(t*o),s[r.idx(1,1)]=1/o,s[r.idx(2,2)]=i/(n-i),s[r.idx(2,3)]=-(n*i)/(i-n),s[r.idx(3,2)]=-1,s}static getColumn(e,t){return[e[r.idx(0,t)],e[r.idx(1,t)],e[r.idx(2,t)],e[r.idx(3,t)]]}static setColumn(e,t,n){e[r.idx(0,t)]=n[0],e[r.idx(1,t)]=n[1],e[r.idx(2,t)]=n[2],e[r.idx(3,t)]=n[3]??(t===3?1:0)}static makeOrtho(e,t,n,i,s,o){let c=1/(e-t),h=1/(n-i),f=1/(s-o),b=r.create();return b[0]=-2*c,b[1]=0,b[2]=0,b[3]=0,b[4]=0,b[5]=-2*h,b[6]=0,b[7]=0,b[8]=0,b[9]=0,b[10]=2*f,b[11]=0,b[12]=(e+t)*c,b[13]=(i+n)*h,b[14]=(o+s)*f,b[15]=1,b}static makeTranslation(e,t,n){let i=r.makeIdentity();return i[r.idx(0,3)]=e,i[r.idx(1,3)]=t,i[r.idx(2,3)]=n,i}static makeXAxisReflection(){let e=r.makeIdentity();return e[r.idx(0,0)]=-1,e}static makeYAxisReflection(){let e=r.makeIdentity();return e[r.idx(1,1)]=-1,e}static makeZAxisReflection(){let e=r.makeIdentity();return e[r.idx(2,2)]=-1,e}static translate(e,t,n,i){return e[r.idx(0,3)]=t,e[r.idx(1,3)]=n,e[r.idx(2,3)]=i,e}static makeIdentity(){let e=r.create();return e[r.idx(0,0)]=1,e[r.idx(1,1)]=1,e[r.idx(2,2)]=1,e[r.idx(3,3)]=1,e}static makeRotation(e,t){N(y.len(e),1)||(console.log("Warning, input axis to makeRotation should be unit length"),y.normalise(e));let[n,i,s]=[Math.cos(t),Math.sin(t),1-Math.cos(t)],[o,c,h]=[s*e[0],s*e[1],s*e[2]],[f,b,a]=[i*e[0],i*e[1],i*e[2]],[p,g,M]=[o*e[1],c*e[2],o*e[2]],x=r.create();return r.set(x,0,0,o*e[0]+n),r.set(x,0,1,p+a),r.set(x,0,2,M-b),r.set(x,1,0,p-a),r.set(x,1,1,c*e[1]+n),r.set(x,1,2,g+f),r.set(x,2,0,M+b),r.set(x,2,1,g-f),r.set(x,2,2,h*e[2]+n),r.set(x,3,3,1),x}static rotate(e,t,n){N(y.len(t),1)||(console.log("Warning, input axis to makeRotation should be unit length"),y.normalise(t));let[i,s,o]=[Math.cos(n),Math.sin(n),1-Math.cos(n)],[c,h,f]=[o*t[0],o*t[1],o*t[2]],[b,a,p]=[s*t[0],s*t[1],s*t[2]],[g,M,x]=[c*t[1],h*t[2],c*t[2]];return r.set(e,0,0,c*t[0]+i),r.set(e,0,1,g+p),r.set(e,0,2,x-a),r.set(e,1,0,g-p),r.set(e,1,1,h*t[1]+i),r.set(e,1,2,M+b),r.set(e,2,0,x+a),r.set(e,2,1,M-b),r.set(e,2,2,f*t[2]+i),e}static makeScale(e){let t=r.create();return r.set(t,0,0,e[0]),r.set(t,1,1,e[1]),r.set(t,2,2,e[2]),r.set(t,3,3,1),t}static scale(e,t){return r.set(e,0,0,t[0]),r.set(e,1,1,t[1]),r.set(e,2,2,t[2]),e}static makeTransform(e,t,n){let i=r.create();return r.rotate(i,[1,0,0],t[0]),r.rotate(i,[0,1,0],t[1]),r.rotate(i,[0,0,1],t[2]),r.scale(i,e),r.translate(i,n[0],n[1],n[2]),i}static mul(e,t,n){return r.set(e,0,0,r.get(t,0,0)*r.get(n,0,0)+r.get(t,0,1)*r.get(n,1,0)+r.get(t,0,2)*r.get(n,2,0)+r.get(t,0,3)*r.get(n,3,0)),r.set(e,0,1,r.get(t,0,0)*r.get(n,0,1)+r.get(t,0,1)*r.get(n,1,1)+r.get(t,0,2)*r.get(n,2,1)+r.get(t,0,3)*r.get(n,3,1)),r.set(e,0,2,r.get(t,0,0)*r.get(n,0,2)+r.get(t,0,1)*r.get(n,1,2)+r.get(t,0,2)*r.get(n,2,2)+r.get(t,0,3)*r.get(n,3,2)),r.set(e,0,3,r.get(t,0,0)*r.get(n,0,3)+r.get(t,0,1)*r.get(n,1,3)+r.get(t,0,2)*r.get(n,2,3)+r.get(t,0,3)*r.get(n,3,3)),r.set(e,1,0,r.get(t,1,0)*r.get(n,0,0)+r.get(t,1,1)*r.get(n,1,0)+r.get(t,1,2)*r.get(n,2,0)+r.get(t,1,3)*r.get(n,3,0)),r.set(e,1,1,r.get(t,1,0)*r.get(n,0,1)+r.get(t,1,1)*r.get(n,1,1)+r.get(t,1,2)*r.get(n,2,1)+r.get(t,1,3)*r.get(n,3,1)),r.set(e,1,2,r.get(t,1,0)*r.get(n,0,2)+r.get(t,1,1)*r.get(n,1,2)+r.get(t,1,2)*r.get(n,2,2)+r.get(t,1,3)*r.get(n,3,2)),r.set(e,1,3,r.get(t,1,0)*r.get(n,0,3)+r.get(t,1,1)*r.get(n,1,3)+r.get(t,1,2)*r.get(n,2,3)+r.get(t,1,3)*r.get(n,3,3)),r.set(e,2,0,r.get(t,2,0)*r.get(n,0,0)+r.get(t,2,1)*r.get(n,1,0)+r.get(t,2,2)*r.get(n,2,0)+r.get(t,2,3)*r.get(n,3,0)),r.set(e,2,1,r.get(t,2,0)*r.get(n,0,1)+r.get(t,2,1)*r.get(n,1,1)+r.get(t,2,2)*r.get(n,2,1)+r.get(t,2,3)*r.get(n,3,1)),r.set(e,2,2,r.get(t,2,0)*r.get(n,0,2)+r.get(t,2,1)*r.get(n,1,2)+r.get(t,2,2)*r.get(n,2,2)+r.get(t,2,3)*r.get(n,3,2)),r.set(e,2,3,r.get(t,2,0)*r.get(n,0,3)+r.get(t,2,1)*r.get(n,1,3)+r.get(t,2,2)*r.get(n,2,3)+r.get(t,2,3)*r.get(n,3,3)),r.set(e,3,0,r.get(t,3,0)*r.get(n,0,0)+r.get(t,3,1)*r.get(n,1,0)+r.get(t,3,2)*r.get(n,2,0)+r.get(t,3,3)*r.get(n,3,0)),r.set(e,3,1,r.get(t,3,0)*r.get(n,0,1)+r.get(t,3,1)*r.get(n,1,1)+r.get(t,3,2)*r.get(n,2,1)+r.get(t,3,3)*r.get(n,3,1)),r.set(e,3,2,r.get(t,3,0)*r.get(n,0,2)+r.get(t,3,1)*r.get(n,1,2)+r.get(t,3,2)*r.get(n,2,2)+r.get(t,3,3)*r.get(n,3,2)),r.set(e,3,3,r.get(t,3,0)*r.get(n,0,3)+r.get(t,3,1)*r.get(n,1,3)+r.get(t,3,2)*r.get(n,2,3)+r.get(t,3,3)*r.get(n,3,3)),e}static transform3(e,t){let n=t[0],i=t[1],s=t[2];return t[0]=r.get(e,0,0)*n+r.get(e,0,1)*i+r.get(e,0,2)*s+r.get(e,0,3),t[1]=r.get(e,1,0)*n+r.get(e,1,1)*i+r.get(e,1,2)*s+r.get(e,1,3),t[2]=r.get(e,2,0)*n+r.get(e,2,1)*i+r.get(e,2,2)*s+r.get(e,2,3),t}static mul3(e,t){let n=t[0],i=t[1],s=t[2];return t[0]=r.get(e,0,0)*n+r.get(e,0,1)*i+r.get(e,0,2)*s,t[1]=r.get(e,1,0)*n+r.get(e,1,1)*i+r.get(e,1,2)*s,t[2]=r.get(e,2,0)*n+r.get(e,2,1)*i+r.get(e,2,2)*s,t}static mul4(e,t){let n=t[0],i=t[1],s=t[2],o=t[3];return t[0]=r.get(e,0,0)*n+r.get(e,0,1)*i+r.get(e,0,2)*s+r.get(e,0,3)*o,t[1]=r.get(e,1,0)*n+r.get(e,1,1)*i+r.get(e,1,2)*s+r.get(e,1,3)*o,t[2]=r.get(e,2,0)*n+r.get(e,2,1)*i+r.get(e,2,2)*s+r.get(e,2,3)*o,t[3]=r.get(e,3,0)*n+r.get(e,3,1)*i+r.get(e,3,2)*s+r.get(e,3,3)*o,t}static inverse(e,t=.001){let n=e[0]*e[5]-e[1]*e[4],i=e[0]*e[6]-e[2]*e[4],s=e[0]*e[7]-e[3]*e[4],o=e[1]*e[6]-e[2]*e[5],c=e[1]*e[7]-e[3]*e[5],h=e[2]*e[7]-e[3]*e[6],f=e[8]*e[13]-e[9]*e[12],b=e[8]*e[14]-e[10]*e[12],a=e[8]*e[15]-e[11]*e[12],p=e[9]*e[14]-e[10]*e[13],g=e[9]*e[15]-e[11]*e[13],M=e[10]*e[15]-e[11]*e[14],x=n*M-i*g+s*p+o*a-c*b+h*f,m=r.create();if(Math.abs(x)<=t)return m;m[0]=+e[5]*M-e[6]*g+e[7]*p,m[4]=-e[4]*M+e[6]*a-e[7]*b,m[8]=+e[4]*g-e[5]*a+e[7]*f,m[12]=-e[4]*p+e[5]*b-e[6]*f,m[1]=-e[1]*M+e[2]*g-e[3]*p,m[5]=+e[0]*M-e[2]*a+e[3]*b,m[9]=-e[0]*g+e[1]*a-e[3]*f,m[13]=+e[0]*p-e[1]*b+e[2]*f,m[2]=+e[13]*h-e[14]*c+e[15]*o,m[6]=-e[12]*h+e[14]*s-e[15]*i,m[10]=+e[12]*c-e[13]*s+e[15]*n,m[14]=-e[12]*o+e[13]*i-e[14]*n,m[3]=-e[9]*h+e[10]*c-e[11]*o,m[7]=+e[8]*h-e[10]*s+e[11]*i,m[11]=-e[8]*c+e[9]*s-e[11]*n,m[15]=+e[8]*o-e[9]*i+e[10]*n;let v=1/x;return m[0]*=v,m[1]*=v,m[2]*=v,m[3]*=v,m[4]*=v,m[5]*=v,m[6]*=v,m[7]*=v,m[8]*=v,m[9]*=v,m[10]*=v,m[11]*=v,m[12]*=v,m[13]*=v,m[14]*=v,m[15]*=v,m}static transpose(e){let t=r.idx,n=e[t(0,1)];return e[t(0,1)]=e[t(1,0)],e[t(1,0)]=n,n=e[t(0,2)],e[t(0,2)]=e[t(2,0)],e[t(2,0)]=n,n=e[t(0,3)],e[t(0,3)]=e[t(3,0)],e[t(3,0)]=n,n=e[t(1,2)],e[t(1,2)]=e[t(2,1)],e[t(2,1)]=n,n=e[t(1,3)],e[t(1,3)]=e[t(3,1)],e[t(3,1)]=n,n=e[t(2,3)],e[t(2,3)]=e[t(3,2)],e[t(3,2)]=n,e}static lookAt(e,t,n=[0,1,0]){let i,s,o,c,h,f,b,a,p,g,M=e[0],x=e[1],m=e[2],v=n[0],k=n[1],d=n[2],I=t[0],O=t[1],U=t[2],E=1e-6;if(Math.abs(M-I)<E&&Math.abs(x-O)<E&&Math.abs(m-U)<E)return r.makeIdentity();let V=r.create();return b=M-I,a=x-O,p=m-U,g=1/Math.hypot(b,a,p),b*=g,a*=g,p*=g,i=k*p-d*a,s=d*b-v*p,o=v*a-k*b,g=Math.hypot(i,s,o),N(g,0)?(i=0,s=0,o=0):(g=1/g,i*=g,s*=g,o*=g),c=a*o-p*s,h=p*i-b*o,f=b*s-a*i,g=Math.hypot(c,h,f),N(g,0)?(c=0,h=0,f=0):(g=1/g,c*=g,h*=g,f*=g),V[0]=i,V[1]=c,V[2]=b,V[3]=0,V[4]=s,V[5]=h,V[6]=a,V[7]=0,V[8]=o,V[9]=f,V[10]=p,V[11]=0,V[12]=-(i*M+s*x+o*m),V[13]=-(c*M+h*x+f*m),V[14]=-(b*M+a*x+p*m),V[15]=1,V}static makePlaneProjection(e,t,n){let i=r.create(),s=-y.dot(e,t),o=y.dot(e,n);return i[0]=o+s-n[0]*e[0],i[1]=-n[1]*e[0],i[2]=-n[2]*e[0],i[3]=-e[0],i[4]=-n[0]*e[1],i[5]=o+s-n[1]*e[1],i[6]=-n[2]*e[1],i[7]=-e[1],i[8]=-n[0]*e[2],i[9]=-n[1]*e[2],i[10]=o+s-n[2]*e[2],i[11]=-e[2],i[12]=-n[0]*s,i[13]=-n[1]*s,i[14]=-n[2]*s,i[15]=o,i}};var Y=class r extends Float32Array{static size=4;constructor(){super(r.size)}static create(e){let t=new Float32Array(r.size);return e!=null&&t.set(e),t}static idx(e,t){return 2*t+e}static set(e,t,n,i){e[r.idx(t,n)]=i}static get(e,t,n){return e[r.idx(t,n)]}static transform2(e,t,n){return P.set(t,r.get(e,0,0)*n[0]+r.get(e,0,1)*n[1],r.get(e,1,0)*n[0]+r.get(e,1,1)*n[1]),t}static makeIdentity(){let e=r.create();return e[r.idx(0,0)]=1,e[r.idx(1,1)]=1,e}static makeRotation(e){let[t,n]=[Math.cos(e),Math.sin(e)],i=r.create();return r.set(i,0,0,t),r.set(i,0,1,-n),r.set(i,1,0,n),r.set(i,1,1,t),i}static rotate(e,t){let[n,i]=[Math.cos(t),Math.sin(t)];return r.set(e,0,0,n),r.set(e,0,1,-i),r.set(e,1,0,i),r.set(e,1,1,n),e}static makeScale(e){let t=r.create();return r.set(t,0,0,e[0]),r.set(t,1,1,e[1]),t}static mul(e,t,n){return r.set(e,0,0,r.get(t,0,0)*r.get(n,0,0)+r.get(t,0,1)*r.get(n,1,0)),r.set(e,0,1,r.get(t,0,0)*r.get(n,0,1)+r.get(t,0,1)*r.get(n,1,1)),r.set(e,1,0,r.get(t,1,0)*r.get(n,0,0)+r.get(t,1,1)*r.get(n,1,0)),r.set(e,1,1,r.get(t,1,0)*r.get(n,0,1)+r.get(t,1,1)*r.get(n,1,1)),e}static inverse(e,t=1e-4){let n=r.create(),i=e[0]*e[3]-e[1]*e[2];if(Math.abs(i)>t){let s=1/i;n[0]=e[3]*s,n[1]=-e[1]*s,n[2]=-e[2]*s,n[3]=e[0]*s}else n.fill(0);return n}};var j=class r extends Float32Array{static size=4;constructor(e,t,n,i){super(r.size),this.set(e??0,t,n,i)}static create(){return new r}clone(){return new r(this)}put(e,t,n,i){return this[0]=e,this[1]=t,this[2]=n,this[3]=i,this}set(e,t,n,i){return typeof e=="number"?(this[0]=e,this[1]=t??0,this[2]=n??0,this[3]=i??0):super.set(e),this}static set(e,t,n,i,s){return e[0]=t,e[1]=n,e[2]=i,e[3]=s,e}copy(e){return this.set(e),this}static copy(e,t){return e.set(t),e}add(e){return this[0]+=e[0],this[1]+=e[1],this[2]+=e[2],this[3]+=e[3],this}static add(e,t,n){return n=n??new r,n[0]=e[0]+t[0],n[1]=e[1]+t[1],n[2]=e[2]+t[2],n[3]=e[3]+t[3],n}addScalar(e){return this[0]+=e,this[1]+=e,this[2]+=e,this[3]+=e,this}static addScalar(e,t,n){return n=n??new r,n[0]=e[0]+t,n[1]=e[1]+t,n[2]=e[2]+t,n[3]=e[3]+t,n}sub(e){return this[0]-=e[0],this[1]-=e[1],this[2]-=e[2],this[3]-=e[3],this}static sub(e,t,n){return n=n??new r,n[0]=e[0]-t[0],n[1]=e[1]-t[1],n[2]=e[2]-t[2],n[3]=e[3]-t[3],n}subScalar(e){return this[0]-=e,this[1]-=e,this[2]-=e,this[3]-=e,this}static subScalar(e,t,n){return n=n??new r,n[0]-=t,n[1]-=t,n[2]-=t,n[3]-=t,n}mul(e){return this[0]*=e[0],this[1]*=e[1],this[2]*=e[2],this[3]*=e[3],this}static mul(e,t,n){return n=n??new r,n[0]=e[0]*t[0],n[1]=e[1]*t[1],n[2]=e[2]*t[2],n[3]=e[3]*t[3],n}mulScalar(e){return this[0]*=e,this[1]*=e,this[2]*=e,this[3]*=e,this}static mulScalar(e,t,n){return n=n??new r,n[0]=e[0]*t,n[1]=e[1]*t,n[2]=e[2]*t,n[3]=e[3]*t,n}div(e){return this[0]/=e[0],this[1]/=e[1],this[2]/=e[2],this[3]/=e[3],this}static div(e,t,n){return n=n??new r,n[0]=e[0]/t[0],n[1]=e[1]/t[1],n[2]=e[2]/t[2],n[3]=e[3]/t[3],n}divScalar(e){return this[0]/=e,this[1]/=e,this[2]/=e,this[3]/=e,this}static divScalar(e,t,n){return n=n??new r,n[0]=e[0]/t,n[1]=e[1]/t,n[2]=e[2]/t,n[3]=e[3]/t,n}dot(e){return this.x*e[0]+this.y*e[1]+this.z*e[2]+this.w*e[3]}static dot(e,t){return e[0]*t[0]+e[1]*t[1]+e[2]*t[2]+e[3]*t[3]}dotScalar(e,t,n,i){return this.x*e+this.y*t+this.z*n+this.w*i}static dotScalar(e,t,n,i,s){return e[0]*t+e[1]*n+e[2]*i+e[3]*s}normalise(){return this.mulScalar(1/this.len())}static normalise(e){if(Array.isArray(e)||e instanceof Float32Array){let t=1/r.len(e);for(let n=0;n!==4;++n)e[n]*=t;return e}else if(e instanceof r)return e.mulScalar(1/e.len())}lenSq(){return this.dot(this)}static lenSq(e){return r.dot(e,e)}len(){return Math.sqrt(this.lenSq())}static len(e){return Math.sqrt(r.dot(e,e))}get x(){return this[0]}set x(e){this[0]=e}get y(){return this[1]}set y(e){this[1]=e}get z(){return this[2]}set z(e){this[2]=e}get w(){return this[3]}set w(e){this[3]=e}};var A=(l=>(l[l.NONE=0]="NONE",l[l.BOOL=WebGL2RenderingContext.BOOL]="BOOL",l[l.UBYTE=WebGL2RenderingContext.UNSIGNED_BYTE]="UBYTE",l[l.BYTE=WebGL2RenderingContext.BYTE]="BYTE",l[l.USHORT=WebGL2RenderingContext.UNSIGNED_SHORT]="USHORT",l[l.SHORT=WebGL2RenderingContext.SHORT]="SHORT",l[l.UINT=WebGL2RenderingContext.UNSIGNED_INT]="UINT",l[l.INT=WebGL2RenderingContext.INT]="INT",l[l.HALF_FLOAT=WebGL2RenderingContext.HALF_FLOAT]="HALF_FLOAT",l[l.FLOAT=WebGL2RenderingContext.FLOAT]="FLOAT",l[l.VEC2=WebGL2RenderingContext.FLOAT_VEC2]="VEC2",l[l.VEC3=WebGL2RenderingContext.FLOAT_VEC3]="VEC3",l[l.VEC4=WebGL2RenderingContext.FLOAT_VEC4]="VEC4",l[l.IVEC2=WebGL2RenderingContext.INT_VEC2]="IVEC2",l[l.IVEC3=WebGL2RenderingContext.INT_VEC3]="IVEC3",l[l.IVEC4=WebGL2RenderingContext.INT_VEC4]="IVEC4",l[l.MAT2=WebGL2RenderingContext.FLOAT_MAT2]="MAT2",l[l.MAT3=WebGL2RenderingContext.FLOAT_MAT3]="MAT3",l[l.MAT4=WebGL2RenderingContext.FLOAT_MAT4]="MAT4",l[l.SAMPLER_2D=WebGL2RenderingContext.SAMPLER_2D]="SAMPLER_2D",l[l.SAMPLER_3D=WebGL2RenderingContext.SAMPLER_3D]="SAMPLER_3D",l[l.SAMPLER_CUBE=WebGL2RenderingContext.SAMPLER_CUBE]="SAMPLER_CUBE",l[l.ISAMPLER_2D=WebGL2RenderingContext.INT_SAMPLER_2D]="ISAMPLER_2D",l[l.ISAMPLER_3D=WebGL2RenderingContext.INT_SAMPLER_3D]="ISAMPLER_3D",l[l.ISAMPLER_CUBE=WebGL2RenderingContext.INT_SAMPLER_CUBE]="ISAMPLER_CUBE",l))(A||{});function Me(r,e){let{dataType:t,location:n,value:i,count:s}=e;switch(t){case A.BOOL:case A.BYTE:case A.INT:case A.SHORT:case A.SAMPLER_2D:case A.SAMPLER_3D:case A.SAMPLER_CUBE:case A.ISAMPLER_2D:case A.ISAMPLER_3D:case A.ISAMPLER_CUBE:s===void 0||s<2?r.uniform1i(n,i):r.uniform1iv(n,new Int32Array(i));break;case A.FLOAT:case A.HALF_FLOAT:r.uniform1f(n,i);break;case A.UBYTE:case A.UINT:case A.USHORT:r.uniform1ui(n,i);break;case A.VEC2:r.uniform2fv(n,i);break;case A.VEC3:r.uniform3fv(n,i);break;case A.VEC4:r.uniform4fv(n,i);break;case A.IVEC2:r.uniform2iv(n,i);break;case A.IVEC3:r.uniform3iv(n,i);break;case A.IVEC4:r.uniform4iv(n,i);break;case A.MAT2:r.uniformMatrix2fv(n,!1,i);break;case A.MAT3:r.uniformMatrix3fv(n,!1,i);break;case A.MAT4:r.uniformMatrix4fv(n,!1,i);break;case 0:default:console.warn("Unrecognised uniform data type")}}function R(r,e){let t=Object.keys(e);for(let n=0;n!==t.length;++n)Me(r,e[t[n]])}function Se(r){return r?.name.startsWith("gl_")??r?.name.startsWith("webgl_")??!1}function we(r){switch(r){case WebGL2RenderingContext.FLOAT:return 0;case WebGL2RenderingContext.FLOAT_VEC2:return P.create();case WebGL2RenderingContext.FLOAT_VEC3:return y.create();case WebGL2RenderingContext.FLOAT_VEC4:return j.create();case WebGL2RenderingContext.FLOAT_MAT2:return Y.create();case WebGL2RenderingContext.FLOAT_MAT3:return S.create();case WebGL2RenderingContext.FLOAT_MAT4:return u.create();case WebGL2RenderingContext.INT:return 0;case WebGL2RenderingContext.SAMPLER_2D:return 0;case WebGL2RenderingContext.SAMPLER_3D:return 0;case WebGL2RenderingContext.SAMPLER_CUBE:return 0;default:return null}}function Z(r,e){let t={},n=r.getProgramParameter(e,r.ACTIVE_UNIFORMS);for(let i=0;i!==n;++i){let s=r.getActiveUniform(e,i);if(Se(s)){console.log("builtin:",s);continue}if(s==null)continue;let{name:o,type:c,size:h}=s;t[o]={value:we(c),location:r.getUniformLocation(e,o),dataType:c,count:h}}return t}var ce=`#version 300 es
-precision mediump float;
-#define PI 3.141592653589793238
-#define TWO_PI (PI + PI)
-vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x,289.0);}vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}float snoise(vec3 v){const vec2 C=vec2(1.0/6.0,1.0/3.0);const vec4 D=vec4(0.0,0.5,1.0,2.0);vec3 i=floor(v+dot(v,C.yyy));vec3 x0=v-i+dot(i,C.xxx);vec3 g=step(x0.yzx,x0.xyz);vec3 l=1.0-g;vec3 i1=min(g.xyz,l.zxy);vec3 i2=max(g.xyz,l.zxy);vec3 x1=x0-i1+1.0*C.xxx;vec3 x2=x0-i2+2.0*C.xxx;vec3 x3=x0-1.+3.0*C.xxx;i=mod(i,289.0);vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));float n_=1.0/7.0;vec3  ns=n_*D.wyz-D.xzx;vec4 j=p-49.0*floor(p*ns.z*ns.z);vec4 x_=floor(j*ns.z);vec4 y_=floor(j-7.0*x_);vec4 x=x_*ns.x+ns.yyyy;vec4 y=y_*ns.x+ns.yyyy;vec4 h=1.0-abs(x)-abs(y);vec4 b0=vec4(x.xy,y.xy);vec4 b1=vec4(x.zw,y.zw);vec4 s0=floor(b0)*2.0+1.0;vec4 s1=floor(b1)*2.0+1.0;vec4 sh=-step(h,vec4(0.0));vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;vec3 p0=vec3(a0.xy,h.x);vec3 p1=vec3(a0.zw,h.y);vec3 p2=vec3(a1.xy,h.z);vec3 p3=vec3(a1.zw,h.w);vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);m=m*m;return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));}layout(location=0)in vec3 position;uniform mat4 mvp;uniform mat4 mv;uniform float pointSize;uniform float time;uniform vec4 speeds;uniform vec4 layerControls;uniform vec4 landmass;uniform float randomSeed;uniform int visibility;uniform int scalePoints;uniform vec4 frequencies;uniform float opacity;
-#define emissionSpeed speeds.x
-#define evolutionSpeed speeds.y
-#define rotationSpeed speeds.z
-#define layerScaleDelta layerControls.y
-#define emissionStart landmass.x
-#define emissionEnd landmass.y
-#define emissionHeight landmass.z
-#define sealevel landmass.w
-#define emissionFreq frequencies.x
-#define landFreq frequencies.y
-#define rotFreq frequencies.z
-#define rotMag frequencies.w
-out vec4 pos;vec2 rot(vec2 v,float a){return mat2(cos(a),-sin(a),sin(a),cos(a))*v;}float fBM(vec3 p){float f=0.0;f+=0.5000*snoise(p);p.xy=rot(p.xy,0.5);f+=0.2500*snoise(2.*p);p.xy=rot(p.xy,0.5);f+=0.1250*snoise(4.*p);p.xy=rot(p.xy,0.5);f+=0.0625*snoise(8.*p);return f/0.9375;}vec2 cart2sphere(vec3 coord){return vec2(atan(coord.z,coord.x),acos(coord.y));}mat3 buildFrame(vec3 N){vec3 U=mix(vec3(1.0,0.0,0.0),vec3(0.0,1.0,0.0),step(.9,abs(N.x)));vec3 B=cross(N,U);vec3 T=cross(B,N);return mat3(B,T,N);}float visTerm(float emission,float land){switch(visibility){case 0:return min(emission,land);case 1:return max(emission,land);case 2:return emission*land;}return min(emission,land);}void main(){vec3 N=normalize(position);float emission=fBM(emissionFreq*N+time*emissionSpeed+vec3(randomSeed));float land=fBM(landFreq*position+time*evolutionSpeed+vec3(randomSeed));float emissionFactor=smoothstep(emissionStart-0.1,emissionEnd+0.1,emission);land=smoothstep(sealevel-0.1,sealevel+0.1,land);vec3 vN=normalize((mv*vec4(N,0.)).xyz);float angle=dot(vN,vec3(0.,0.,1.))*.5+.5;float rotation=TWO_PI*snoise(rotFreq*N+rotationSpeed*time+vec3(-randomSeed,2.*randomSeed,0.));vec3 offset=0.1*rotMag*buildFrame(N)*vec3(rot(vec2(1.,0.),rotation),0.0);pos=vec4(position+emissionHeight*emissionFactor*emission*N+offset,angle*visTerm(emission,land));gl_Position=mvp*vec4(pos.xyz,1.);gl_PointSize=max(pointSize*layerScaleDelta*(scalePoints==1?angle:1.),opacity);}`;var ae=`#version 300 es
-precision mediump float;uniform vec4 layerControls;uniform float roundedPoints;uniform float opacity;uniform vec3 baseColour;in vec4 pos;out vec4 fragColour;
-#define layerOpacity layerControls.x
-#define layer int(layerControls.z)
-#define useLayerColours layerControls.w > 0.
-float length2(vec2 v){return dot(v,v);}const vec4 colours[5]=vec4[5](vec4(1.0,0.0,0.0,1.0),vec4(0.0,1.0,0.0,1.0),vec4(0.0,0.0,1.0,1.0),vec4(1.0,1.0,0.0,1.0),vec4(1.0,0.0,1.0,1.0));void main(){if(pos.w<1e-2||opacity==0.)discard;if(roundedPoints>0.){float d=length2(gl_PointCoord-.5);if(d>.25)discard;}fragColour=opacity*pos.w*layerOpacity*(useLayerColours?colours[layer]:vec4(baseColour,opacity));}`;var ue=`#version 300 es
-precision mediump float;vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}vec2 mod289(vec2 x){return x-floor(x*(1.0/289.0))*289.0;}vec3 permute(vec3 x){return mod289(((x*34.0)+1.0)*x);}float snoise(vec2 v){const vec4 C=vec4(0.211324865405187,0.366025403784439,-0.577350269189626,0.024390243902439);vec2 i=floor(v+dot(v,C.yy));vec2 x0=v-i+dot(i,C.xx);vec2 i1;i1=(x0.x>x0.y)?vec2(1.0,0.0):vec2(0.0,1.0);vec4 x12=x0.xyxy+C.xxzz;x12.xy-=i1;i=mod289(i);vec3 p=permute(permute(i.y+vec3(0.0,i1.y,1.0))+i.x+vec3(0.0,i1.x,1.0));vec3 m=max(0.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0.0);m=m*m;m=m*m;vec3 x=2.0*fract(p*C.www)-1.0;vec3 h=abs(x)-0.5;vec3 ox=floor(x+0.5);vec3 a0=x-ox;m*=1.79284291400159-0.85373472095314*(a0*a0+h*h);vec3 g;g.x=a0.x*x0.x+h.x*x0.y;g.yz=a0.yz*x12.xz+h.yz*x12.yw;return 130.0*dot(m,g);}
-#define PI 3.141592653589793238
-#define TWO_PI (PI + PI)
-layout(location=0)in vec2 position;const vec3 layerAxes[5]=vec3[](vec3(1.0,1.0,0.0),vec3(1.0,-1.0,-1.0),vec3(-1.0,1.0,0.0),vec3(0.0,1.0,-1.0),vec3(1.0,0.0,1.0));uniform mat4 mvp;uniform float pointSize;uniform float time;uniform vec3 resolution;uniform int layer;out vec2 uv;flat out float colourP;const float screenScale=2.2;vec3 mapToCylinder(vec2 uv,float radius,float t){const float width=6.0;float theta=uv.x*TWO_PI+t-PI/2.0;float s=abs(.5-uv.y)*.5;s=s*s+0.1*s+.1*snoise(uv*13.0);return vec3(-s*width*cos(theta),.75*(2.*uv.y-1.),s*width*sin(theta));}vec3 displacement(vec2 uv){return vec3(snoise(vec2(1.283,1.437)*uv),snoise(vec2(-1.823,0.934)*uv),snoise(vec2(-0.32,-1.38)*uv));}vec3 rotate(vec3 v,float theta){return mat3(cos(theta),0.,-sin(theta),0.,1.,0.,sin(theta),0.,cos(theta))*v;}float rand(vec2 co){return fract(sin(dot(co.xy,vec2(12.9898,78.233)))*43758.5453);}vec3 uvToSpherical(vec2 uv,float time){float p=smoothstep(0.0,0.5,time)-smoothstep(0.5,1.5,time);float phi=uv.x*TWO_PI+PI/2.+p*0.2*(rand(uv)*2.-1.);float theta=(1.-uv.y)*PI+p*0.2*(rand(uv)*2.-1.);return vec3(sin(theta)*cos(phi),cos(theta),sin(theta)*sin(phi));}void main(){uv=fract(position.xy+vec2(0e-3*time,0.0));vec2 pos=position.xy;colourP=snoise(200.*uv)*.5+.5;gl_PointSize=.25*pointSize+.75*pointSize*(snoise(100.*uv)*.5+.5);vec2 scale=vec2(resolution[2],1.)*screenScale;float ani=max(0.225*time,0.0);vec3 P=vec3(fract(pos)*scale,0.0);P.xy-=vec2(resolution[2]*.5,.5)*2.2;vec3 Q=mapToCylinder(pos,.5,0.)+.01*displacement(uv+2.*time+float(layer));vec3 S=uvToSpherical(pos,ani)+.01*displacement(uv+2.*time+float(layer));vec3 R=mix(mix(P,Q,0.),S,ani);R=rotate(R,4.0*ani*ani*(ani*PI/3.*float(layer+1)));gl_Position=mvp*vec4(R,1.0);gl_PointSize=mix(gl_PointSize,.5*gl_PointSize,smoothstep(0.0,1.0,ani));}`;var le=`#version 300 es
-precision mediump float;float length2(vec2 v){return dot(v,v);}uniform float roundedPoints;uniform float time;uniform float opacity;in vec2 uv;flat in float colourP;out vec4 fragColour;const vec3 colour=vec3(34./255.99,46./255.99,55./255.99);void main(){float d=length2(gl_PointCoord-.5);if(d>.25)discard;vec3 pColour=mix(colour,mix(colour,vec3(1.),.4),1.15*colourP-0.15);float edge=1.-smoothstep(0.25*.6,.25*.9,d);fragColour=mix(vec4(colour,1.),vec4(mix(colour,pColour,edge),1.),opacity);}`;async function X(r){let e=await fetch(r);if(!e.ok)throw new Error(`Failed to load buffer from: ${r}`);return await e.arrayBuffer()}var Fe="https://cdn.jsdelivr.net/gh/otgaard/cdn@0.0.34/data/vbuf001.bin",Te="https://cdn.jsdelivr.net/gh/otgaard/cdn@0.0.34/data/vbuf003.bin",Ie="https://cdn.jsdelivr.net/gh/otgaard/cdn@0.0.34/data/vbuf005.bin",De=["min","max","mul"],T={none:"{}",about:'{"customScale":1.1,"rotationSpeed":0,"dirChangeFreq":0.01,"dirChangeStrength":0,"dirChangeVariance":0,"layers":1,"sampleRadius":0.01,"layerStepDistance":0.01,"layerOpacityDelta":0,"pointSize":0.54,"opacity":1,"emissionFreq":17.5,"emissionSpeed":1.5,"emissionStart":-1,"emissionEnd":1,"emissionHeight":-1,"evolutionSpeed":0,"landFreq":0.1,"sealevel":1,"sealevelLayerDelta":0.5,"rotationFreq":0,"rotationMag":0,"angularRotSpeed":0,"visibility":"max","randomSeed":true,"layerColours":false,"roundedPoints":true,"lockAxes":true,"scalePoints":true,"showText":false,"line1":"Defining the future of","line2":"business solutions.","preset":"none","resolution":[2880,1580,1.8227848101265822]}',ai:'{"customScale":1.0,"rotationSpeed":1.1,"dirChangeFreq":0.01,"dirChangeStrength":0.55,"dirChangeVariance":1,"layers":5,"sampleRadius":0.03,"layerStepDistance":0.07,"layerOpacityDelta":0.12,"pointSize":1.15,"opacity":1,"emissionFreq":2.9,"emissionSpeed":2.3,"emissionStart":1,"emissionEnd":0.61,"emissionHeight":-1,"evolutionSpeed":20,"landFreq":7.8,"sealevel":0.28,"sealevelLayerDelta":-0.5,"rotationFreq":0,"rotationMag":0,"angularRotSpeed":0,"visibility":"max","randomSeed":true,"layerColours":false,"roundedPoints":true,"lockAxes":true,"scalePoints":true,"resolution":[2880,1580,1.8227848101265822]}',b2b:'{"customScale":1.1,"rotationSpeed":1,"dirChangeFreq":0.01,"dirChangeStrength":1,"dirChangeVariance":0,"layers":5,"sampleRadius":0.05,"layerStepDistance":0.44,"layerOpacityDelta":0,"pointSize":0.9,"opacity":1,"emissionFreq":13.2,"emissionSpeed":20,"emissionStart":-1,"emissionEnd":-0.23,"emissionHeight":-0.06,"evolutionSpeed":0,"landFreq":6.3,"sealevel":0.19,"sealevelLayerDelta":-0.5,"rotationFreq":40,"rotationMag":1,"angularRotSpeed":0,"visibility":"max","randomSeed":true,"layerColours":false,"roundedPoints":true,"lockAxes":true,"scalePoints":true,"resolution":[2880,1580,1.8227848101265822]}',clean:'{"customScale":1.08,"rotationSpeed":0,"dirChangeFreq":1,"dirChangeStrength":0.55,"dirChangeVariance":1,"layers":1,"sampleRadius":0.03,"layerStepDistance":0.07,"layerOpacityDelta":0.12,"pointSize":0.72,"opacity":1,"emissionFreq":13.2,"emissionSpeed":10.2,"emissionStart":1,"emissionEnd":-1,"emissionHeight":0.34,"evolutionSpeed":11.6,"landFreq":2.6,"sealevel":0.21,"sealevelLayerDelta":-0.5,"rotationFreq":0,"rotationMag":0,"angularRotSpeed":0,"visibility":"max","randomSeed":true,"layerColours":false,"roundedPoints":true,"lockAxes":true,"scalePoints":true,"resolution":[2880,1580,1.8227848101265822]}',base:'{"customScale":1.0,"rotationSpeed":0.8,"dirChangeFreq":0.01,"dirChangeStrength":0.01,"dirChangeVariance":0,"layers":3,"sampleRadius":0.01,"layerStepDistance":0.2,"layerOpacityDelta":0.5,"pointSize":0.5,"opacity":1,"emissionFreq":2,"emissionSpeed":4.3,"emissionStart":1,"emissionEnd":-0.7,"emissionHeight":1,"evolutionSpeed":8,"landFreq":14.1,"sealevel":0.08,"sealevelLayerDelta":-0.3,"rotationFreq":28,"rotationMag":0.69,"angularRotSpeed":0,"visibility":"mul","randomSeed":true,"layerColours":false,"roundedPoints":true,"lockAxes":false,"scalePoints":true,"showText":true,"line1":"Defining the future of","line2":"business solutions.","preset":"none","resolution":[2880,1580,1.8227848101265822]}'},Oe={rotationSpeed:.8,dirChangeFreq:.01,dirChangeStrength:.01,dirChangeVariance:0,layers:3,sampleRadius:.01,layerStepDistance:.2,layerOpacityDelta:.5,pointSize:.5,opacity:1,emissionFreq:2,emissionSpeed:4.3,emissionStart:1,emissionEnd:-.7,emissionHeight:1,evolutionSpeed:8,landFreq:14.1,sealevel:.08,sealevelLayerDelta:-.3,rotationFreq:28,rotationMag:.69,angularRotSpeed:0,visibility:"mul",randomSeed:!0,layerColours:!1,roundedPoints:!0,lockAxes:!1,scalePoints:!0,showText:!0,line1:"Defining the future of",line2:"business solutions.",preset:"none",resolution:[2157,1079,2157/1079]};function J(r,e){for(let t in e)typeof e[t]=="object"?J(r[t],e[t]):r[t]=e[t]}var W=4,Ht=[34/255.99,46/255.99,55/255.99],Ee=.02,Ne=.1,F=[y.normalise([1,1,0]),y.normalise([1,-1,-1]),y.normalise([-1,1,0]),y.normalise([0,1,-1]),y.normalise([1,0,1])],ze=[.27478805808024576,.7651830778546598,.09990401387135628,.5521414685809944,.8017688214506036],q=class{controls=JSON.parse(JSON.stringify(Oe));controlTarget=null;targetName_="";controlSource=null;sourceName="none";controlTime=0;transition_=0;angle=0;currArrays={source:new Array,targets:new Array,rotAccum:new Array,freq:new Array,rotations:new Array,layerDisplayTime:new Array};targetArrays={source:new Array,targets:new Array,rotAccum:new Array,freq:new Array,rotations:new Array,layerDisplayTime:new Array};time=0;introTime=W;valid;canvasId;canvas;gl;width=0;height=0;planePoints=null;points=null;programs=[];ctx=[];overlay=document.getElementById("overlay");line1=document.getElementById("line1");line2=document.getElementById("line2");rnd={gen:H(18284.480873),random:(e,t)=>D(e,t,this.rnd.gen.double())};get transition(){return this.transition_}set transition(e){this.transition_=e}get colour(){return this.ctx[0].baseColour.value}set colour(e){this.ctx[0].baseColour.value=e}get currName(){return this.sourceName}get targetName(){return this.targetName_}load(e){J(this.controls,JSON.parse(T[e])),this.rebuild();let n=this.gl.canvas.getBoundingClientRect(),i=Math.round(n.width),s=Math.round(n.height),o=window.devicePixelRatio,c=Math.round(o*i),h=Math.round(o*s);this.width=c,this.height=h,this.gl.viewport(0,0,this.width,this.height);let f=u.mul(u.makeIdentity(),u.lookAt([0,0,5],[0,0,0],[0,1,0]),u.makeRotation([1,0,0],Math.PI/2));this.ctx[0].mvp.value=u.mul(u.makeIdentity(),u.makePerspective(45,this.width/this.height,.5,5),f),this.gl.useProgram(this.programs[0]),R(this.gl,this.ctx[0])}rebuild(e=!1){this.planePoints!=null&&(this.gl.deleteVertexArray(this.planePoints[0]),this.gl.deleteBuffer(this.planePoints[1]));let t=Object.values(T).map(c=>JSON.parse(c).sampleRadius).filter(c=>c!==void 0),n=[...new Set(t)];console.log("Unique radii:",n);let i=oe(this.gl,G);if(this.points=i,this.points==null)return;let s=Math.floor(this.width/32),o=Math.floor(this.height/32);this.planePoints=se(this.gl,s,o),this.controlSource=JSON.parse(JSON.stringify(this.controls)),this.currArrays.rotAccum=new Array(this.controls.layers).fill(0),this.currArrays.rotations=F.slice(0,this.controls.layers).map(c=>new y(c)),this.currArrays.source=F.slice(0,this.controls.layers).map(c=>new y(c)),this.currArrays.targets=F.slice(0,this.controls.layers).map(c=>new y(c)),this.currArrays.rotAccum=new Array(this.controls.layers).fill(0),this.currArrays.freq=new Array(this.controls.layers).fill(this.controls.dirChangeFreq),this.introTime=e?W:0,this.line1!=null&&(this.line1.innerText=this.controls.line1),this.line2!=null&&(this.line2.innerText=this.controls.line2),this.overlay!=null&&this.overlay.classList.contains("hidden")===this.controls.showText&&this.overlay.classList.toggle("hidden"),this.time=0,this.angle=0,this.rnd={gen:H(18284.480873),random:(c,h)=>D(c,h,this.rnd.gen.double())}}initiateLerp(e,t){this.sourceName!==t&&(this.targetName_=t,this.controlTarget=e,this.controlTime=0,this.targetArrays={source:F.slice(0,e.layers).map(n=>new y(n)),targets:F.slice(0,e.layers).map(n=>new y(n)),rotAccum:new Array(e.layers).fill(0),freq:new Array(e.layers).fill(e.dirChangeFreq),rotations:F.slice(0,e.layers).map(n=>new y(n)),layerDisplayTime:new Array(e.layers).fill(0)})}buildShaders(){let e=this.gl;this.programs=new Array(2);let t=Q(e,ce,ae);typeof t=="string"?console.error("Compile Error:",t):(this.programs[0]=t,e.useProgram(t),this.ctx[0]=Z(e,t),this.ctx[0].mvp.value=u.mul(u.makeIdentity(),u.makePerspective(45,1,.5,5),u.lookAt([0,0,5],[0,0,0],[0,1,0])),this.ctx[0].pointSize.value=this.controls.pointSize,this.ctx[0].baseColour.value=[1,1,1],R(e,this.ctx[0]));let n=Q(e,ue,le);typeof n=="string"?console.error("Compile Error:",n):(this.programs[1]=n,e.useProgram(n),this.ctx[1]=Z(e,n),this.ctx[1].mvp.value=u.mul(u.makeIdentity(),u.makePerspective(45,1,.5,5),u.lookAt([0,0,2],[0,0,0],[0,1,0])),this.ctx[1].pointSize.value=this.controls.pointSize,R(e,this.ctx[1]))}constructor(e,t=!1){if(this.valid=document.getElementById(e)!=null,!this.valid)return;this.canvasId=e;let n=document.getElementById(e);this.canvas=n;let i=n.getContext("webgl2",{alpha:!0,antialias:!1,depth:!0,premultipliedAlpha:!0,stencil:!1});if(i==null)throw new Error("WebGL2 not supported");this.gl=i,i.enable(i.DEPTH_TEST),window.addEventListener("resize",()=>{this.onResize()}),i.clearColor(0,0,0,0),this.buildShaders(),this.onResize()}initialiseData(e){switch(this.canvasId){case"canvas":J(this.controls,JSON.parse(T.base)),this.rebuild(e);break;case"about-canvas":J(this.controls,JSON.parse(T.about)),this.rebuild(e);break}}onResize(){if(this.gl.canvas==null||this.ctx==null)return;let e=this.gl.canvas,t=e.getBoundingClientRect(),n=Math.round(t.width),i=Math.round(t.height),s=window.devicePixelRatio,o=Math.round(s*n),c=Math.round(s*i);if(this.width!==o||this.height!==c){this.width=o,this.height=c,e.width=this.width,e.height=this.height,this.gl.viewport(0,0,this.width,this.height);let h=u.mul(u.makeIdentity(),u.lookAt([0,0,5],[0,0,0],[0,1,0]),u.makeRotation([1,0,0],Math.PI/2));this.ctx[0].mvp.value=u.mul(u.makeIdentity(),u.makePerspective(45,this.width/this.height,.5,5),h),this.gl.useProgram(this.programs[0]),R(this.gl,this.ctx[0])}}render(e){if(this.ctx==null)return;let t=this.gl;t.viewport(0,0,this.width,this.height),t.clear(t.COLOR_BUFFER_BIT|t.DEPTH_BUFFER_BIT),this.time+=e;let n=(W-this.introTime)/W,i=D(0,1,n>.8?(n-.8)/.2:0),s=1-i;this.introTime>0&&(this.introTime-=e,this.renderIntro(s)),t.useProgram(this.programs[0]);let o=[this.controls,this.controlTarget].filter(b=>b!=null),c=[this.currArrays,this.targetArrays];this.controlTarget&&(this.controlTime+=e);let h=z(0,1,this.controlTime),f=[1-h,h];for(let b=0;b<o.length;++b){let a=o[b],p=c[b];this.angle+=a.rotationSpeed*.1*e,this.ctx[0].speeds.value=[a.emissionSpeed*Ee,a.evolutionSpeed*Ne,a.angularRotSpeed,0];let g=this.width/a.resolution[0],M=this.height/a.resolution[1],x=Math.sqrt(g*g+M*M);this.ctx[0].pointSize.value=a.pointSize*x*(1+.8*this.transition_);let m=D(1,.8,this.transition_),v=(d=1)=>new y(this.rnd.random(-1,1),this.rnd.random(-1,1),this.rnd.random(-1,1)).mulScalar(d);for(let d=0;d<a.layers;++d)p.rotAccum[d]-=e,p.rotAccum[d]<=0&&(p.freq[d]=this.rnd.random(a.dirChangeFreq*(1-a.dirChangeVariance),a.dirChangeFreq),p.rotAccum[d]=1/p.freq[d],p.source[d]=new y(p.rotations[d]),p.targets[d]=new y(v(a.dirChangeStrength).add(p.rotations[d])).normalise());for(let d=0;d<a.layers;++d){let I=1-p.rotAccum[d]*p.freq[d];ie(p.source[d],p.targets[d],p.rotations[d],z(0,1,I)),p.rotations[d].normalise()}this.ctx[0].time.value=this.time,this.ctx[0].opacity.value=Math.min(a.opacity,i,f[b],m),this.ctx[0].scalePoints.value=a.scalePoints?1:0,this.ctx[0].frequencies.value=[a.emissionFreq,a.landFreq,a.rotationFreq,a.rotationMag];let k=this.width<this.height?this.width/this.height:1;k*=a.customScale??1;for(let d=0;d<a.layers;++d){let I=u.mul(u.makeIdentity(),a.lockAxes?u.makeRotation(F[d],this.angle*(d%2===0?-1:1)):u.makeRotation(p.rotations[d],this.angle*(d%2===0?-1:1)),u.mul(u.makeIdentity(),u.makeRotation([1,0,0],Math.PI/2),u.makeScale([k*(1-d*a.layerStepDistance),k*(1-d*a.layerStepDistance),k*(1-d*a.layerStepDistance)]))),O=u.mul(u.makeIdentity(),u.lookAt([0,0,3],[0,0,0],[0,1,0]),I);this.ctx[0].mv.value=O,this.ctx[0].mvp.value=u.mul(u.makeIdentity(),u.makePerspective(45,this.width/this.height,.5,5),O);let U=C(1-a.layerOpacityDelta*d,0,1),E=5-3*(d/a.layers);if(this.ctx[0].layerControls.value=[U,E,d,a.layerColours?1:0],this.ctx[0].landmass.value=[a.emissionStart,a.emissionEnd,a.emissionHeight,a.sealevel+C(d*a.sealevelLayerDelta,0,1)],this.ctx[0].roundedPoints.value=a.roundedPoints?1:0,this.ctx[0].randomSeed.value=a.randomSeed?ze[d]:0,this.ctx[0].visibility.value=De.indexOf(a.visibility),R(this.gl,this.ctx[0]),this.points?.has(a.sampleRadius)){let V=this.points.get(a.sampleRadius);V&&(t.bindVertexArray(V[0]),t.drawArrays(t.POINTS,0,V[2]))}else console.error("Failed to find points with radius:",a.sampleRadius)}}this.controlTime>1&&(this.controls={...this.controls,...JSON.parse(JSON.stringify(this.controlTarget))},this.controlSource=this.controlTarget,this.currArrays=this.targetArrays,this.sourceName=this.targetName_,this.controlTarget=null,this.controlTime=0)}renderIntro(e){if(this.ctx==null||this.introTime<=0)return;let t=this.gl;t.viewport(0,0,this.width,this.height),t.clear(t.COLOR_BUFFER_BIT|t.DEPTH_BUFFER_BIT),t.useProgram(this.programs[1]);let n=this.width/this.controls.resolution[0],i=this.height/this.controls.resolution[1],s=Math.sqrt(n*n+i*i);this.ctx[1].pointSize.value=6*s,this.ctx[1].time.value=this.time,this.ctx[1].opacity.value=e;let o=1-this.introTime/W,c=z(0,.5,o)-z(.5,1,o),h=D(3,1.5,c);this.ctx[1].resolution.value=[this.width,this.height,this.width/this.height];for(let f=0;f<5;++f)this.ctx[1].mvp.value=u.mul(u.makeIdentity(),u.makePerspective(45,this.width/this.height,.5,5),u.mul(u.makeIdentity(),u.lookAt([0,0,h],[0,0,0],[0,1,0]),u.makeScale([1-.15*f,1-.15*f,1-.15*f]))),this.ctx[1].layer.value=f,R(t,this.ctx[1]),this.planePoints!=null&&(t.bindVertexArray(this.planePoints[0]),t.drawArrays(t.POINTS,0,this.planePoints[2]))}},ee=new q("canvas",!0),te=new q("about-canvas",!1),Ge=["ct-accordion","ai-accordion","b2b-accordion"],pe=["clean","ai","b2b"],w=[],B=[],L=[null,null];ee.valid&&(L[0]=ee);te.valid&&(L[1]=te);var be=performance.now(),_=performance.now(),he=1,re=1,fe=()=>{be=_,_=performance.now(),he=(_-be)*.001,L.forEach((r,e)=>{r?.render(he)}),window.requestAnimationFrame(fe)};Promise.all([X(Fe),X(Te),X(Ie)]).then(r=>{G.set(.01,new Float32Array(r[0])),G.set(.03,new Float32Array(r[1])),G.set(.05,new Float32Array(r[2]));for(let e of L)e&&e.initialiseData(e.canvasId==="canvas");window.requestAnimationFrame(fe)}).catch(r=>{console.error("Failed to load buffers:",r)});function ge(){re=1;let r=document.getElementById("ai-accordion")?.parentElement?.parentElement??null;if(!r)return console.error("Swiper wrapper not found"),()=>{};let e=r.querySelectorAll(".swiper-slide"),t=performance.now(),n=new MutationObserver(function(i){i.forEach(function(s){s.type==="attributes"&&s.attributeName==="class"&&e.forEach((o,c)=>{if(o.classList.contains("swiper-slide-active")&&xe(e[c])&&performance.now()-t>100){re=c;let h=pe[c];L[0]?.targetName!==h&&L[0]?.initiateLerp(JSON.parse(T[h]),h),t=performance.now()}})})});return e.forEach(i=>{n.observe(i,{attributes:!0,attributeFilter:["class"]})}),()=>{n.disconnect()}}function ye(r=Ge[1]){let e=document.getElementById(r);if(!e)return console.error("Trigger accordion not found"),()=>{};let t=performance.now();function n(){if(performance.now()-t<100)return;let i=xe(e);if(L[0]!=null)if(i){let s=pe[re];L[0]?.targetName!==s&&L[0]?.initiateLerp(JSON.parse(T[s]),s)}else!i&&L[0]?.targetName!=="base"&&L[0]?.initiateLerp(JSON.parse(T.base),"base");t=performance.now()}return window.addEventListener("scroll",n),n(),()=>{window.removeEventListener("scroll",n)}}function xe(r){let e=r.getBoundingClientRect();return!(e.right<=0||e.left>=window.innerWidth||e.bottom<=0||e.top>=window.innerHeight)}ee.valid?(w.push(ye()),w.push(ge()),w.push($())):te.valid&&B.push($());function Ae(r,e){return r.classList?.contains("main")&&r.querySelector!=null&&r.querySelector(e)}function me(r,e,t){return Ae(r,e)?(L[t]=new q(e.slice(1),!1),!0):!1}function de(r,e,t){return Ae(r,e)?(L[t]=null,!0):!1}var We=new MutationObserver(r=>{r.forEach(e=>{e.addedNodes.forEach(t=>{me(t,"#canvas",0)&&w.length===0?(w.push(ge()),w.push(ye()),setTimeout(()=>{w.push($())},100)):me(t,"#about-canvas",1)&&B.length===0&&setTimeout(()=>{B.push($())},100)}),e.removedNodes.forEach(t=>{de(t,"#canvas",0)&&(w.forEach(n=>{n()}),w.length=0),de(t,"#about-canvas",1)&&(B.forEach(n=>{n()}),B.length=0)})})});We.observe(document.body,{childList:!0,subtree:!0});document.addEventListener("scroll",function(){let r=window.scrollY,e=document.documentElement.scrollHeight-window.innerHeight,t=r/e;Be(t)});function Be(r){L[0]&&(L[0].transition=r)}function qe(r){if(!r)return null;if(r.startsWith("#")){let e=r.slice(1),t,n,i;return e.length===3?(t=parseInt(e[0]+e[0],16),n=parseInt(e[1]+e[1],16),i=parseInt(e[2]+e[2],16)):e.length===6&&(t=parseInt(e.substring(0,2),16),n=parseInt(e.substring(2,4),16),i=parseInt(e.substring(4,6),16)),!t||!n||!i?null:[t/255,n/255,i/255]}return r.startsWith("rgb")?r.match(/\d+/g).map(Number).map(t=>t/255):null}function $(){let r=document.querySelector(".main");if(!r)return console.log("Could not find main element"),()=>{};let e=new MutationObserver(function(t){t.forEach(function(n){if(n.type==="attributes"&&n.attributeName==="style"){let i=r.style.getPropertyValue("--color--text");if(i&&(L[0]!=null||L[1]!=null)){let s=qe(i);s&&Array.isArray(s)&&s.length>3&&(L[0]?L[0].colour=s.slice(0,3):L[1]&&(L[1].colour=s.slice(0,3)))}}})});return e.observe(r,{attributes:!0,attributeFilter:["style"]}),()=>{e.disconnect()}}export{q as RenderApp};
+// src/lib/maths/Vec3.ts
+var Vec3 = class _Vec3 extends Float32Array {
+  static size = 3;
+  constructor(x, y, z) {
+    super(_Vec3.size);
+    this.set(x ?? 0, y, z);
+  }
+  static fromBuffer(buffer, offset) {
+    const buf = new Float32Array(buffer, offset, 3);
+    return buf;
+  }
+  static create() {
+    return new _Vec3();
+  }
+  clone() {
+    return new _Vec3(this);
+  }
+  put(x, y, z) {
+    this[0] = x;
+    this[1] = y;
+    this[2] = z;
+    return this;
+  }
+  set(x, y, z) {
+    if (typeof x === "number") {
+      this[0] = x;
+      this[1] = y ?? 0;
+      this[2] = z ?? 0;
+    } else {
+      super.set(x);
+    }
+    return this;
+  }
+  static set(r, x, y, z) {
+    r[0] = x;
+    r[1] = y;
+    r[2] = z;
+    return r;
+  }
+  copy(u) {
+    this.set(u);
+    return this;
+  }
+  static copy(r, u) {
+    r.set(u);
+    return r;
+  }
+  add(u) {
+    this[0] += u[0];
+    this[1] += u[1];
+    this[2] += u[2];
+    return this;
+  }
+  static add(u, v, r) {
+    r = r ?? new _Vec3();
+    r[0] = u[0] + v[0];
+    r[1] = u[1] + v[1];
+    r[2] = u[2] + v[2];
+    return r;
+  }
+  addScalar(s) {
+    this[0] += s;
+    this[1] += s;
+    this[2] += s;
+    return this;
+  }
+  static addScalar(u, s, r) {
+    r = r ?? new _Vec3();
+    r[0] = u[0] + s;
+    r[1] = u[1] + s;
+    r[2] = u[2] + s;
+    return r;
+  }
+  sub(u) {
+    this[0] -= u[0];
+    this[1] -= u[1];
+    this[2] -= u[2];
+    return this;
+  }
+  static sub(u, v, r) {
+    r = r ?? new _Vec3();
+    r[0] = u[0] - v[0];
+    r[1] = u[1] - v[1];
+    r[2] = u[2] - v[2];
+    return r;
+  }
+  subScalar(s) {
+    this[0] -= s;
+    this[1] -= s;
+    this[2] -= s;
+    return this;
+  }
+  static subScalar(u, s, r) {
+    r = r ?? new _Vec3();
+    r[0] -= s;
+    r[1] -= s;
+    r[2] -= s;
+    return r;
+  }
+  mul(u) {
+    this[0] *= u[0];
+    this[1] *= u[1];
+    this[2] *= u[2];
+    return this;
+  }
+  static mul(u, v, r) {
+    r = r ?? new _Vec3();
+    r[0] = u[0] * v[0];
+    r[1] = u[1] * v[1];
+    r[2] = u[2] * v[2];
+    return r;
+  }
+  mulScalar(s) {
+    this[0] *= s;
+    this[1] *= s;
+    this[2] *= s;
+    return this;
+  }
+  static mulScalar(u, s, r) {
+    r = r ?? new _Vec3();
+    r[0] = u[0] * s;
+    r[1] = u[1] * s;
+    r[2] = u[2] * s;
+    return r;
+  }
+  div(u) {
+    this[0] /= u[0];
+    this[1] /= u[1];
+    this[2] /= u[2];
+    return this;
+  }
+  static div(u, v, r) {
+    r = r ?? new _Vec3();
+    r[0] = u[0] / v[0];
+    r[1] = u[1] / v[1];
+    r[2] = u[2] / v[2];
+    return r;
+  }
+  divScalar(s) {
+    this[0] /= s;
+    this[1] /= s;
+    this[2] /= s;
+    return this;
+  }
+  static divScalar(u, s, r) {
+    r = r ?? new _Vec3();
+    r[0] = u[0] / s;
+    r[1] = u[1] / s;
+    r[2] = u[2] / s;
+    return r;
+  }
+  dot(u) {
+    return this.x * u[0] + this.y * u[1] + this.z * u[2];
+  }
+  static dot(u, v) {
+    return u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
+  }
+  dotScalar(x, y, z) {
+    return this.x * x + this.y * y + this.z * z;
+  }
+  static dotScalar(u, x, y, z) {
+    return u[0] * x + u[1] * y + u[2] * z;
+  }
+  normalise() {
+    return this.mulScalar(1 / this.len());
+  }
+  static normalise(u) {
+    if (Array.isArray(u) || u instanceof Float32Array) {
+      const invLen = 1 / _Vec3.len(u);
+      for (let i = 0; i !== 3; ++i)
+        u[i] *= invLen;
+      return u;
+    } else if (u instanceof _Vec3) {
+      return u.mulScalar(1 / u.len());
+    }
+    return void 0;
+  }
+  cross(u) {
+    const x = this.x;
+    const y = this.y;
+    const z = this.z;
+    this.x = y * u[2] - z * u[1];
+    this.y = z * u[0] - x * u[2];
+    this.z = x * u[1] - y * u[0];
+    return this;
+  }
+  static cross(u, v, r) {
+    r = r ?? new _Vec3();
+    r[0] = u[1] * v[2] - u[2] * v[1];
+    r[1] = u[2] * v[0] - u[0] * v[2];
+    r[2] = u[0] * v[1] - u[1] * v[0];
+    return r;
+  }
+  static crossF(r, offset, u, v) {
+    r[offset] = u[1] * v[2] - u[2] * v[1];
+    r[offset + 1] = u[2] * v[0] - u[0] * v[2];
+    r[offset + 2] = u[0] * v[1] - u[1] * v[0];
+  }
+  lenSq() {
+    return this.dot(this);
+  }
+  static lenSq(u) {
+    return _Vec3.dot(u, u);
+  }
+  len() {
+    return Math.sqrt(this.lenSq());
+  }
+  static len(u) {
+    return Math.sqrt(_Vec3.dot(u, u));
+  }
+  get x() {
+    return this[0];
+  }
+  set x(value) {
+    this[0] = value;
+  }
+  get y() {
+    return this[1];
+  }
+  set y(value) {
+    this[1] = value;
+  }
+  get z() {
+    return this[2];
+  }
+  set z(value) {
+    this[2] = value;
+  }
+};
+
+// src/lib/maths/functions.ts
+var EPSILON = 1e-6;
+var PI = Math.PI;
+var TWO_PI = 2 * PI;
+var HALF_PI = PI / 2;
+function eq(A, B, epsilon = EPSILON) {
+  return Math.abs(A - B) < epsilon;
+}
+function clamp(val, min, max) {
+  return val < min ? min : val > max ? max : val;
+}
+function smoothstep(A, B, u) {
+  u = clamp((u - A) / (B - A), 0, 1);
+  return u * u * (3 - 2 * u);
+}
+function lerp(A, B, u) {
+  return (1 - u) * A + u * B;
+}
+function lerpI(A, B, R, u) {
+  const um = 1 - u;
+  for (let i = 0; i !== R.length; ++i)
+    R[i] = um * A[i] + u * B[i];
+}
+
+// src/lib/maths/Vec2.ts
+var Vec2 = class _Vec2 extends Float32Array {
+  static size = 2;
+  constructor(x, y) {
+    super(_Vec2.size);
+    this.set(x ?? 0, y ?? (typeof x === "number" ? x : void 0));
+  }
+  static create() {
+    return new _Vec2();
+  }
+  clone() {
+    return new _Vec2(this);
+  }
+  put(x, y) {
+    this[0] = x;
+    this[1] = y;
+    return this;
+  }
+  set(x, y) {
+    if (typeof x === "number") {
+      this[0] = x;
+      this[1] = y ?? 0;
+    } else {
+      super.set(x);
+    }
+    return this;
+  }
+  static set(r, x, y) {
+    r[0] = x;
+    r[1] = y;
+    return r;
+  }
+  copy(u) {
+    this.set(u);
+    return this;
+  }
+  static copy(r, u) {
+    r.set(u);
+    return r;
+  }
+  add(u) {
+    this[0] += u[0];
+    this[1] += u[1];
+    return this;
+  }
+  static add(u, v, r) {
+    r = r ?? new _Vec2();
+    r[0] = u[0] + v[0];
+    r[1] = u[1] + v[1];
+    return r;
+  }
+  addScalar(s) {
+    this[0] += s;
+    this[1] += s;
+    return this;
+  }
+  static addScalar(u, s, r) {
+    r = r ?? new _Vec2();
+    r[0] = u[0] + s;
+    r[1] = u[1] + s;
+    return r;
+  }
+  addScaled(u, s) {
+    this[0] += u[0] * s;
+    this[1] += u[1] * s;
+    return this;
+  }
+  static addScaled(u, v, s, r) {
+    r = r ?? new _Vec2();
+    r[0] = u[0] + v[0] * s;
+    r[1] = u[1] + v[1] * s;
+    return r;
+  }
+  sub(u) {
+    this[0] -= u[0];
+    this[1] -= u[1];
+    return this;
+  }
+  static sub(u, v, r) {
+    r = r ?? new _Vec2();
+    r[0] = u[0] - v[0];
+    r[1] = u[1] - v[1];
+    return r;
+  }
+  subScalar(s) {
+    this[0] -= s;
+    this[1] -= s;
+    return this;
+  }
+  static subScalar(u, s, r) {
+    r = r ?? new _Vec2();
+    r[0] -= s;
+    r[1] -= s;
+    return r;
+  }
+  mul(u) {
+    this[0] *= u[0];
+    this[1] *= u[1];
+    return this;
+  }
+  static mul(u, v, r) {
+    r = r ?? new _Vec2();
+    r[0] = u[0] * v[0];
+    r[1] = u[1] * v[1];
+    return r;
+  }
+  mulScalar(s) {
+    this[0] *= s;
+    this[1] *= s;
+    return this;
+  }
+  static mulScalar(u, s, r) {
+    r = r ?? new _Vec2();
+    r[0] = u[0] * s;
+    r[1] = u[1] * s;
+    return r;
+  }
+  div(u) {
+    this[0] /= u[0];
+    this[1] /= u[1];
+    return this;
+  }
+  static div(u, v, r) {
+    r = r ?? new _Vec2();
+    r[0] = u[0] / v[0];
+    r[1] = u[1] / v[1];
+    return r;
+  }
+  divScalar(s) {
+    this[0] /= s;
+    this[1] /= s;
+    return this;
+  }
+  static divScalar(u, s, r) {
+    r = r ?? new _Vec2();
+    r[0] = u[0] / s;
+    r[1] = u[1] / s;
+    return r;
+  }
+  dot(u) {
+    return this.x * u[0] + this.y * u[1];
+  }
+  static dot(u, v) {
+    return u[0] * v[0] + u[1] * v[1];
+  }
+  static perp(u) {
+    return new _Vec2(-u.y, u.x);
+  }
+  dotScalar(x, y) {
+    return this.x * x + this.y * y;
+  }
+  static dotScalar(u, x, y) {
+    return u[0] * x + u[1] * y;
+  }
+  normalise() {
+    return this.mulScalar(1 / this.len);
+  }
+  static normalise(u) {
+    if (Array.isArray(u) || u instanceof Float32Array) {
+      const invLen = 1 / _Vec2.len(u);
+      u[0] *= invLen;
+      u[1] *= invLen;
+      return u;
+    } else if (u instanceof _Vec2) {
+      return u.mulScalar(1 / u.len);
+    }
+    return void 0;
+  }
+  static kross(u, v) {
+    return u[0] * v[1] - u[1] * v[0];
+  }
+  static reflect(I, N) {
+    const th = 2 * _Vec2.dot(I, N);
+    const r = _Vec2.mulScalar(N, th);
+    return _Vec2.sub(I, r);
+  }
+  clamp(min, max) {
+    this.x = clamp(this.x, min, max);
+    this.y = clamp(this.x, min, max);
+    return this;
+  }
+  apply(fnc) {
+    this.x = fnc(this.x);
+    this.y = fnc(this.y);
+    return this;
+  }
+  static distSq(u, v) {
+    return Math.pow(v[0] - u[0], 2) + Math.pow(v[1] - u[1], 2);
+  }
+  static dist(u, v) {
+    return Math.sqrt(_Vec2.distSq(u, v));
+  }
+  lenSq() {
+    return this.dot(this);
+  }
+  static lenSq(u) {
+    return _Vec2.dot(u, u);
+  }
+  get len() {
+    return Math.sqrt(this.lenSq());
+  }
+  static len(u) {
+    return Math.sqrt(_Vec2.dot(u, u));
+  }
+  invert() {
+    this.x = 1 / this.x;
+    this.y = 1 / this.y;
+    return this;
+  }
+  get x() {
+    return this[0];
+  }
+  set x(value) {
+    this[0] = value;
+  }
+  get y() {
+    return this[1];
+  }
+  set y(value) {
+    this[1] = value;
+  }
+};
+
+// src/lib/maths/prng.js
+function _prng_restore(prng, xg, opts) {
+  const state = opts && opts.state;
+  if (state) {
+    if (typeof state === "object")
+      xg.copy(state, xg);
+    prng.state = () => xg.copy(xg, {});
+  }
+}
+function _prng_xor_core(xg, opts) {
+  const prng = () => (xg.next() >>> 0) / 4294967296;
+  prng.double = () => {
+    let top, bot, result;
+    do {
+      top = xg.next() >>> 11;
+      bot = (xg.next() >>> 0) / 4294967296;
+      result = (top + bot) / (1 << 21);
+    } while (result === 0);
+    return result;
+  };
+  prng.int32 = () => xg.next() | 0;
+  prng.quick = prng;
+  _prng_restore(prng, xg, opts);
+  return prng;
+}
+var prng_default = prng_xor128;
+function prng_xor128(seed2, opts) {
+  const xg = new Xor128Gen(seed2);
+  return _prng_xor_core(xg, opts);
+}
+var Xor128Gen = class {
+  constructor(seed2) {
+    if (seed2 == null)
+      seed2 = +/* @__PURE__ */ new Date();
+    let strseed = "";
+    this.x = 0;
+    this.y = 0;
+    this.z = 0;
+    this.w = 0;
+    if (seed2 === (seed2 | 0)) {
+      this.x = seed2;
+    } else {
+      strseed += seed2;
+    }
+    for (let k = 0; k < strseed.length + 64; k++) {
+      this.x ^= strseed.charCodeAt(k) | 0;
+      this.next();
+    }
+  }
+  next() {
+    const { x, y, z, w } = this;
+    const t = x ^ x << 11;
+    this.x = y;
+    this.y = z;
+    this.z = w;
+    return this.w = w ^ (w >>> 19 ^ t ^ t >>> 8);
+  }
+  copy(f, t) {
+    t.x = f.x;
+    t.y = f.y;
+    t.z = f.z;
+    t.w = f.w;
+    return t;
+  }
+};
+
+// src/lib/geometry/Generator.ts
+function makePointRect(gl, x, y) {
+  x = Math.floor(x);
+  y = Math.floor(y);
+  const data = new Float32Array(2 * x * y);
+  for (let j = 0; j < y; ++j) {
+    for (let i = 0; i < x; ++i) {
+      const idx = 2 * (j * x + i);
+      data[idx] = i / x;
+      data[idx + 1] = j / y;
+    }
+  }
+  const vao = gl.createVertexArray();
+  if (vao != null) {
+    gl.bindVertexArray(vao);
+    const buf = gl.createBuffer();
+    if (buf == null)
+      return null;
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.bindVertexArray(null);
+    return [vao, buf, data.length / 2];
+  }
+  return null;
+}
+function loadPoints(gl, dict2) {
+  const map = /* @__PURE__ */ new Map();
+  for (const [key, value] of dict2) {
+    const data = new Float32Array(value);
+    const vao = gl.createVertexArray();
+    if (vao != null) {
+      gl.bindVertexArray(vao);
+      const buf = gl.createBuffer();
+      if (buf == null)
+        return null;
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0);
+      gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+      gl.bindVertexArray(null);
+      map.set(Number(key), [vao, buf, data.length / 3]);
+    }
+  }
+  return map;
+}
+var dict = /* @__PURE__ */ new Map();
+
+// src/lib/engine/Program.ts
+function compileProgram(gl, vertexShader, fragmentShader) {
+  const progDef = [
+    [vertexShader, gl.VERTEX_SHADER, "vertex"],
+    [fragmentShader, gl.FRAGMENT_SHADER, "fragment"]
+  ];
+  const shaders = [];
+  const program = gl.createProgram();
+  if (program == null) {
+    return "Failed to create shader program";
+  }
+  for (let i = 0; i !== progDef.length; ++i) {
+    const shader = gl.createShader(progDef[i][1]);
+    if (shader == null)
+      return `Failed to create ${progDef[i][2]} shader`;
+    let content = progDef[i][0];
+    if (!content.includes("#version")) {
+      console.log("inserting version");
+      content = `#version 300 es
+${content}`;
+    }
+    gl.shaderSource(shader, content);
+    gl.compileShader(shader);
+    if (gl.getShaderParameter(shader, gl.COMPILE_STATUS) === true) {
+      shaders.push(shader);
+      gl.attachShader(program, shader);
+    } else {
+      shaders.forEach((e) => {
+        gl.deleteShader(e);
+      });
+      const err = gl.getShaderInfoLog(shader) ?? "unknown";
+      return `Failed to create ${progDef[i][2]} shader with error:
+${err}`;
+    }
+  }
+  gl.linkProgram(program);
+  shaders.forEach((s) => {
+    gl.deleteShader(s);
+  });
+  if (gl.getProgramParameter(program, gl.LINK_STATUS) === true) {
+    return program;
+  } else {
+    const err = gl.getProgramInfoLog(program) ?? "unknown";
+    gl.deleteProgram(program);
+    return `Failed to create program with error:
+${err}`;
+  }
+}
+
+// src/lib/maths/Mat3.ts
+var Mat3 = class _Mat3 extends Float32Array {
+  static size = 9;
+  constructor() {
+    super(_Mat3.size);
+  }
+  static create(copy) {
+    const R = new _Mat3();
+    if (copy != null)
+      R.set(copy);
+    return R;
+  }
+  static idx(row, col) {
+    return 3 * col + row;
+  }
+  static set(mat, row, col, value) {
+    mat[_Mat3.idx(row, col)] = value;
+  }
+  static get(mat, row, col) {
+    return mat[_Mat3.idx(row, col)];
+  }
+  // Returns the rotation matrix as a 3x3
+  static fromMat4Rotation(mat) {
+    const result = _Mat3.create();
+    _Mat3.setColumn(result, 0, Mat4.getColumn(mat, 0));
+    _Mat3.setColumn(result, 1, Mat4.getColumn(mat, 1));
+    _Mat3.setColumn(result, 2, Mat4.getColumn(mat, 2));
+    return result;
+  }
+  copyMat4Rotation(mat) {
+    _Mat3.setColumn(this, 0, Mat4.getColumn(mat, 0));
+    _Mat3.setColumn(this, 1, Mat4.getColumn(mat, 1));
+    _Mat3.setColumn(this, 2, Mat4.getColumn(mat, 2));
+    return this;
+  }
+  static getColumn(mat, col) {
+    return [
+      mat[_Mat3.idx(0, col)],
+      mat[_Mat3.idx(1, col)],
+      mat[_Mat3.idx(2, col)]
+    ];
+  }
+  static setColumn(mat, col, value) {
+    mat[_Mat3.idx(0, col)] = value[0];
+    mat[_Mat3.idx(1, col)] = value[1];
+    mat[_Mat3.idx(2, col)] = value[2] ?? (col === 2 ? 1 : 0);
+  }
+  static makeTranslation(x, y) {
+    const result = _Mat3.makeIdentity();
+    result[_Mat3.idx(0, 2)] = x;
+    result[_Mat3.idx(1, 2)] = y;
+    return result;
+  }
+  static translate(mat, x, y) {
+    if (typeof y === "number") {
+      mat[_Mat3.idx(0, 2)] = x;
+      mat[_Mat3.idx(1, 2)] = y;
+    } else {
+      const val = x;
+      mat[_Mat3.idx(0, 2)] = val[0];
+      mat[_Mat3.idx(1, 2)] = val[1];
+    }
+    return mat;
+  }
+  static makeIdentity() {
+    const result = _Mat3.create();
+    result[_Mat3.idx(0, 0)] = 1;
+    result[_Mat3.idx(1, 1)] = 1;
+    result[_Mat3.idx(2, 2)] = 1;
+    return result;
+  }
+  static makeRotation(theta) {
+    const [cosTheta, sinTheta] = [Math.cos(theta), Math.sin(theta)];
+    const r = _Mat3.create();
+    _Mat3.set(r, 0, 0, cosTheta);
+    _Mat3.set(r, 0, 1, -sinTheta);
+    _Mat3.set(r, 1, 0, sinTheta);
+    _Mat3.set(r, 1, 1, cosTheta);
+    _Mat3.set(r, 2, 2, 1);
+    return r;
+  }
+  static rotate(mat, theta) {
+    const [cosTheta, sinTheta] = [Math.cos(theta), Math.sin(theta)];
+    _Mat3.set(mat, 0, 0, cosTheta);
+    _Mat3.set(mat, 0, 1, -sinTheta);
+    _Mat3.set(mat, 1, 0, sinTheta);
+    _Mat3.set(mat, 1, 1, cosTheta);
+    _Mat3.set(mat, 2, 2, 1);
+    return mat;
+  }
+  static makeScale(scale) {
+    const r = _Mat3.create();
+    _Mat3.set(r, 0, 0, scale[0]);
+    _Mat3.set(r, 1, 1, scale[1]);
+    _Mat3.set(r, 2, 2, 1);
+    return r;
+  }
+  static scale(mat, scale) {
+    _Mat3.set(mat, 0, 0, scale[0]);
+    _Mat3.set(mat, 1, 1, scale[1]);
+    _Mat3.set(mat, 2, 2, 1);
+    return mat;
+  }
+  static scaleBy(mat, scale) {
+    _Mat3.set(mat, 0, 0, _Mat3.get(mat, 0, 0) * scale[0]);
+    _Mat3.set(mat, 0, 1, _Mat3.get(mat, 0, 1) * scale[1]);
+    _Mat3.set(mat, 1, 0, _Mat3.get(mat, 1, 0) * scale[0]);
+    _Mat3.set(mat, 1, 1, _Mat3.get(mat, 1, 1) * scale[1]);
+    return mat;
+  }
+  static makeTransform(position, scale, rotation) {
+    const r = _Mat3.create();
+    _Mat3.set(r, 0, 0, scale[0] * Math.cos(rotation));
+    _Mat3.set(r, 0, 1, -scale[1] * Math.sin(rotation));
+    _Mat3.set(r, 1, 0, scale[0] * Math.sin(rotation));
+    _Mat3.set(r, 1, 1, scale[1] * Math.cos(rotation));
+    _Mat3.set(r, 0, 2, position[0]);
+    _Mat3.set(r, 1, 2, position[1]);
+    _Mat3.set(r, 2, 2, 1);
+    return r;
+  }
+  mul2(v) {
+    const x = v[0];
+    const y = v[1];
+    v[0] = _Mat3.get(this, 0, 0) * x + _Mat3.get(this, 0, 1) * y;
+    v[1] = _Mat3.get(this, 1, 0) * x + _Mat3.get(this, 1, 1) * y;
+    return v;
+  }
+  transform2(v) {
+    const x = v[0];
+    const y = v[1];
+    v[0] = _Mat3.get(this, 0, 0) * x + _Mat3.get(this, 0, 1) * y + _Mat3.get(this, 0, 2);
+    v[1] = _Mat3.get(this, 1, 0) * x + _Mat3.get(this, 1, 1) * y + _Mat3.get(this, 1, 2);
+    return v;
+  }
+  static transform2(mat, v, r, offset) {
+    const x = v[0];
+    const y = v[1];
+    const o = offset ?? 0;
+    r[o] = _Mat3.get(mat, 0, 0) * x + _Mat3.get(mat, 0, 1) * y + _Mat3.get(mat, 0, 2);
+    r[o + 1] = _Mat3.get(mat, 1, 0) * x + _Mat3.get(mat, 1, 1) * y + _Mat3.get(mat, 1, 2);
+    return r;
+  }
+  static mul(result, a, b) {
+    _Mat3.set(
+      result,
+      0,
+      0,
+      _Mat3.get(a, 0, 0) * _Mat3.get(b, 0, 0) + _Mat3.get(a, 0, 1) * _Mat3.get(b, 1, 0) + _Mat3.get(a, 0, 2) * _Mat3.get(b, 2, 0)
+    );
+    _Mat3.set(
+      result,
+      0,
+      1,
+      _Mat3.get(a, 0, 0) * _Mat3.get(b, 0, 1) + _Mat3.get(a, 0, 1) * _Mat3.get(b, 1, 1) + _Mat3.get(a, 0, 2) * _Mat3.get(b, 2, 1)
+    );
+    _Mat3.set(
+      result,
+      0,
+      2,
+      _Mat3.get(a, 0, 0) * _Mat3.get(b, 0, 2) + _Mat3.get(a, 0, 1) * _Mat3.get(b, 1, 2) + _Mat3.get(a, 0, 2) * _Mat3.get(b, 2, 2)
+    );
+    _Mat3.set(
+      result,
+      1,
+      0,
+      _Mat3.get(a, 1, 0) * _Mat3.get(b, 0, 0) + _Mat3.get(a, 1, 1) * _Mat3.get(b, 1, 0) + _Mat3.get(a, 1, 2) * _Mat3.get(b, 2, 0)
+    );
+    _Mat3.set(
+      result,
+      1,
+      1,
+      _Mat3.get(a, 1, 0) * _Mat3.get(b, 0, 1) + _Mat3.get(a, 1, 1) * _Mat3.get(b, 1, 1) + _Mat3.get(a, 1, 2) * _Mat3.get(b, 2, 1)
+    );
+    _Mat3.set(
+      result,
+      1,
+      2,
+      _Mat3.get(a, 1, 0) * _Mat3.get(b, 0, 2) + _Mat3.get(a, 1, 1) * _Mat3.get(b, 1, 2) + _Mat3.get(a, 1, 2) * _Mat3.get(b, 2, 2)
+    );
+    _Mat3.set(
+      result,
+      2,
+      0,
+      _Mat3.get(a, 2, 0) * _Mat3.get(b, 0, 0) + _Mat3.get(a, 2, 1) * _Mat3.get(b, 1, 0) + _Mat3.get(a, 2, 2) * _Mat3.get(b, 2, 0)
+    );
+    _Mat3.set(
+      result,
+      2,
+      1,
+      _Mat3.get(a, 2, 0) * _Mat3.get(b, 0, 1) + _Mat3.get(a, 2, 1) * _Mat3.get(b, 1, 1) + _Mat3.get(a, 2, 2) * _Mat3.get(b, 2, 1)
+    );
+    _Mat3.set(
+      result,
+      2,
+      2,
+      _Mat3.get(a, 2, 0) * _Mat3.get(b, 0, 2) + _Mat3.get(a, 2, 1) * _Mat3.get(b, 1, 2) + _Mat3.get(a, 2, 2) * _Mat3.get(b, 2, 2)
+    );
+    return result;
+  }
+  static inverse(arr, epsilon = 1e-4) {
+    const inv = _Mat3.create();
+    inv[0] = arr[4] * arr[8] - arr[5] * arr[7];
+    inv[1] = arr[2] * arr[7] - arr[1] * arr[8];
+    inv[2] = arr[1] * arr[5] - arr[2] * arr[4];
+    inv[3] = arr[5] * arr[6] - arr[3] * arr[8];
+    inv[4] = arr[0] * arr[8] - arr[2] * arr[6];
+    inv[5] = arr[2] * arr[3] - arr[0] * arr[5];
+    inv[6] = arr[3] * arr[7] - arr[4] * arr[6];
+    inv[7] = arr[1] * arr[6] - arr[0] * arr[7];
+    inv[8] = arr[0] * arr[4] - arr[1] * arr[3];
+    const det = arr[0] * inv[0] + arr[1] * inv[3] + arr[2] * inv[6];
+    if (Math.abs(det) > epsilon) {
+      const invDet = 1 / det;
+      inv[0] *= invDet;
+      inv[1] *= invDet;
+      inv[2] *= invDet;
+      inv[3] *= invDet;
+      inv[4] *= invDet;
+      inv[5] *= invDet;
+      inv[6] *= invDet;
+      inv[7] *= invDet;
+      inv[8] *= invDet;
+      return inv;
+    }
+    return _Mat3.create();
+  }
+  static transpose(mat) {
+    const idx = _Mat3.idx;
+    let t = mat[idx(0, 1)];
+    mat[idx(0, 1)] = mat[idx(1, 0)];
+    mat[idx(1, 0)] = t;
+    t = mat[idx(0, 2)];
+    mat[idx(0, 2)] = mat[idx(2, 0)];
+    mat[idx(2, 0)] = t;
+    t = mat[idx(1, 2)];
+    mat[idx(1, 2)] = mat[idx(2, 1)];
+    mat[idx(2, 1)] = t;
+    return mat;
+  }
+};
+
+// src/lib/maths/Mat4.ts
+var Mat4 = class _Mat4 extends Float32Array {
+  static size = 16;
+  constructor() {
+    super(_Mat4.size);
+  }
+  static create(copy) {
+    const R = new _Mat4();
+    if (copy != null)
+      R.set(copy);
+    return R;
+  }
+  static fromMat3(mat) {
+    const ret = _Mat4.makeIdentity();
+    _Mat4.set(ret, 0, 0, Mat3.get(mat, 0, 0));
+    _Mat4.set(ret, 0, 1, Mat3.get(mat, 0, 1));
+    _Mat4.set(ret, 0, 3, Mat3.get(mat, 0, 2));
+    _Mat4.set(ret, 1, 0, Mat3.get(mat, 1, 0));
+    _Mat4.set(ret, 1, 1, Mat3.get(mat, 1, 1));
+    _Mat4.set(ret, 1, 3, Mat3.get(mat, 1, 2));
+    return ret;
+  }
+  static idx(row, col) {
+    return 4 * col + row;
+  }
+  static set(mat, row, col, value) {
+    mat[_Mat4.idx(row, col)] = value;
+  }
+  static get(mat, row, col) {
+    return mat[_Mat4.idx(row, col)];
+  }
+  static makePerspective(fov, AR, dMin, dMax) {
+    const m = _Mat4.create();
+    const halfTanFOV = Math.tan(fov * Math.PI / 360);
+    m[_Mat4.idx(0, 0)] = 1 / (AR * halfTanFOV);
+    m[_Mat4.idx(1, 1)] = 1 / halfTanFOV;
+    m[_Mat4.idx(2, 2)] = dMax / (dMin - dMax);
+    m[_Mat4.idx(2, 3)] = -(dMin * dMax) / (dMax - dMin);
+    m[_Mat4.idx(3, 2)] = -1;
+    return m;
+  }
+  static getColumn(mat, col) {
+    return [
+      mat[_Mat4.idx(0, col)],
+      mat[_Mat4.idx(1, col)],
+      mat[_Mat4.idx(2, col)],
+      mat[_Mat4.idx(3, col)]
+    ];
+  }
+  static setColumn(mat, col, value) {
+    mat[_Mat4.idx(0, col)] = value[0];
+    mat[_Mat4.idx(1, col)] = value[1];
+    mat[_Mat4.idx(2, col)] = value[2];
+    mat[_Mat4.idx(3, col)] = value[3] ?? (col === 3 ? 1 : 0);
+  }
+  static makeOrtho(left, right, bottom, top, near, far) {
+    const lr = 1 / (left - right);
+    const bt = 1 / (bottom - top);
+    const nf = 1 / (near - far);
+    const result = _Mat4.create();
+    result[0] = -2 * lr;
+    result[1] = 0;
+    result[2] = 0;
+    result[3] = 0;
+    result[4] = 0;
+    result[5] = -2 * bt;
+    result[6] = 0;
+    result[7] = 0;
+    result[8] = 0;
+    result[9] = 0;
+    result[10] = 2 * nf;
+    result[11] = 0;
+    result[12] = (left + right) * lr;
+    result[13] = (top + bottom) * bt;
+    result[14] = (far + near) * nf;
+    result[15] = 1;
+    return result;
+  }
+  static makeTranslation(x, y, z) {
+    const result = _Mat4.makeIdentity();
+    result[_Mat4.idx(0, 3)] = x;
+    result[_Mat4.idx(1, 3)] = y;
+    result[_Mat4.idx(2, 3)] = z;
+    return result;
+  }
+  static makeXAxisReflection() {
+    const result = _Mat4.makeIdentity();
+    result[_Mat4.idx(0, 0)] = -1;
+    return result;
+  }
+  static makeYAxisReflection() {
+    const result = _Mat4.makeIdentity();
+    result[_Mat4.idx(1, 1)] = -1;
+    return result;
+  }
+  static makeZAxisReflection() {
+    const result = _Mat4.makeIdentity();
+    result[_Mat4.idx(2, 2)] = -1;
+    return result;
+  }
+  static translate(mat, x, y, z) {
+    mat[_Mat4.idx(0, 3)] = x;
+    mat[_Mat4.idx(1, 3)] = y;
+    mat[_Mat4.idx(2, 3)] = z;
+    return mat;
+  }
+  static makeIdentity() {
+    const result = _Mat4.create();
+    result[_Mat4.idx(0, 0)] = 1;
+    result[_Mat4.idx(1, 1)] = 1;
+    result[_Mat4.idx(2, 2)] = 1;
+    result[_Mat4.idx(3, 3)] = 1;
+    return result;
+  }
+  static makeRotation(axis, theta) {
+    if (!eq(Vec3.len(axis), 1)) {
+      console.log("Warning, input axis to makeRotation should be unit length");
+      Vec3.normalise(axis);
+    }
+    const [cosTheta, sinTheta, t] = [Math.cos(theta), Math.sin(theta), 1 - Math.cos(theta)];
+    const [tx, ty, tz] = [t * axis[0], t * axis[1], t * axis[2]];
+    const [sx, sy, sz] = [sinTheta * axis[0], sinTheta * axis[1], sinTheta * axis[2]];
+    const [txy, tyz, txz] = [tx * axis[1], ty * axis[2], tx * axis[2]];
+    const r = _Mat4.create();
+    _Mat4.set(r, 0, 0, tx * axis[0] + cosTheta);
+    _Mat4.set(r, 0, 1, txy + sz);
+    _Mat4.set(r, 0, 2, txz - sy);
+    _Mat4.set(r, 1, 0, txy - sz);
+    _Mat4.set(r, 1, 1, ty * axis[1] + cosTheta);
+    _Mat4.set(r, 1, 2, tyz + sx);
+    _Mat4.set(r, 2, 0, txz + sy);
+    _Mat4.set(r, 2, 1, tyz - sx);
+    _Mat4.set(r, 2, 2, tz * axis[2] + cosTheta);
+    _Mat4.set(r, 3, 3, 1);
+    return r;
+  }
+  static rotate(mat, axis, theta) {
+    if (!eq(Vec3.len(axis), 1)) {
+      console.log("Warning, input axis to makeRotation should be unit length");
+      Vec3.normalise(axis);
+    }
+    const [cosTheta, sinTheta, t] = [Math.cos(theta), Math.sin(theta), 1 - Math.cos(theta)];
+    const [tx, ty, tz] = [t * axis[0], t * axis[1], t * axis[2]];
+    const [sx, sy, sz] = [sinTheta * axis[0], sinTheta * axis[1], sinTheta * axis[2]];
+    const [txy, tyz, txz] = [tx * axis[1], ty * axis[2], tx * axis[2]];
+    _Mat4.set(mat, 0, 0, tx * axis[0] + cosTheta);
+    _Mat4.set(mat, 0, 1, txy + sz);
+    _Mat4.set(mat, 0, 2, txz - sy);
+    _Mat4.set(mat, 1, 0, txy - sz);
+    _Mat4.set(mat, 1, 1, ty * axis[1] + cosTheta);
+    _Mat4.set(mat, 1, 2, tyz + sx);
+    _Mat4.set(mat, 2, 0, txz + sy);
+    _Mat4.set(mat, 2, 1, tyz - sx);
+    _Mat4.set(mat, 2, 2, tz * axis[2] + cosTheta);
+    return mat;
+  }
+  static makeScale(scale) {
+    const r = _Mat4.create();
+    _Mat4.set(r, 0, 0, scale[0]);
+    _Mat4.set(r, 1, 1, scale[1]);
+    _Mat4.set(r, 2, 2, scale[2]);
+    _Mat4.set(r, 3, 3, 1);
+    return r;
+  }
+  static scale(mat, scale) {
+    _Mat4.set(mat, 0, 0, scale[0]);
+    _Mat4.set(mat, 1, 1, scale[1]);
+    _Mat4.set(mat, 2, 2, scale[2]);
+    return mat;
+  }
+  static makeTransform(scale, rotation, translation) {
+    const r = _Mat4.create();
+    _Mat4.rotate(r, [1, 0, 0], rotation[0]);
+    _Mat4.rotate(r, [0, 1, 0], rotation[1]);
+    _Mat4.rotate(r, [0, 0, 1], rotation[2]);
+    _Mat4.scale(r, scale);
+    _Mat4.translate(r, translation[0], translation[1], translation[2]);
+    return r;
+  }
+  static mul(result, a, b) {
+    _Mat4.set(result, 0, 0, _Mat4.get(a, 0, 0) * _Mat4.get(b, 0, 0) + _Mat4.get(a, 0, 1) * _Mat4.get(b, 1, 0) + _Mat4.get(a, 0, 2) * _Mat4.get(b, 2, 0) + _Mat4.get(a, 0, 3) * _Mat4.get(b, 3, 0));
+    _Mat4.set(result, 0, 1, _Mat4.get(a, 0, 0) * _Mat4.get(b, 0, 1) + _Mat4.get(a, 0, 1) * _Mat4.get(b, 1, 1) + _Mat4.get(a, 0, 2) * _Mat4.get(b, 2, 1) + _Mat4.get(a, 0, 3) * _Mat4.get(b, 3, 1));
+    _Mat4.set(result, 0, 2, _Mat4.get(a, 0, 0) * _Mat4.get(b, 0, 2) + _Mat4.get(a, 0, 1) * _Mat4.get(b, 1, 2) + _Mat4.get(a, 0, 2) * _Mat4.get(b, 2, 2) + _Mat4.get(a, 0, 3) * _Mat4.get(b, 3, 2));
+    _Mat4.set(result, 0, 3, _Mat4.get(a, 0, 0) * _Mat4.get(b, 0, 3) + _Mat4.get(a, 0, 1) * _Mat4.get(b, 1, 3) + _Mat4.get(a, 0, 2) * _Mat4.get(b, 2, 3) + _Mat4.get(a, 0, 3) * _Mat4.get(b, 3, 3));
+    _Mat4.set(result, 1, 0, _Mat4.get(a, 1, 0) * _Mat4.get(b, 0, 0) + _Mat4.get(a, 1, 1) * _Mat4.get(b, 1, 0) + _Mat4.get(a, 1, 2) * _Mat4.get(b, 2, 0) + _Mat4.get(a, 1, 3) * _Mat4.get(b, 3, 0));
+    _Mat4.set(result, 1, 1, _Mat4.get(a, 1, 0) * _Mat4.get(b, 0, 1) + _Mat4.get(a, 1, 1) * _Mat4.get(b, 1, 1) + _Mat4.get(a, 1, 2) * _Mat4.get(b, 2, 1) + _Mat4.get(a, 1, 3) * _Mat4.get(b, 3, 1));
+    _Mat4.set(result, 1, 2, _Mat4.get(a, 1, 0) * _Mat4.get(b, 0, 2) + _Mat4.get(a, 1, 1) * _Mat4.get(b, 1, 2) + _Mat4.get(a, 1, 2) * _Mat4.get(b, 2, 2) + _Mat4.get(a, 1, 3) * _Mat4.get(b, 3, 2));
+    _Mat4.set(result, 1, 3, _Mat4.get(a, 1, 0) * _Mat4.get(b, 0, 3) + _Mat4.get(a, 1, 1) * _Mat4.get(b, 1, 3) + _Mat4.get(a, 1, 2) * _Mat4.get(b, 2, 3) + _Mat4.get(a, 1, 3) * _Mat4.get(b, 3, 3));
+    _Mat4.set(result, 2, 0, _Mat4.get(a, 2, 0) * _Mat4.get(b, 0, 0) + _Mat4.get(a, 2, 1) * _Mat4.get(b, 1, 0) + _Mat4.get(a, 2, 2) * _Mat4.get(b, 2, 0) + _Mat4.get(a, 2, 3) * _Mat4.get(b, 3, 0));
+    _Mat4.set(result, 2, 1, _Mat4.get(a, 2, 0) * _Mat4.get(b, 0, 1) + _Mat4.get(a, 2, 1) * _Mat4.get(b, 1, 1) + _Mat4.get(a, 2, 2) * _Mat4.get(b, 2, 1) + _Mat4.get(a, 2, 3) * _Mat4.get(b, 3, 1));
+    _Mat4.set(result, 2, 2, _Mat4.get(a, 2, 0) * _Mat4.get(b, 0, 2) + _Mat4.get(a, 2, 1) * _Mat4.get(b, 1, 2) + _Mat4.get(a, 2, 2) * _Mat4.get(b, 2, 2) + _Mat4.get(a, 2, 3) * _Mat4.get(b, 3, 2));
+    _Mat4.set(result, 2, 3, _Mat4.get(a, 2, 0) * _Mat4.get(b, 0, 3) + _Mat4.get(a, 2, 1) * _Mat4.get(b, 1, 3) + _Mat4.get(a, 2, 2) * _Mat4.get(b, 2, 3) + _Mat4.get(a, 2, 3) * _Mat4.get(b, 3, 3));
+    _Mat4.set(result, 3, 0, _Mat4.get(a, 3, 0) * _Mat4.get(b, 0, 0) + _Mat4.get(a, 3, 1) * _Mat4.get(b, 1, 0) + _Mat4.get(a, 3, 2) * _Mat4.get(b, 2, 0) + _Mat4.get(a, 3, 3) * _Mat4.get(b, 3, 0));
+    _Mat4.set(result, 3, 1, _Mat4.get(a, 3, 0) * _Mat4.get(b, 0, 1) + _Mat4.get(a, 3, 1) * _Mat4.get(b, 1, 1) + _Mat4.get(a, 3, 2) * _Mat4.get(b, 2, 1) + _Mat4.get(a, 3, 3) * _Mat4.get(b, 3, 1));
+    _Mat4.set(result, 3, 2, _Mat4.get(a, 3, 0) * _Mat4.get(b, 0, 2) + _Mat4.get(a, 3, 1) * _Mat4.get(b, 1, 2) + _Mat4.get(a, 3, 2) * _Mat4.get(b, 2, 2) + _Mat4.get(a, 3, 3) * _Mat4.get(b, 3, 2));
+    _Mat4.set(result, 3, 3, _Mat4.get(a, 3, 0) * _Mat4.get(b, 0, 3) + _Mat4.get(a, 3, 1) * _Mat4.get(b, 1, 3) + _Mat4.get(a, 3, 2) * _Mat4.get(b, 2, 3) + _Mat4.get(a, 3, 3) * _Mat4.get(b, 3, 3));
+    return result;
+  }
+  static transform3(mat, v) {
+    const x = v[0];
+    const y = v[1];
+    const z = v[2];
+    v[0] = _Mat4.get(mat, 0, 0) * x + _Mat4.get(mat, 0, 1) * y + _Mat4.get(mat, 0, 2) * z + _Mat4.get(mat, 0, 3);
+    v[1] = _Mat4.get(mat, 1, 0) * x + _Mat4.get(mat, 1, 1) * y + _Mat4.get(mat, 1, 2) * z + _Mat4.get(mat, 1, 3);
+    v[2] = _Mat4.get(mat, 2, 0) * x + _Mat4.get(mat, 2, 1) * y + _Mat4.get(mat, 2, 2) * z + _Mat4.get(mat, 2, 3);
+    return v;
+  }
+  static mul3(mat, v) {
+    const x = v[0];
+    const y = v[1];
+    const z = v[2];
+    v[0] = _Mat4.get(mat, 0, 0) * x + _Mat4.get(mat, 0, 1) * y + _Mat4.get(mat, 0, 2) * z;
+    v[1] = _Mat4.get(mat, 1, 0) * x + _Mat4.get(mat, 1, 1) * y + _Mat4.get(mat, 1, 2) * z;
+    v[2] = _Mat4.get(mat, 2, 0) * x + _Mat4.get(mat, 2, 1) * y + _Mat4.get(mat, 2, 2) * z;
+    return v;
+  }
+  static mul4(mat, v) {
+    const x = v[0];
+    const y = v[1];
+    const z = v[2];
+    const w = v[3];
+    v[0] = _Mat4.get(mat, 0, 0) * x + _Mat4.get(mat, 0, 1) * y + _Mat4.get(mat, 0, 2) * z + _Mat4.get(mat, 0, 3) * w;
+    v[1] = _Mat4.get(mat, 1, 0) * x + _Mat4.get(mat, 1, 1) * y + _Mat4.get(mat, 1, 2) * z + _Mat4.get(mat, 1, 3) * w;
+    v[2] = _Mat4.get(mat, 2, 0) * x + _Mat4.get(mat, 2, 1) * y + _Mat4.get(mat, 2, 2) * z + _Mat4.get(mat, 2, 3) * w;
+    v[3] = _Mat4.get(mat, 3, 0) * x + _Mat4.get(mat, 3, 1) * y + _Mat4.get(mat, 3, 2) * z + _Mat4.get(mat, 3, 3) * w;
+    return v;
+  }
+  static inverse(arr, epsilon = 1e-3) {
+    const a0 = arr[0] * arr[5] - arr[1] * arr[4];
+    const a1 = arr[0] * arr[6] - arr[2] * arr[4];
+    const a2 = arr[0] * arr[7] - arr[3] * arr[4];
+    const a3 = arr[1] * arr[6] - arr[2] * arr[5];
+    const a4 = arr[1] * arr[7] - arr[3] * arr[5];
+    const a5 = arr[2] * arr[7] - arr[3] * arr[6];
+    const b0 = arr[8] * arr[13] - arr[9] * arr[12];
+    const b1 = arr[8] * arr[14] - arr[10] * arr[12];
+    const b2 = arr[8] * arr[15] - arr[11] * arr[12];
+    const b3 = arr[9] * arr[14] - arr[10] * arr[13];
+    const b4 = arr[9] * arr[15] - arr[11] * arr[13];
+    const b5 = arr[10] * arr[15] - arr[11] * arr[14];
+    const det = a0 * b5 - a1 * b4 + a2 * b3 + a3 * b2 - a4 * b1 + a5 * b0;
+    const inv = _Mat4.create();
+    if (Math.abs(det) <= epsilon)
+      return inv;
+    inv[0] = +arr[5] * b5 - arr[6] * b4 + arr[7] * b3;
+    inv[4] = -arr[4] * b5 + arr[6] * b2 - arr[7] * b1;
+    inv[8] = +arr[4] * b4 - arr[5] * b2 + arr[7] * b0;
+    inv[12] = -arr[4] * b3 + arr[5] * b1 - arr[6] * b0;
+    inv[1] = -arr[1] * b5 + arr[2] * b4 - arr[3] * b3;
+    inv[5] = +arr[0] * b5 - arr[2] * b2 + arr[3] * b1;
+    inv[9] = -arr[0] * b4 + arr[1] * b2 - arr[3] * b0;
+    inv[13] = +arr[0] * b3 - arr[1] * b1 + arr[2] * b0;
+    inv[2] = +arr[13] * a5 - arr[14] * a4 + arr[15] * a3;
+    inv[6] = -arr[12] * a5 + arr[14] * a2 - arr[15] * a1;
+    inv[10] = +arr[12] * a4 - arr[13] * a2 + arr[15] * a0;
+    inv[14] = -arr[12] * a3 + arr[13] * a1 - arr[14] * a0;
+    inv[3] = -arr[9] * a5 + arr[10] * a4 - arr[11] * a3;
+    inv[7] = +arr[8] * a5 - arr[10] * a2 + arr[11] * a1;
+    inv[11] = -arr[8] * a4 + arr[9] * a2 - arr[11] * a0;
+    inv[15] = +arr[8] * a3 - arr[9] * a1 + arr[10] * a0;
+    const invDet = 1 / det;
+    inv[0] *= invDet;
+    inv[1] *= invDet;
+    inv[2] *= invDet;
+    inv[3] *= invDet;
+    inv[4] *= invDet;
+    inv[5] *= invDet;
+    inv[6] *= invDet;
+    inv[7] *= invDet;
+    inv[8] *= invDet;
+    inv[9] *= invDet;
+    inv[10] *= invDet;
+    inv[11] *= invDet;
+    inv[12] *= invDet;
+    inv[13] *= invDet;
+    inv[14] *= invDet;
+    inv[15] *= invDet;
+    return inv;
+  }
+  static transpose(mat) {
+    const idx = _Mat4.idx;
+    let t = mat[idx(0, 1)];
+    mat[idx(0, 1)] = mat[idx(1, 0)];
+    mat[idx(1, 0)] = t;
+    t = mat[idx(0, 2)];
+    mat[idx(0, 2)] = mat[idx(2, 0)];
+    mat[idx(2, 0)] = t;
+    t = mat[idx(0, 3)];
+    mat[idx(0, 3)] = mat[idx(3, 0)];
+    mat[idx(3, 0)] = t;
+    t = mat[idx(1, 2)];
+    mat[idx(1, 2)] = mat[idx(2, 1)];
+    mat[idx(2, 1)] = t;
+    t = mat[idx(1, 3)];
+    mat[idx(1, 3)] = mat[idx(3, 1)];
+    mat[idx(3, 1)] = t;
+    t = mat[idx(2, 3)];
+    mat[idx(2, 3)] = mat[idx(3, 2)];
+    mat[idx(3, 2)] = t;
+    return mat;
+  }
+  static lookAt(eye, target, up = [0, 1, 0]) {
+    let x0, x1, x2, y0, y1, y2, z0, z1, z2, len;
+    const eyex = eye[0];
+    const eyey = eye[1];
+    const eyez = eye[2];
+    const upx = up[0];
+    const upy = up[1];
+    const upz = up[2];
+    const targetx = target[0];
+    const targety = target[1];
+    const targetz = target[2];
+    const EPSILON2 = 1e-6;
+    if (Math.abs(eyex - targetx) < EPSILON2 && Math.abs(eyey - targety) < EPSILON2 && Math.abs(eyez - targetz) < EPSILON2) {
+      return _Mat4.makeIdentity();
+    }
+    const mat = _Mat4.create();
+    z0 = eyex - targetx;
+    z1 = eyey - targety;
+    z2 = eyez - targetz;
+    len = 1 / Math.hypot(z0, z1, z2);
+    z0 *= len;
+    z1 *= len;
+    z2 *= len;
+    x0 = upy * z2 - upz * z1;
+    x1 = upz * z0 - upx * z2;
+    x2 = upx * z1 - upy * z0;
+    len = Math.hypot(x0, x1, x2);
+    if (eq(len, 0)) {
+      x0 = 0;
+      x1 = 0;
+      x2 = 0;
+    } else {
+      len = 1 / len;
+      x0 *= len;
+      x1 *= len;
+      x2 *= len;
+    }
+    y0 = z1 * x2 - z2 * x1;
+    y1 = z2 * x0 - z0 * x2;
+    y2 = z0 * x1 - z1 * x0;
+    len = Math.hypot(y0, y1, y2);
+    if (eq(len, 0)) {
+      y0 = 0;
+      y1 = 0;
+      y2 = 0;
+    } else {
+      len = 1 / len;
+      y0 *= len;
+      y1 *= len;
+      y2 *= len;
+    }
+    mat[0] = x0;
+    mat[1] = y0;
+    mat[2] = z0;
+    mat[3] = 0;
+    mat[4] = x1;
+    mat[5] = y1;
+    mat[6] = z1;
+    mat[7] = 0;
+    mat[8] = x2;
+    mat[9] = y2;
+    mat[10] = z2;
+    mat[11] = 0;
+    mat[12] = -(x0 * eyex + x1 * eyey + x2 * eyez);
+    mat[13] = -(y0 * eyex + y1 * eyey + y2 * eyez);
+    mat[14] = -(z0 * eyex + z1 * eyey + z2 * eyez);
+    mat[15] = 1;
+    return mat;
+  }
+  // This function creates a projection matrix for projecting to a plane.
+  static makePlaneProjection(normal, point, eye) {
+    const mat = _Mat4.create();
+    const d = -Vec3.dot(normal, point);
+    const NdL = Vec3.dot(normal, eye);
+    mat[0] = NdL + d - eye[0] * normal[0];
+    mat[1] = -eye[1] * normal[0];
+    mat[2] = -eye[2] * normal[0];
+    mat[3] = -normal[0];
+    mat[4] = -eye[0] * normal[1];
+    mat[5] = NdL + d - eye[1] * normal[1];
+    mat[6] = -eye[2] * normal[1];
+    mat[7] = -normal[1];
+    mat[8] = -eye[0] * normal[2];
+    mat[9] = -eye[1] * normal[2];
+    mat[10] = NdL + d - eye[2] * normal[2];
+    mat[11] = -normal[2];
+    mat[12] = -eye[0] * d;
+    mat[13] = -eye[1] * d;
+    mat[14] = -eye[2] * d;
+    mat[15] = NdL;
+    return mat;
+  }
+};
+
+// src/lib/maths/Mat2.ts
+var Mat2 = class _Mat2 extends Float32Array {
+  static size = 4;
+  constructor() {
+    super(_Mat2.size);
+  }
+  static create(copy) {
+    const R = new Float32Array(_Mat2.size);
+    if (copy != null)
+      R.set(copy);
+    return R;
+  }
+  static idx(row, col) {
+    return 2 * col + row;
+  }
+  static set(mat, row, col, value) {
+    mat[_Mat2.idx(row, col)] = value;
+  }
+  static get(mat, row, col) {
+    return mat[_Mat2.idx(row, col)];
+  }
+  static transform2(mat, r, v) {
+    Vec2.set(
+      r,
+      _Mat2.get(mat, 0, 0) * v[0] + _Mat2.get(mat, 0, 1) * v[1],
+      _Mat2.get(mat, 1, 0) * v[0] + _Mat2.get(mat, 1, 1) * v[1]
+    );
+    return r;
+  }
+  static makeIdentity() {
+    const result = _Mat2.create();
+    result[_Mat2.idx(0, 0)] = 1;
+    result[_Mat2.idx(1, 1)] = 1;
+    return result;
+  }
+  static makeRotation(theta) {
+    const [cosTheta, sinTheta] = [Math.cos(theta), Math.sin(theta)];
+    const r = _Mat2.create();
+    _Mat2.set(r, 0, 0, cosTheta);
+    _Mat2.set(r, 0, 1, -sinTheta);
+    _Mat2.set(r, 1, 0, sinTheta);
+    _Mat2.set(r, 1, 1, cosTheta);
+    return r;
+  }
+  static rotate(mat, theta) {
+    const [cosTheta, sinTheta] = [Math.cos(theta), Math.sin(theta)];
+    _Mat2.set(mat, 0, 0, cosTheta);
+    _Mat2.set(mat, 0, 1, -sinTheta);
+    _Mat2.set(mat, 1, 0, sinTheta);
+    _Mat2.set(mat, 1, 1, cosTheta);
+    return mat;
+  }
+  static makeScale(scale) {
+    const r = _Mat2.create();
+    _Mat2.set(r, 0, 0, scale[0]);
+    _Mat2.set(r, 1, 1, scale[1]);
+    return r;
+  }
+  static mul(result, a, b) {
+    _Mat2.set(
+      result,
+      0,
+      0,
+      _Mat2.get(a, 0, 0) * _Mat2.get(b, 0, 0) + _Mat2.get(a, 0, 1) * _Mat2.get(b, 1, 0)
+    );
+    _Mat2.set(
+      result,
+      0,
+      1,
+      _Mat2.get(a, 0, 0) * _Mat2.get(b, 0, 1) + _Mat2.get(a, 0, 1) * _Mat2.get(b, 1, 1)
+    );
+    _Mat2.set(
+      result,
+      1,
+      0,
+      _Mat2.get(a, 1, 0) * _Mat2.get(b, 0, 0) + _Mat2.get(a, 1, 1) * _Mat2.get(b, 1, 0)
+    );
+    _Mat2.set(
+      result,
+      1,
+      1,
+      _Mat2.get(a, 1, 0) * _Mat2.get(b, 0, 1) + _Mat2.get(a, 1, 1) * _Mat2.get(b, 1, 1)
+    );
+    return result;
+  }
+  static inverse(mat, epsilon = 1e-4) {
+    const r = _Mat2.create();
+    const det = mat[0] * mat[3] - mat[1] * mat[2];
+    if (Math.abs(det) > epsilon) {
+      const invDet = 1 / det;
+      r[0] = mat[3] * invDet;
+      r[1] = -mat[1] * invDet;
+      r[2] = -mat[2] * invDet;
+      r[3] = mat[0] * invDet;
+    } else {
+      r.fill(0);
+    }
+    return r;
+  }
+};
+
+// src/lib/maths/Vec4.ts
+var Vec4 = class _Vec4 extends Float32Array {
+  static size = 4;
+  constructor(x, y, z, w) {
+    super(_Vec4.size);
+    this.set(x ?? 0, y, z, w);
+  }
+  static create() {
+    return new _Vec4();
+  }
+  clone() {
+    return new _Vec4(this);
+  }
+  put(x, y, z, w) {
+    this[0] = x;
+    this[1] = y;
+    this[2] = z;
+    this[3] = w;
+    return this;
+  }
+  set(x, y, z, w) {
+    if (typeof x === "number") {
+      this[0] = x;
+      this[1] = y ?? 0;
+      this[2] = z ?? 0;
+      this[3] = w ?? 0;
+    } else {
+      super.set(x);
+    }
+    return this;
+  }
+  static set(r, x, y, z, w) {
+    r[0] = x;
+    r[1] = y;
+    r[2] = z;
+    r[3] = w;
+    return r;
+  }
+  copy(u) {
+    this.set(u);
+    return this;
+  }
+  static copy(r, u) {
+    r.set(u);
+    return r;
+  }
+  add(u) {
+    this[0] += u[0];
+    this[1] += u[1];
+    this[2] += u[2];
+    this[3] += u[3];
+    return this;
+  }
+  static add(u, v, r) {
+    r = r ?? new _Vec4();
+    r[0] = u[0] + v[0];
+    r[1] = u[1] + v[1];
+    r[2] = u[2] + v[2];
+    r[3] = u[3] + v[3];
+    return r;
+  }
+  addScalar(s) {
+    this[0] += s;
+    this[1] += s;
+    this[2] += s;
+    this[3] += s;
+    return this;
+  }
+  static addScalar(u, s, r) {
+    r = r ?? new _Vec4();
+    r[0] = u[0] + s;
+    r[1] = u[1] + s;
+    r[2] = u[2] + s;
+    r[3] = u[3] + s;
+    return r;
+  }
+  sub(u) {
+    this[0] -= u[0];
+    this[1] -= u[1];
+    this[2] -= u[2];
+    this[3] -= u[3];
+    return this;
+  }
+  static sub(u, v, r) {
+    r = r ?? new _Vec4();
+    r[0] = u[0] - v[0];
+    r[1] = u[1] - v[1];
+    r[2] = u[2] - v[2];
+    r[3] = u[3] - v[3];
+    return r;
+  }
+  subScalar(s) {
+    this[0] -= s;
+    this[1] -= s;
+    this[2] -= s;
+    this[3] -= s;
+    return this;
+  }
+  static subScalar(u, s, r) {
+    r = r ?? new _Vec4();
+    r[0] -= s;
+    r[1] -= s;
+    r[2] -= s;
+    r[3] -= s;
+    return r;
+  }
+  mul(u) {
+    this[0] *= u[0];
+    this[1] *= u[1];
+    this[2] *= u[2];
+    this[3] *= u[3];
+    return this;
+  }
+  static mul(u, v, r) {
+    r = r ?? new _Vec4();
+    r[0] = u[0] * v[0];
+    r[1] = u[1] * v[1];
+    r[2] = u[2] * v[2];
+    r[3] = u[3] * v[3];
+    return r;
+  }
+  mulScalar(s) {
+    this[0] *= s;
+    this[1] *= s;
+    this[2] *= s;
+    this[3] *= s;
+    return this;
+  }
+  static mulScalar(u, s, r) {
+    r = r ?? new _Vec4();
+    r[0] = u[0] * s;
+    r[1] = u[1] * s;
+    r[2] = u[2] * s;
+    r[3] = u[3] * s;
+    return r;
+  }
+  div(u) {
+    this[0] /= u[0];
+    this[1] /= u[1];
+    this[2] /= u[2];
+    this[3] /= u[3];
+    return this;
+  }
+  static div(u, v, r) {
+    r = r ?? new _Vec4();
+    r[0] = u[0] / v[0];
+    r[1] = u[1] / v[1];
+    r[2] = u[2] / v[2];
+    r[3] = u[3] / v[3];
+    return r;
+  }
+  divScalar(s) {
+    this[0] /= s;
+    this[1] /= s;
+    this[2] /= s;
+    this[3] /= s;
+    return this;
+  }
+  static divScalar(u, s, r) {
+    r = r ?? new _Vec4();
+    r[0] = u[0] / s;
+    r[1] = u[1] / s;
+    r[2] = u[2] / s;
+    r[3] = u[3] / s;
+    return r;
+  }
+  dot(u) {
+    return this.x * u[0] + this.y * u[1] + this.z * u[2] + this.w * u[3];
+  }
+  static dot(u, v) {
+    return u[0] * v[0] + u[1] * v[1] + u[2] * v[2] + u[3] * v[3];
+  }
+  dotScalar(x, y, z, w) {
+    return this.x * x + this.y * y + this.z * z + this.w * w;
+  }
+  static dotScalar(u, x, y, z, w) {
+    return u[0] * x + u[1] * y + u[2] * z + u[3] * w;
+  }
+  normalise() {
+    return this.mulScalar(1 / this.len());
+  }
+  static normalise(u) {
+    if (Array.isArray(u) || u instanceof Float32Array) {
+      const invLen = 1 / _Vec4.len(u);
+      for (let i = 0; i !== 4; ++i)
+        u[i] *= invLen;
+      return u;
+    } else if (u instanceof _Vec4) {
+      return u.mulScalar(1 / u.len());
+    }
+    return void 0;
+  }
+  lenSq() {
+    return this.dot(this);
+  }
+  static lenSq(u) {
+    return _Vec4.dot(u, u);
+  }
+  len() {
+    return Math.sqrt(this.lenSq());
+  }
+  static len(u) {
+    return Math.sqrt(_Vec4.dot(u, u));
+  }
+  get x() {
+    return this[0];
+  }
+  set x(value) {
+    this[0] = value;
+  }
+  get y() {
+    return this[1];
+  }
+  set y(value) {
+    this[1] = value;
+  }
+  get z() {
+    return this[2];
+  }
+  set z(value) {
+    this[2] = value;
+  }
+  get w() {
+    return this[3];
+  }
+  set w(value) {
+    this[3] = value;
+  }
+};
+
+// src/lib/Renderer/RenderContext.ts
+var UniformType = ((UniformType2) => {
+  UniformType2[UniformType2["NONE"] = 0] = "NONE";
+  UniformType2[UniformType2["BOOL"] = WebGL2RenderingContext.BOOL] = "BOOL";
+  UniformType2[UniformType2["UBYTE"] = WebGL2RenderingContext.UNSIGNED_BYTE] = "UBYTE";
+  UniformType2[UniformType2["BYTE"] = WebGL2RenderingContext.BYTE] = "BYTE";
+  UniformType2[UniformType2["USHORT"] = WebGL2RenderingContext.UNSIGNED_SHORT] = "USHORT";
+  UniformType2[UniformType2["SHORT"] = WebGL2RenderingContext.SHORT] = "SHORT";
+  UniformType2[UniformType2["UINT"] = WebGL2RenderingContext.UNSIGNED_INT] = "UINT";
+  UniformType2[UniformType2["INT"] = WebGL2RenderingContext.INT] = "INT";
+  UniformType2[UniformType2["HALF_FLOAT"] = WebGL2RenderingContext.HALF_FLOAT] = "HALF_FLOAT";
+  UniformType2[UniformType2["FLOAT"] = WebGL2RenderingContext.FLOAT] = "FLOAT";
+  UniformType2[UniformType2["VEC2"] = WebGL2RenderingContext.FLOAT_VEC2] = "VEC2";
+  UniformType2[UniformType2["VEC3"] = WebGL2RenderingContext.FLOAT_VEC3] = "VEC3";
+  UniformType2[UniformType2["VEC4"] = WebGL2RenderingContext.FLOAT_VEC4] = "VEC4";
+  UniformType2[UniformType2["IVEC2"] = WebGL2RenderingContext.INT_VEC2] = "IVEC2";
+  UniformType2[UniformType2["IVEC3"] = WebGL2RenderingContext.INT_VEC3] = "IVEC3";
+  UniformType2[UniformType2["IVEC4"] = WebGL2RenderingContext.INT_VEC4] = "IVEC4";
+  UniformType2[UniformType2["MAT2"] = WebGL2RenderingContext.FLOAT_MAT2] = "MAT2";
+  UniformType2[UniformType2["MAT3"] = WebGL2RenderingContext.FLOAT_MAT3] = "MAT3";
+  UniformType2[UniformType2["MAT4"] = WebGL2RenderingContext.FLOAT_MAT4] = "MAT4";
+  UniformType2[UniformType2["SAMPLER_2D"] = WebGL2RenderingContext.SAMPLER_2D] = "SAMPLER_2D";
+  UniformType2[UniformType2["SAMPLER_3D"] = WebGL2RenderingContext.SAMPLER_3D] = "SAMPLER_3D";
+  UniformType2[UniformType2["SAMPLER_CUBE"] = WebGL2RenderingContext.SAMPLER_CUBE] = "SAMPLER_CUBE";
+  UniformType2[UniformType2["ISAMPLER_2D"] = WebGL2RenderingContext.INT_SAMPLER_2D] = "ISAMPLER_2D";
+  UniformType2[UniformType2["ISAMPLER_3D"] = WebGL2RenderingContext.INT_SAMPLER_3D] = "ISAMPLER_3D";
+  UniformType2[UniformType2["ISAMPLER_CUBE"] = WebGL2RenderingContext.INT_SAMPLER_CUBE] = "ISAMPLER_CUBE";
+  return UniformType2;
+})(UniformType || {});
+function bindUniform(gl, uniform) {
+  const {
+    dataType,
+    location,
+    value,
+    count
+  } = uniform;
+  switch (dataType) {
+    case UniformType.BOOL:
+    case UniformType.BYTE:
+    case UniformType.INT:
+    case UniformType.SHORT:
+    case UniformType.SAMPLER_2D:
+    case UniformType.SAMPLER_3D:
+    case UniformType.SAMPLER_CUBE:
+    case UniformType.ISAMPLER_2D:
+    case UniformType.ISAMPLER_3D:
+    case UniformType.ISAMPLER_CUBE:
+      count === void 0 || count < 2 ? gl.uniform1i(location, value) : gl.uniform1iv(location, new Int32Array(value));
+      break;
+    case UniformType.FLOAT:
+    case UniformType.HALF_FLOAT:
+      gl.uniform1f(location, value);
+      break;
+    case UniformType.UBYTE:
+    case UniformType.UINT:
+    case UniformType.USHORT:
+      gl.uniform1ui(location, value);
+      break;
+    case UniformType.VEC2:
+      gl.uniform2fv(location, value);
+      break;
+    case UniformType.VEC3:
+      gl.uniform3fv(location, value);
+      break;
+    case UniformType.VEC4:
+      gl.uniform4fv(location, value);
+      break;
+    case UniformType.IVEC2:
+      gl.uniform2iv(location, value);
+      break;
+    case UniformType.IVEC3:
+      gl.uniform3iv(location, value);
+      break;
+    case UniformType.IVEC4:
+      gl.uniform4iv(location, value);
+      break;
+    case UniformType.MAT2:
+      gl.uniformMatrix2fv(location, false, value);
+      break;
+    case UniformType.MAT3:
+      gl.uniformMatrix3fv(location, false, value);
+      break;
+    case UniformType.MAT4:
+      gl.uniformMatrix4fv(location, false, value);
+      break;
+    case 0 /* NONE */:
+    default:
+      console.warn("Unrecognised uniform data type");
+  }
+}
+function bindContext(gl, context) {
+  const list2 = Object.keys(context);
+  for (let i = 0; i !== list2.length; ++i) {
+    bindUniform(gl, context[list2[i]]);
+  }
+}
+function isBuiltIn(info) {
+  return info?.name.startsWith("gl_") ?? info?.name.startsWith("webgl_") ?? false;
+}
+function createBaseType(type) {
+  switch (type) {
+    case WebGL2RenderingContext.FLOAT:
+      return 0;
+    case WebGL2RenderingContext.FLOAT_VEC2:
+      return Vec2.create();
+    case WebGL2RenderingContext.FLOAT_VEC3:
+      return Vec3.create();
+    case WebGL2RenderingContext.FLOAT_VEC4:
+      return Vec4.create();
+    case WebGL2RenderingContext.FLOAT_MAT2:
+      return Mat2.create();
+    case WebGL2RenderingContext.FLOAT_MAT3:
+      return Mat3.create();
+    case WebGL2RenderingContext.FLOAT_MAT4:
+      return Mat4.create();
+    case WebGL2RenderingContext.INT:
+      return 0;
+    case WebGL2RenderingContext.SAMPLER_2D:
+      return 0;
+    case WebGL2RenderingContext.SAMPLER_3D:
+      return 0;
+    case WebGL2RenderingContext.SAMPLER_CUBE:
+      return 0;
+    default:
+      return null;
+  }
+}
+function buildRenderContext(gl, prog) {
+  const context = {};
+  const uniformCount = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i !== uniformCount; ++i) {
+    const info = gl.getActiveUniform(prog, i);
+    if (isBuiltIn(info)) {
+      console.log("builtin:", info);
+      continue;
+    }
+    if (info == null)
+      continue;
+    const { name, type, size } = info;
+    context[name] = {
+      value: createBaseType(type),
+      location: gl.getUniformLocation(prog, name),
+      dataType: type,
+      count: size
+    };
+  }
+  return context;
+}
+
+// src/apps/pxsphere/shaders/sphere-vertex.glsl
+var sphere_vertex_default = "#version 300 es\nprecision mediump float;\n#define PI 3.141592653589793238\n#define TWO_PI (PI + PI)\nvec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x,289.0);}vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}float snoise(vec3 v){const vec2 C=vec2(1.0/6.0,1.0/3.0);const vec4 D=vec4(0.0,0.5,1.0,2.0);vec3 i=floor(v+dot(v,C.yyy));vec3 x0=v-i+dot(i,C.xxx);vec3 g=step(x0.yzx,x0.xyz);vec3 l=1.0-g;vec3 i1=min(g.xyz,l.zxy);vec3 i2=max(g.xyz,l.zxy);vec3 x1=x0-i1+1.0*C.xxx;vec3 x2=x0-i2+2.0*C.xxx;vec3 x3=x0-1.+3.0*C.xxx;i=mod(i,289.0);vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));float n_=1.0/7.0;vec3  ns=n_*D.wyz-D.xzx;vec4 j=p-49.0*floor(p*ns.z*ns.z);vec4 x_=floor(j*ns.z);vec4 y_=floor(j-7.0*x_);vec4 x=x_*ns.x+ns.yyyy;vec4 y=y_*ns.x+ns.yyyy;vec4 h=1.0-abs(x)-abs(y);vec4 b0=vec4(x.xy,y.xy);vec4 b1=vec4(x.zw,y.zw);vec4 s0=floor(b0)*2.0+1.0;vec4 s1=floor(b1)*2.0+1.0;vec4 sh=-step(h,vec4(0.0));vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;vec3 p0=vec3(a0.xy,h.x);vec3 p1=vec3(a0.zw,h.y);vec3 p2=vec3(a1.xy,h.z);vec3 p3=vec3(a1.zw,h.w);vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);m=m*m;return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));}layout(location=0)in vec3 position;uniform mat4 mvp;uniform mat4 mv;uniform float pointSize;uniform float time;uniform vec4 speeds;uniform vec4 layerControls;uniform vec4 landmass;uniform float randomSeed;uniform int visibility;uniform int scalePoints;uniform vec4 frequencies;uniform float opacity;\n#define emissionSpeed speeds.x\n#define evolutionSpeed speeds.y\n#define rotationSpeed speeds.z\n#define layerScaleDelta layerControls.y\n#define emissionStart landmass.x\n#define emissionEnd landmass.y\n#define emissionHeight landmass.z\n#define sealevel landmass.w\n#define emissionFreq frequencies.x\n#define landFreq frequencies.y\n#define rotFreq frequencies.z\n#define rotMag frequencies.w\nout vec4 pos;vec2 rot(vec2 v,float a){return mat2(cos(a),-sin(a),sin(a),cos(a))*v;}float fBM(vec3 p){float f=0.0;f+=0.5000*snoise(p);p.xy=rot(p.xy,0.5);f+=0.2500*snoise(2.*p);p.xy=rot(p.xy,0.5);f+=0.1250*snoise(4.*p);p.xy=rot(p.xy,0.5);f+=0.0625*snoise(8.*p);return f/0.9375;}vec2 cart2sphere(vec3 coord){return vec2(atan(coord.z,coord.x),acos(coord.y));}mat3 buildFrame(vec3 N){vec3 U=mix(vec3(1.0,0.0,0.0),vec3(0.0,1.0,0.0),step(.9,abs(N.x)));vec3 B=cross(N,U);vec3 T=cross(B,N);return mat3(B,T,N);}float visTerm(float emission,float land){switch(visibility){case 0:return min(emission,land);case 1:return max(emission,land);case 2:return emission*land;}return min(emission,land);}void main(){vec3 N=normalize(position);float emission=fBM(emissionFreq*N+time*emissionSpeed+vec3(randomSeed));float land=fBM(landFreq*position+time*evolutionSpeed+vec3(randomSeed));float emissionFactor=smoothstep(emissionStart-0.1,emissionEnd+0.1,emission);land=smoothstep(sealevel-0.1,sealevel+0.1,land);vec3 vN=normalize((mv*vec4(N,0.)).xyz);float angle=dot(vN,vec3(0.,0.,1.))*.5+.5;float rotation=TWO_PI*snoise(rotFreq*N+rotationSpeed*time+vec3(-randomSeed,2.*randomSeed,0.));vec3 offset=0.1*rotMag*buildFrame(N)*vec3(rot(vec2(1.,0.),rotation),0.0);pos=vec4(position+emissionHeight*emissionFactor*emission*N+offset,angle*visTerm(emission,land));gl_Position=mvp*vec4(pos.xyz,1.);gl_PointSize=max(pointSize*layerScaleDelta*(scalePoints==1?angle:1.),opacity);}";
+
+// src/apps/pxsphere/shaders/sphere-fragment.glsl
+var sphere_fragment_default = "#version 300 es\nprecision mediump float;uniform vec4 layerControls;uniform float roundedPoints;uniform float opacity;uniform vec3 baseColour;in vec4 pos;out vec4 fragColour;\n#define layerOpacity layerControls.x\n#define layer int(layerControls.z)\n#define useLayerColours layerControls.w > 0.\nfloat length2(vec2 v){return dot(v,v);}const vec4 colours[5]=vec4[5](vec4(1.0,0.0,0.0,1.0),vec4(0.0,1.0,0.0,1.0),vec4(0.0,0.0,1.0,1.0),vec4(1.0,1.0,0.0,1.0),vec4(1.0,0.0,1.0,1.0));void main(){if(pos.w<1e-2||opacity==0.)discard;if(roundedPoints>0.){float d=length2(gl_PointCoord-.5);if(d>.25)discard;}fragColour=opacity*pos.w*layerOpacity*(useLayerColours?colours[layer]:vec4(baseColour,opacity));}";
+
+// src/apps/pxsphere/shaders/intro-vertex.glsl
+var intro_vertex_default = "#version 300 es\nprecision mediump float;vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}vec2 mod289(vec2 x){return x-floor(x*(1.0/289.0))*289.0;}vec3 permute(vec3 x){return mod289(((x*34.0)+1.0)*x);}float snoise(vec2 v){const vec4 C=vec4(0.211324865405187,0.366025403784439,-0.577350269189626,0.024390243902439);vec2 i=floor(v+dot(v,C.yy));vec2 x0=v-i+dot(i,C.xx);vec2 i1;i1=(x0.x>x0.y)?vec2(1.0,0.0):vec2(0.0,1.0);vec4 x12=x0.xyxy+C.xxzz;x12.xy-=i1;i=mod289(i);vec3 p=permute(permute(i.y+vec3(0.0,i1.y,1.0))+i.x+vec3(0.0,i1.x,1.0));vec3 m=max(0.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0.0);m=m*m;m=m*m;vec3 x=2.0*fract(p*C.www)-1.0;vec3 h=abs(x)-0.5;vec3 ox=floor(x+0.5);vec3 a0=x-ox;m*=1.79284291400159-0.85373472095314*(a0*a0+h*h);vec3 g;g.x=a0.x*x0.x+h.x*x0.y;g.yz=a0.yz*x12.xz+h.yz*x12.yw;return 130.0*dot(m,g);}\n#define PI 3.141592653589793238\n#define TWO_PI (PI + PI)\nlayout(location=0)in vec2 position;const vec3 layerAxes[5]=vec3[](vec3(1.0,1.0,0.0),vec3(1.0,-1.0,-1.0),vec3(-1.0,1.0,0.0),vec3(0.0,1.0,-1.0),vec3(1.0,0.0,1.0));uniform mat4 mvp;uniform float pointSize;uniform float time;uniform vec3 resolution;uniform int layer;out vec2 uv;flat out float colourP;const float screenScale=2.2;vec3 mapToCylinder(vec2 uv,float radius,float t){const float width=6.0;float theta=uv.x*TWO_PI+t-PI/2.0;float s=abs(.5-uv.y)*.5;s=s*s+0.1*s+.1*snoise(uv*13.0);return vec3(-s*width*cos(theta),.75*(2.*uv.y-1.),s*width*sin(theta));}vec3 displacement(vec2 uv){return vec3(snoise(vec2(1.283,1.437)*uv),snoise(vec2(-1.823,0.934)*uv),snoise(vec2(-0.32,-1.38)*uv));}vec3 rotate(vec3 v,float theta){return mat3(cos(theta),0.,-sin(theta),0.,1.,0.,sin(theta),0.,cos(theta))*v;}float rand(vec2 co){return fract(sin(dot(co.xy,vec2(12.9898,78.233)))*43758.5453);}vec3 uvToSpherical(vec2 uv,float time){float p=smoothstep(0.0,0.5,time)-smoothstep(0.5,1.5,time);float phi=uv.x*TWO_PI+PI/2.+p*0.2*(rand(uv)*2.-1.);float theta=(1.-uv.y)*PI+p*0.2*(rand(uv)*2.-1.);return vec3(sin(theta)*cos(phi),cos(theta),sin(theta)*sin(phi));}void main(){uv=fract(position.xy+vec2(0e-3*time,0.0));vec2 pos=position.xy;colourP=snoise(200.*uv)*.5+.5;gl_PointSize=.25*pointSize+.75*pointSize*(snoise(100.*uv)*.5+.5);vec2 scale=vec2(resolution[2],1.)*screenScale;float ani=max(0.225*time,0.0);vec3 P=vec3(fract(pos)*scale,0.0);P.xy-=vec2(resolution[2]*.5,.5)*2.2;vec3 Q=mapToCylinder(pos,.5,0.)+.01*displacement(uv+2.*time+float(layer));vec3 S=uvToSpherical(pos,ani)+.01*displacement(uv+2.*time+float(layer));vec3 R=mix(mix(P,Q,0.),S,ani);R=rotate(R,4.0*ani*ani*(ani*PI/3.*float(layer+1)));gl_Position=mvp*vec4(R,1.0);gl_PointSize=mix(gl_PointSize,.5*gl_PointSize,smoothstep(0.0,1.0,ani));}";
+
+// src/apps/pxsphere/shaders/intro-fragment.glsl
+var intro_fragment_default = "#version 300 es\nprecision mediump float;float length2(vec2 v){return dot(v,v);}uniform float roundedPoints;uniform float time;uniform float opacity;in vec2 uv;flat in float colourP;out vec4 fragColour;const vec3 colour=vec3(34./255.99,46./255.99,55./255.99);void main(){float d=length2(gl_PointCoord-.5);if(d>.25)discard;vec3 pColour=mix(colour,mix(colour,vec3(1.),.4),1.15*colourP-0.15);float edge=1.-smoothstep(0.25*.6,.25*.9,d);fragColour=mix(vec4(colour,1.),vec4(mix(colour,pColour,edge),1.),opacity);}";
+
+// src/apps/pxsphere/pxsphere.ts
+async function loadBuffer(url) {
+  const response = await fetch(url);
+  if (!response.ok)
+    throw new Error(`Failed to load buffer from: ${url}`);
+  return await response.arrayBuffer();
+}
+var VBUF001_URL = "https://cdn.jsdelivr.net/gh/otgaard/cdn@0.0.34/data/vbuf001.bin";
+var VBUF003_URL = "https://cdn.jsdelivr.net/gh/otgaard/cdn@0.0.34/data/vbuf003.bin";
+var VBUF005_URL = "https://cdn.jsdelivr.net/gh/otgaard/cdn@0.0.34/data/vbuf005.bin";
+var visibility = [
+  "min",
+  "max",
+  "mul"
+];
+var configurations = {
+  none: "{}",
+  about: '{"customScale":1.1,"rotationSpeed":0,"dirChangeFreq":0.01,"dirChangeStrength":0,"dirChangeVariance":0,"layers":1,"sampleRadius":0.01,"layerStepDistance":0.01,"layerOpacityDelta":0,"pointSize":0.54,"opacity":1,"emissionFreq":17.5,"emissionSpeed":1.5,"emissionStart":-1,"emissionEnd":1,"emissionHeight":-1,"evolutionSpeed":0,"landFreq":0.1,"sealevel":1,"sealevelLayerDelta":0.5,"rotationFreq":0,"rotationMag":0,"angularRotSpeed":0,"visibility":"max","randomSeed":true,"layerColours":false,"roundedPoints":true,"lockAxes":true,"scalePoints":true,"showText":false,"line1":"Defining the future of","line2":"business solutions.","preset":"none","resolution":[2880,1580,1.8227848101265822]}',
+  ai: '{"customScale":1.0,"rotationSpeed":1.1,"dirChangeFreq":0.01,"dirChangeStrength":0.55,"dirChangeVariance":1,"layers":5,"sampleRadius":0.03,"layerStepDistance":0.07,"layerOpacityDelta":0.12,"pointSize":1.15,"opacity":1,"emissionFreq":2.9,"emissionSpeed":2.3,"emissionStart":1,"emissionEnd":0.61,"emissionHeight":-1,"evolutionSpeed":20,"landFreq":7.8,"sealevel":0.28,"sealevelLayerDelta":-0.5,"rotationFreq":0,"rotationMag":0,"angularRotSpeed":0,"visibility":"max","randomSeed":true,"layerColours":false,"roundedPoints":true,"lockAxes":true,"scalePoints":true,"resolution":[2880,1580,1.8227848101265822]}',
+  b2b: '{"customScale":1.1,"rotationSpeed":1,"dirChangeFreq":0.01,"dirChangeStrength":1,"dirChangeVariance":0,"layers":5,"sampleRadius":0.05,"layerStepDistance":0.44,"layerOpacityDelta":0,"pointSize":0.9,"opacity":1,"emissionFreq":13.2,"emissionSpeed":20,"emissionStart":-1,"emissionEnd":-0.23,"emissionHeight":-0.06,"evolutionSpeed":0,"landFreq":6.3,"sealevel":0.19,"sealevelLayerDelta":-0.5,"rotationFreq":40,"rotationMag":1,"angularRotSpeed":0,"visibility":"max","randomSeed":true,"layerColours":false,"roundedPoints":true,"lockAxes":true,"scalePoints":true,"resolution":[2880,1580,1.8227848101265822]}',
+  clean: '{"customScale":1.08,"rotationSpeed":0,"dirChangeFreq":1,"dirChangeStrength":0.55,"dirChangeVariance":1,"layers":1,"sampleRadius":0.03,"layerStepDistance":0.07,"layerOpacityDelta":0.12,"pointSize":0.72,"opacity":1,"emissionFreq":13.2,"emissionSpeed":10.2,"emissionStart":1,"emissionEnd":-1,"emissionHeight":0.34,"evolutionSpeed":11.6,"landFreq":2.6,"sealevel":0.21,"sealevelLayerDelta":-0.5,"rotationFreq":0,"rotationMag":0,"angularRotSpeed":0,"visibility":"max","randomSeed":true,"layerColours":false,"roundedPoints":true,"lockAxes":true,"scalePoints":true,"resolution":[2880,1580,1.8227848101265822]}',
+  base: '{"customScale":1.0,"rotationSpeed":0.8,"dirChangeFreq":0.01,"dirChangeStrength":0.01,"dirChangeVariance":0,"layers":3,"sampleRadius":0.01,"layerStepDistance":0.2,"layerOpacityDelta":0.5,"pointSize":0.5,"opacity":1,"emissionFreq":2,"emissionSpeed":4.3,"emissionStart":1,"emissionEnd":-0.7,"emissionHeight":1,"evolutionSpeed":8,"landFreq":14.1,"sealevel":0.08,"sealevelLayerDelta":-0.3,"rotationFreq":28,"rotationMag":0.69,"angularRotSpeed":0,"visibility":"mul","randomSeed":true,"layerColours":false,"roundedPoints":true,"lockAxes":false,"scalePoints":true,"showText":true,"line1":"Defining the future of","line2":"business solutions.","preset":"none","resolution":[2880,1580,1.8227848101265822]}'
+};
+var globalControls = {
+  rotationSpeed: 0.8,
+  dirChangeFreq: 0.01,
+  dirChangeStrength: 0.01,
+  dirChangeVariance: 0,
+  layers: 3,
+  sampleRadius: 0.01,
+  layerStepDistance: 0.2,
+  layerOpacityDelta: 0.5,
+  pointSize: 0.5,
+  opacity: 1,
+  emissionFreq: 2,
+  emissionSpeed: 4.3,
+  emissionStart: 1,
+  emissionEnd: -0.7,
+  emissionHeight: 1,
+  evolutionSpeed: 8,
+  landFreq: 14.1,
+  sealevel: 0.08,
+  sealevelLayerDelta: -0.3,
+  rotationFreq: 28,
+  rotationMag: 0.69,
+  angularRotSpeed: 0,
+  visibility: "mul",
+  randomSeed: true,
+  layerColours: false,
+  roundedPoints: true,
+  lockAxes: false,
+  scalePoints: true,
+  showText: true,
+  line1: "Defining the future of",
+  line2: "business solutions.",
+  preset: "none",
+  resolution: [2157, 1079, 2157 / 1079]
+  // Dummy, will be replaced on save and use to calculate point scaling.
+};
+function setControls(obj, data) {
+  for (const key in data) {
+    if (typeof data[key] === "object") {
+      setControls(obj[key], data[key]);
+    } else {
+      obj[key] = data[key];
+    }
+  }
+}
+var INTRO_DURATION = 4;
+var BACKGROUND_COLOUR = [34 / 255.99, 46 / 255.99, 55 / 255.99];
+var K_EMISSION_FACTOR = 0.02;
+var K_EVOLUTION_FACTOR = 0.1;
+var LAYER_AXES = [
+  Vec3.normalise([1, 1, 0]),
+  Vec3.normalise([1, -1, -1]),
+  Vec3.normalise([-1, 1, 0]),
+  Vec3.normalise([0, 1, -1]),
+  Vec3.normalise([1, 0, 1])
+];
+var seed = [
+  0.27478805808024576,
+  0.7651830778546598,
+  0.09990401387135628,
+  0.5521414685809944,
+  0.8017688214506036
+];
+var RenderApp = class {
+  controls = JSON.parse(JSON.stringify(globalControls));
+  // The active, current controls
+  controlTarget = null;
+  // The target controls for lerp
+  targetName_ = "";
+  controlSource = null;
+  sourceName = "base";
+  controlTime = 0;
+  transition_ = 0;
+  angle = 0;
+  currArrays = {
+    source: new Array(),
+    targets: new Array(),
+    rotAccum: new Array(),
+    freq: new Array(),
+    rotations: new Array(),
+    layerDisplayTime: new Array()
+  };
+  targetArrays = {
+    source: new Array(),
+    targets: new Array(),
+    rotAccum: new Array(),
+    freq: new Array(),
+    rotations: new Array(),
+    layerDisplayTime: new Array()
+  };
+  time = 0;
+  introTime = INTRO_DURATION;
+  valid;
+  canvasId;
+  canvas;
+  gl;
+  width = 0;
+  height = 0;
+  planePoints = null;
+  points = null;
+  // [WebGLVertexArrayObject, WebGLBuffer, number] | null = null
+  programs = [];
+  ctx = [];
+  overlay = document.getElementById("overlay");
+  line1 = document.getElementById("line1");
+  line2 = document.getElementById("line2");
+  rnd = {
+    gen: prng_default(18284.480873),
+    random: (min, max) => lerp(min, max, this.rnd.gen.double())
+  };
+  get transition() {
+    return this.transition_;
+  }
+  set transition(value) {
+    this.transition_ = value;
+  }
+  get colour() {
+    return this.ctx[0].baseColour.value;
+  }
+  set colour(value) {
+    this.ctx[0].baseColour.value = value;
+  }
+  get currName() {
+    return this.sourceName;
+  }
+  get targetName() {
+    return this.targetName_;
+  }
+  load(name) {
+    setControls(this.controls, JSON.parse(configurations[name]));
+    this.rebuild();
+    const canvas = this.gl.canvas;
+    const bound = canvas.getBoundingClientRect();
+    const w = Math.round(bound.width);
+    const h = Math.round(bound.height);
+    const dPR = window.devicePixelRatio;
+    const rW = Math.round(dPR * w);
+    const rH = Math.round(dPR * h);
+    this.width = rW;
+    this.height = rH;
+    this.gl.viewport(0, 0, this.width, this.height);
+    const mv = Mat4.mul(
+      Mat4.makeIdentity(),
+      Mat4.lookAt([0, 0, 5], [0, 0, 0], [0, 1, 0]),
+      Mat4.makeRotation([1, 0, 0], Math.PI / 2)
+    );
+    this.ctx[0].mvp.value = Mat4.mul(
+      Mat4.makeIdentity(),
+      Mat4.makePerspective(45, this.width / this.height, 0.5, 5),
+      mv
+    );
+    this.gl.useProgram(this.programs[0]);
+    bindContext(this.gl, this.ctx[0]);
+  }
+  rebuild(replayIntro = false) {
+    if (this.planePoints != null) {
+      this.gl.deleteVertexArray(this.planePoints[0]);
+      this.gl.deleteBuffer(this.planePoints[1]);
+    }
+    const sampleRadii = Object.values(configurations).map((e) => JSON.parse(e).sampleRadius).filter((e) => e !== void 0);
+    const uniqueRadii = [...new Set(sampleRadii)];
+    console.log("Unique radii:", uniqueRadii);
+    const pointsMap = loadPoints(this.gl, dict);
+    this.points = pointsMap;
+    if (this.points == null)
+      return;
+    const W = Math.floor(this.width / 32);
+    const H = Math.floor(this.height / 32);
+    this.planePoints = makePointRect(this.gl, W, H);
+    this.controlSource = JSON.parse(JSON.stringify(this.controls));
+    this.currArrays.rotAccum = new Array(this.controls.layers).fill(0);
+    this.currArrays.rotations = LAYER_AXES.slice(0, this.controls.layers).map((e) => new Vec3(e));
+    this.currArrays.source = LAYER_AXES.slice(0, this.controls.layers).map((e) => new Vec3(e));
+    this.currArrays.targets = LAYER_AXES.slice(0, this.controls.layers).map((e) => new Vec3(e));
+    this.currArrays.rotAccum = new Array(this.controls.layers).fill(0);
+    this.currArrays.freq = new Array(this.controls.layers).fill(this.controls.dirChangeFreq);
+    this.introTime = replayIntro ? INTRO_DURATION : 0;
+    if (this.line1 != null)
+      this.line1.innerText = this.controls.line1;
+    if (this.line2 != null)
+      this.line2.innerText = this.controls.line2;
+    if (this.overlay != null && this.overlay.classList.contains("hidden") === this.controls.showText)
+      this.overlay.classList.toggle("hidden");
+    this.time = 0;
+    this.angle = 0;
+    this.rnd = {
+      gen: prng_default(18284.480873),
+      random: (min, max) => lerp(min, max, this.rnd.gen.double())
+    };
+  }
+  initiateLerp(target, name) {
+    if (this.sourceName === name)
+      return;
+    this.targetName_ = name;
+    this.controlTarget = target;
+    this.controlTime = 0;
+    this.targetArrays = {
+      source: LAYER_AXES.slice(0, target.layers).map((e) => new Vec3(e)),
+      targets: LAYER_AXES.slice(0, target.layers).map((e) => new Vec3(e)),
+      rotAccum: new Array(target.layers).fill(0),
+      freq: new Array(target.layers).fill(target.dirChangeFreq),
+      rotations: LAYER_AXES.slice(0, target.layers).map((e) => new Vec3(e)),
+      layerDisplayTime: new Array(target.layers).fill(0)
+    };
+  }
+  buildShaders() {
+    const gl = this.gl;
+    this.programs = new Array(2);
+    const prog = compileProgram(gl, sphere_vertex_default, sphere_fragment_default);
+    if (typeof prog === "string") {
+      console.error("Compile Error:", prog);
+    } else {
+      this.programs[0] = prog;
+      gl.useProgram(prog);
+      this.ctx[0] = buildRenderContext(gl, prog);
+      this.ctx[0].mvp.value = Mat4.mul(
+        Mat4.makeIdentity(),
+        Mat4.makePerspective(45, 1, 0.5, 5),
+        Mat4.lookAt([0, 0, 5], [0, 0, 0], [0, 1, 0])
+      );
+      this.ctx[0].pointSize.value = this.controls.pointSize;
+      this.ctx[0].baseColour.value = [1, 1, 1];
+      bindContext(gl, this.ctx[0]);
+    }
+    const prog2 = compileProgram(gl, intro_vertex_default, intro_fragment_default);
+    if (typeof prog2 === "string") {
+      console.error("Compile Error:", prog2);
+    } else {
+      this.programs[1] = prog2;
+      gl.useProgram(prog2);
+      this.ctx[1] = buildRenderContext(gl, prog2);
+      this.ctx[1].mvp.value = Mat4.mul(
+        Mat4.makeIdentity(),
+        Mat4.makePerspective(45, 1, 0.5, 5),
+        Mat4.lookAt([0, 0, 2], [0, 0, 0], [0, 1, 0])
+      );
+      this.ctx[1].pointSize.value = this.controls.pointSize;
+      bindContext(gl, this.ctx[1]);
+    }
+  }
+  constructor(canvasId, playIntro = false) {
+    this.valid = document.getElementById(canvasId) != null;
+    if (!this.valid)
+      return;
+    this.canvasId = canvasId;
+    const canvas = document.getElementById(canvasId);
+    this.canvas = canvas;
+    const gl = canvas.getContext("webgl2", {
+      alpha: true,
+      antialias: false,
+      depth: true,
+      premultipliedAlpha: true,
+      stencil: false
+    });
+    if (gl == null)
+      throw new Error("WebGL2 not supported");
+    this.gl = gl;
+    gl.enable(gl.DEPTH_TEST);
+    window.addEventListener("resize", () => {
+      this.onResize();
+    });
+    gl.clearColor(0, 0, 0, 0);
+    this.buildShaders();
+    this.onResize();
+  }
+  initialiseData(playIntro) {
+    switch (this.canvasId) {
+      case "canvas":
+        setControls(this.controls, JSON.parse(configurations.base));
+        this.rebuild(playIntro);
+        break;
+      case "about-canvas":
+        setControls(this.controls, JSON.parse(configurations.about));
+        this.rebuild(playIntro);
+        break;
+    }
+  }
+  onResize() {
+    if (this.gl.canvas == null || this.ctx == null)
+      return;
+    const canvas = this.gl.canvas;
+    const bound = canvas.getBoundingClientRect();
+    const w = Math.round(bound.width);
+    const h = Math.round(bound.height);
+    const dPR = window.devicePixelRatio;
+    const rW = Math.round(dPR * w);
+    const rH = Math.round(dPR * h);
+    if (this.width !== rW || this.height !== rH) {
+      this.width = rW;
+      this.height = rH;
+      canvas.width = this.width;
+      canvas.height = this.height;
+      this.gl.viewport(0, 0, this.width, this.height);
+      const mv = Mat4.mul(
+        Mat4.makeIdentity(),
+        Mat4.lookAt([0, 0, 5], [0, 0, 0], [0, 1, 0]),
+        Mat4.makeRotation([1, 0, 0], Math.PI / 2)
+      );
+      this.ctx[0].mvp.value = Mat4.mul(
+        Mat4.makeIdentity(),
+        Mat4.makePerspective(45, this.width / this.height, 0.5, 5),
+        mv
+      );
+      this.gl.useProgram(this.programs[0]);
+      bindContext(this.gl, this.ctx[0]);
+    }
+  }
+  render(dt2) {
+    if (this.ctx == null)
+      return;
+    const gl = this.gl;
+    gl.viewport(0, 0, this.width, this.height);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    this.time += dt2;
+    const introTime = (INTRO_DURATION - this.introTime) / INTRO_DURATION;
+    const globalOpacity = lerp(0, 1, introTime > 0.8 ? (introTime - 0.8) / 0.2 : 0);
+    const invOpacity = 1 - globalOpacity;
+    if (this.introTime > 0) {
+      this.introTime -= dt2;
+      this.renderIntro(invOpacity);
+    }
+    gl.useProgram(this.programs[0]);
+    const passes = [this.controls, this.controlTarget].filter((e) => e != null);
+    const data = [this.currArrays, this.targetArrays];
+    if (this.controlTarget)
+      this.controlTime += dt2;
+    const ct = smoothstep(0, 1, this.controlTime);
+    const passOpacity = [1 - ct, ct];
+    for (let p = 0; p < passes.length; ++p) {
+      const controls = passes[p];
+      const arrays = data[p];
+      this.angle += controls.rotationSpeed * 0.1 * dt2;
+      this.ctx[0].speeds.value = [
+        controls.emissionSpeed * K_EMISSION_FACTOR,
+        controls.evolutionSpeed * K_EVOLUTION_FACTOR,
+        controls.angularRotSpeed,
+        0
+      ];
+      const sW = this.width / controls.resolution[0];
+      const sH = this.height / controls.resolution[1];
+      const factor = Math.sqrt(sW * sW + sH * sH);
+      this.ctx[0].pointSize.value = controls.pointSize * factor * (1 + 0.8 * this.transition_);
+      const another = lerp(1, 0.8, this.transition_);
+      const rndVector = (scale = 1) => {
+        return new Vec3(this.rnd.random(-1, 1), this.rnd.random(-1, 1), this.rnd.random(-1, 1)).mulScalar(scale);
+      };
+      for (let layer = 0; layer < controls.layers; ++layer) {
+        arrays.rotAccum[layer] -= dt2;
+        if (arrays.rotAccum[layer] <= 0) {
+          arrays.freq[layer] = this.rnd.random(controls.dirChangeFreq * (1 - controls.dirChangeVariance), controls.dirChangeFreq);
+          arrays.rotAccum[layer] = 1 / arrays.freq[layer];
+          arrays.source[layer] = new Vec3(arrays.rotations[layer]);
+          arrays.targets[layer] = new Vec3(rndVector(controls.dirChangeStrength).add(arrays.rotations[layer])).normalise();
+        }
+      }
+      for (let i = 0; i < controls.layers; ++i) {
+        const u = 1 - arrays.rotAccum[i] * arrays.freq[i];
+        lerpI(arrays.source[i], arrays.targets[i], arrays.rotations[i], smoothstep(0, 1, u));
+        arrays.rotations[i].normalise();
+      }
+      this.ctx[0].time.value = this.time;
+      this.ctx[0].opacity.value = Math.min(controls.opacity, globalOpacity, passOpacity[p], another);
+      this.ctx[0].scalePoints.value = controls.scalePoints ? 1 : 0;
+      this.ctx[0].frequencies.value = [controls.emissionFreq, controls.landFreq, controls.rotationFreq, controls.rotationMag];
+      let rScale = this.width < this.height ? this.width / this.height : 1;
+      rScale *= controls.customScale ?? 1;
+      for (let i = 0; i < controls.layers; ++i) {
+        const model = Mat4.mul(
+          Mat4.makeIdentity(),
+          controls.lockAxes ? Mat4.makeRotation(LAYER_AXES[i], this.angle * (i % 2 === 0 ? -1 : 1)) : Mat4.makeRotation(arrays.rotations[i], this.angle * (i % 2 === 0 ? -1 : 1)),
+          Mat4.mul(
+            Mat4.makeIdentity(),
+            Mat4.makeRotation([1, 0, 0], Math.PI / 2),
+            Mat4.makeScale([rScale * (1 - i * controls.layerStepDistance), rScale * (1 - i * controls.layerStepDistance), rScale * (1 - i * controls.layerStepDistance)])
+          )
+        );
+        const mv = Mat4.mul(
+          Mat4.makeIdentity(),
+          Mat4.lookAt([0, 0, 3], [0, 0, 0], [0, 1, 0]),
+          model
+        );
+        this.ctx[0].mv.value = mv;
+        this.ctx[0].mvp.value = Mat4.mul(
+          Mat4.makeIdentity(),
+          Mat4.makePerspective(45, this.width / this.height, 0.5, 5),
+          mv
+        );
+        const layerOpacity = clamp(1 - controls.layerOpacityDelta * i, 0, 1);
+        const layerScaleDelta = 5 - 3 * (i / controls.layers);
+        this.ctx[0].layerControls.value = [layerOpacity, layerScaleDelta, i, controls.layerColours ? 1 : 0];
+        this.ctx[0].landmass.value = [
+          controls.emissionStart,
+          controls.emissionEnd,
+          controls.emissionHeight,
+          controls.sealevel + clamp(i * controls.sealevelLayerDelta, 0, 1)
+        ];
+        this.ctx[0].roundedPoints.value = controls.roundedPoints ? 1 : 0;
+        this.ctx[0].randomSeed.value = controls.randomSeed ? seed[i] : 0;
+        this.ctx[0].visibility.value = visibility.indexOf(controls.visibility);
+        bindContext(this.gl, this.ctx[0]);
+        if (this.points?.has(controls.sampleRadius)) {
+          const data2 = this.points.get(controls.sampleRadius);
+          if (data2) {
+            gl.bindVertexArray(data2[0]);
+            gl.drawArrays(gl.POINTS, 0, data2[2]);
+          }
+        } else {
+          console.error("Failed to find points with radius:", controls.sampleRadius);
+        }
+      }
+    }
+    if (this.controlTime > 1) {
+      this.controls = { ...this.controls, ...JSON.parse(JSON.stringify(this.controlTarget)) };
+      this.controlSource = this.controlTarget;
+      this.currArrays = this.targetArrays;
+      this.sourceName = this.targetName_;
+      this.controlTarget = null;
+      this.controlTime = 0;
+    }
+  }
+  renderIntro(opacity) {
+    if (this.ctx == null || this.introTime <= 0)
+      return;
+    const gl = this.gl;
+    gl.viewport(0, 0, this.width, this.height);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.useProgram(this.programs[1]);
+    const sW = this.width / this.controls.resolution[0];
+    const sH = this.height / this.controls.resolution[1];
+    const factor = Math.sqrt(sW * sW + sH * sH);
+    this.ctx[1].pointSize.value = 6 * factor;
+    this.ctx[1].time.value = this.time;
+    this.ctx[1].opacity.value = opacity;
+    const u = 1 - this.introTime / INTRO_DURATION;
+    const t = smoothstep(0, 0.5, u) - smoothstep(0.5, 1, u);
+    const d = lerp(3, 1.5, t);
+    this.ctx[1].resolution.value = [this.width, this.height, this.width / this.height];
+    for (let layer = 0; layer < 5; ++layer) {
+      this.ctx[1].mvp.value = Mat4.mul(
+        Mat4.makeIdentity(),
+        Mat4.makePerspective(45, this.width / this.height, 0.5, 5),
+        Mat4.mul(
+          Mat4.makeIdentity(),
+          Mat4.lookAt([0, 0, d], [0, 0, 0], [0, 1, 0]),
+          Mat4.makeScale([1 - 0.15 * layer, 1 - 0.15 * layer, 1 - 0.15 * layer])
+        )
+      );
+      this.ctx[1].layer.value = layer;
+      bindContext(gl, this.ctx[1]);
+      if (this.planePoints != null) {
+        gl.bindVertexArray(this.planePoints[0]);
+        gl.drawArrays(gl.POINTS, 0, this.planePoints[2]);
+      }
+    }
+  }
+};
+var mainCanvas = new RenderApp("canvas", true);
+var aboutCanvas = new RenderApp("about-canvas", false);
+var accordions = ["ct-accordion", "ai-accordion", "b2b-accordion"];
+var names = ["clean", "ai", "b2b"];
+var canvasCallbacks = [];
+var aboutCallbacks = [];
+var list = [null, null];
+if (mainCanvas.valid)
+  list[0] = mainCanvas;
+if (aboutCanvas.valid)
+  list[1] = aboutCanvas;
+var prevTime = performance.now();
+var currTime = performance.now();
+var dt = 1;
+var activeIndex = 1;
+var render = () => {
+  prevTime = currTime;
+  currTime = performance.now();
+  dt = (currTime - prevTime) * 1e-3;
+  list.forEach((e, i) => {
+    e?.render(dt);
+  });
+  window.requestAnimationFrame(render);
+};
+Promise.all([
+  loadBuffer(VBUF001_URL),
+  loadBuffer(VBUF003_URL),
+  loadBuffer(VBUF005_URL)
+]).then((buffers) => {
+  dict.set(0.01, new Float32Array(buffers[0]));
+  dict.set(0.03, new Float32Array(buffers[1]));
+  dict.set(0.05, new Float32Array(buffers[2]));
+  for (const e of list) {
+    if (e)
+      e.initialiseData(e.canvasId === "canvas");
+  }
+  window.requestAnimationFrame(render);
+}).catch((error) => {
+  console.error("Failed to load buffers:", error);
+});
+function setupSlideTransitionObserver() {
+  activeIndex = 1;
+  const swiperWrapper = document.getElementById("ai-accordion")?.parentElement?.parentElement ?? null;
+  if (!swiperWrapper) {
+    console.error("Swiper wrapper not found");
+    return () => {
+    };
+  }
+  const slides = swiperWrapper.querySelectorAll(".swiper-slide");
+  let lastTrigger = performance.now();
+  const observer2 = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.type === "attributes" && mutation.attributeName === "class") {
+        slides.forEach((slide, index) => {
+          if (slide.classList.contains("swiper-slide-active") && isElementInView(slides[index]) && performance.now() - lastTrigger > 100) {
+            activeIndex = index;
+            const n = names[index];
+            if (list[0]?.targetName !== n) {
+              list[0]?.initiateLerp(JSON.parse(configurations[n]), n);
+            }
+            lastTrigger = performance.now();
+          }
+        });
+      }
+    });
+  });
+  slides.forEach((slide) => {
+    observer2.observe(slide, {
+      attributes: true,
+      attributeFilter: ["class"]
+    });
+  });
+  return () => {
+    observer2.disconnect();
+  };
+}
+function setupTriggerAccordion(accordionName = accordions[1]) {
+  const targetAccordion = document.getElementById(accordionName);
+  if (!targetAccordion) {
+    console.error("Trigger accordion not found");
+    return () => {
+    };
+  }
+  let lastUpdate = performance.now();
+  function checkAccordionVisibility() {
+    if (performance.now() - lastUpdate < 100)
+      return;
+    const isInViewport = isElementInView(targetAccordion);
+    if (list[0] != null) {
+      if (isInViewport) {
+        const n = names[activeIndex];
+        if (list[0]?.targetName !== n)
+          list[0]?.initiateLerp(JSON.parse(configurations[n]), n);
+      } else if (!isInViewport && list[0]?.targetName !== "base") {
+        list[0]?.initiateLerp(JSON.parse(configurations.base), "base");
+      }
+    }
+    lastUpdate = performance.now();
+  }
+  window.addEventListener("scroll", checkAccordionVisibility);
+  checkAccordionVisibility();
+  return () => {
+    window.removeEventListener("scroll", checkAccordionVisibility);
+  };
+}
+function isElementInView(element) {
+  const rect = element.getBoundingClientRect();
+  return !(rect.right <= 0 || rect.left >= window.innerWidth || rect.bottom <= 0 || rect.top >= window.innerHeight);
+}
+if (mainCanvas.valid) {
+  canvasCallbacks.push(setupTriggerAccordion());
+  canvasCallbacks.push(setupSlideTransitionObserver());
+  canvasCallbacks.push(setupStyleWatcher());
+} else if (aboutCanvas.valid) {
+  aboutCallbacks.push(setupStyleWatcher());
+}
+function queryCanvas(node, name) {
+  return node.classList?.contains("main") && node.querySelector != null && node.querySelector(name);
+}
+function checkCreate(node, name, index) {
+  if (queryCanvas(node, name)) {
+    list[index] = new RenderApp(name.slice(1), false);
+    return true;
+  }
+  return false;
+}
+function checkDestroy(node, name, index) {
+  if (queryCanvas(node, name)) {
+    list[index] = null;
+    return true;
+  }
+  return false;
+}
+var observer = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    mutation.addedNodes.forEach((node) => {
+      if (checkCreate(node, "#canvas", 0) && canvasCallbacks.length === 0) {
+        canvasCallbacks.push(setupSlideTransitionObserver());
+        canvasCallbacks.push(setupTriggerAccordion());
+        setTimeout(() => {
+          canvasCallbacks.push(setupStyleWatcher());
+        }, 100);
+        list[0]?.initialiseData(true);
+      } else if (checkCreate(node, "#about-canvas", 1) && aboutCallbacks.length === 0) {
+        setTimeout(() => {
+          aboutCallbacks.push(setupStyleWatcher());
+        }, 100);
+        list[1]?.initialiseData(false);
+      }
+    });
+    mutation.removedNodes.forEach((node) => {
+      if (checkDestroy(node, "#canvas", 0)) {
+        canvasCallbacks.forEach((e) => {
+          e();
+        });
+        canvasCallbacks.length = 0;
+      }
+      if (checkDestroy(node, "#about-canvas", 1)) {
+        aboutCallbacks.forEach((e) => {
+          e();
+        });
+        aboutCallbacks.length = 0;
+      }
+    });
+  });
+});
+observer.observe(document.body, { childList: true, subtree: true });
+document.addEventListener("scroll", function() {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const scrollFraction = scrollTop / docHeight;
+  updateAnimation(scrollFraction);
+});
+function updateAnimation(scrollFraction) {
+  if (list[0])
+    list[0].transition = scrollFraction;
+}
+function colorStringToArray(color) {
+  if (!color)
+    return null;
+  if (color.startsWith("#")) {
+    const hex = color.slice(1);
+    let r, g, b;
+    if (hex.length === 3) {
+      r = parseInt(hex[0] + hex[0], 16);
+      g = parseInt(hex[1] + hex[1], 16);
+      b = parseInt(hex[2] + hex[2], 16);
+    } else if (hex.length === 6) {
+      r = parseInt(hex.substring(0, 2), 16);
+      g = parseInt(hex.substring(2, 4), 16);
+      b = parseInt(hex.substring(4, 6), 16);
+    }
+    if (!r || !g || !b)
+      return null;
+    return [r / 255, g / 255, b / 255];
+  }
+  if (color.startsWith("rgb")) {
+    const rgb = color.match(/\d+/g).map(Number);
+    return rgb.map((val) => val / 255);
+  }
+  return null;
+}
+function setupStyleWatcher() {
+  const mainElement = document.querySelector(".main");
+  if (!mainElement) {
+    console.log("Could not find main element");
+    return () => {
+    };
+  }
+  const observer2 = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.type === "attributes" && mutation.attributeName === "style") {
+        const textColor = mainElement.style.getPropertyValue("--color--text");
+        if (textColor && (list[0] != null || list[1] != null)) {
+          const col = colorStringToArray(textColor);
+          if (col && Array.isArray(col) && col.length > 3) {
+            if (list[0])
+              list[0].colour = col.slice(0, 3);
+            else if (list[1])
+              list[1].colour = col.slice(0, 3);
+          }
+        }
+      }
+    });
+  });
+  observer2.observe(mainElement, {
+    attributes: true,
+    attributeFilter: ["style"]
+  });
+  return () => {
+    observer2.disconnect();
+  };
+}
+export {
+  RenderApp
+};
