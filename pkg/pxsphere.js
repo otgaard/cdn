@@ -2330,8 +2330,19 @@ function setupTriggerAccordion(accordionName = accordions[1]) {
     return () => {
     };
   }
+  const docBody = document.documentElement || document.body;
   let lastUpdate = performance.now();
   function checkAccordionVisibility() {
+    window.addEventListener("scroll", function() {
+      if (window.scrollY === 0) {
+        console.log("Scrolled to the top of the document.");
+        lastUpdate -= 101;
+      }
+      if (window.innerHeight + window.scrollY >= docBody.scrollHeight) {
+        console.log("Scrolled to the bottom of the document.");
+        lastUpdate -= 101;
+      }
+    });
     if (performance.now() - lastUpdate < 100)
       return;
     const isInViewport = isElementInView(targetAccordion);
@@ -2389,7 +2400,7 @@ var observer = new MutationObserver((mutations) => {
         setTimeout(() => {
           canvasCallbacks.push(setupStyleWatcher());
         }, 100);
-        list[0]?.initialiseData(true);
+        list[0]?.initialiseData(false);
       } else if (checkCreate(node, "#about-canvas", 1) && aboutCallbacks.length === 0) {
         setTimeout(() => {
           aboutCallbacks.push(setupStyleWatcher());
