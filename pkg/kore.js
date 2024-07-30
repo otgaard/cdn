@@ -99,7 +99,7 @@ float computePosition() {
   float d = record.dist / waveScale;
   float discSize = max(baseUnit / waveScale, 6.);
   record.disc = gain(0.7, smoothstep(0.5 * discSize, 1.2 * discSize, d));
-  return record.disc * sin(d - time) * smoothstep(0., -TWO_PI, d - time);
+  return record.disc * sin(d - time) * smoothstep(2. * TWO_PI, TWO_PI, d - time);
 }
 
 #elif defined(GAUSSIAN)
