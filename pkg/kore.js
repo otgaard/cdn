@@ -1031,9 +1031,11 @@ void main() {
     </div>
 </div>
 `,Ap=`
+<!--
 <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
 <canvas id="canvas" width="1024" height="768"></canvas>
 </div>
+-->
 `,kp=`
 .commands {
     position: fixed;
