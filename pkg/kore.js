@@ -3270,14 +3270,16 @@ var Kore = class {
         const dataStr = div.getAttribute("data-kore");
         let data;
         if (dataStr)
-          data = JSON.parse(dataStr);
+          data = JSON.parse(dataStr.replace(/'/g, '"'));
         else {
           data = {
             position: [0, 0],
             ringScale: 0.04,
             normalScale: 0.8,
             rings: [0, 1, 6, 8],
-            angle: 0
+            angle: 0,
+            arc: 0,
+            colourID: 0
           };
         }
         return data;
