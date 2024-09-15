@@ -2990,8 +2990,8 @@ var Host = class {
     for (let i = 0; i < this.config_.views.length; ++i) {
       const div = this.config_.views[i];
       const canvas = document.createElement("canvas");
-      canvas.width = Math.ceil(div.offsetWidth * dPR);
-      canvas.height = Math.ceil(div.offsetHeight * dPR);
+      canvas.width = Math.round(div.offsetWidth * dPR);
+      canvas.height = Math.round(div.offsetHeight * dPR);
       console.log("w,h:", canvas.width, canvas.height, div.offsetWidth, div.offsetHeight);
       div.insertBefore(canvas, div.firstChild);
       canvas.style.width = `${div.offsetWidth}px`;
