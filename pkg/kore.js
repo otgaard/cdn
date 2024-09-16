@@ -2996,8 +2996,9 @@ var Host = class {
       div.insertBefore(canvas, div.firstChild);
       canvas.style.width = `${div.offsetWidth}px`;
       canvas.style.height = `${div.offsetHeight}px`;
+      canvas.style.zIndex = "-1";
       const ctx2 = canvas.getContext("2d", { alpha: false });
-      ctx2.imageSmoothingEnabled = true;
+      ctx2.imageSmoothingEnabled = false;
       ctx2.scale(1 / dPR, 1 / dPR);
       const data = this.config_.viewDataFnc?.(div) ?? {};
       arr.push({
@@ -3169,7 +3170,138 @@ var Host = class {
 var vertex_shader_default = "const vec2 position[3] = vec2[3](\n    vec2(-1.0, -1.0),\n    vec2(+3.0, -1.0),\n    vec2(-1.0, +3.0)\n);\n\nout vec2 uv;\n\nvoid main() {\n    gl_Position = vec4(position[gl_VertexID], 0.0, 1.0);\n    uv = position[gl_VertexID] * .5 + .5;\n}\n";
 
 // src/apps/kore/shaders/final.glsl
-var final_default = '#include <commonDefs>\n#include <functions>\n#include <colourTable>\n#include <computeNormal>\n#include <simplex2D>\n#include <simplex3D>\n#include <rotate2D>\n#include <noises>\n\nin vec2 uv;\n\n/********************************************************************************/\n/* UNIFORMS                                                                     */\n/********************************************************************************/\n\nuniform vec2 position; // { "value": [0.0, 0.0], "min": -1000.0, "max": 1000.0, "step": 1.0 }\nuniform float ringScale; // { "value": 0.02, "min": 0.01, "max": 1.0, "step": 0.001 }\nuniform float colourScale; // { "value": 0.02, "min": 0.0, "max": 1.0, "step": 0.001 }\nuniform float normalScale; // { "value": 1.0, "min": 0.0, "max": 1.0, "step": 0.001 }\nuniform vec4 rings; // { "value": [0.0, 1.0, 6.0, 8.0], "min": 0.0, "max": 20.0, "step": 1.0 }\nuniform float angle; // { "value": 0.0, "min": 0.0, "max": 6.28319, "step": 0.01 }\nuniform float arc; // { "value": 0.5, "min": -1.0, "max": 1.0, "step": 0.01 }\nuniform int colourID; // { "value": 0, "min": 0, "max": 8, "step": 1 }\n\n#define globalScale (ringScale / dPR)\n#define globalPos (position * dPR)\n\n/********************************************************************************/\n/* GLOBALS                                                                      */\n/********************************************************************************/\n\nvec3 lightDir; // The position of the light (points towards)\nvec2 centre; // The centre of the animation\nvec2 invRes; // The inverse of the viewport (may be a region of the window)\n\nstruct Record {\n  vec2 fragCoord;\n  vec3 dispMag; // displacement from centre, mag of distance\n  vec2 dir; // normalised direction from centre\n  float height; // The height of the computed position\n  vec3 normal; // The computed normal from the height\n  float annulus; // The annulus scalar\n  float sign; // Which side of the bezier curve is this?\n};\n\nRecord record;\n\n/********************************************************************************/\n/* FUNCTIONS                                                                    */\n/********************************************************************************/\n\nfloat random2(vec2 co) {\n  return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\n// Draws the background colour - stippled sand where the annulus is 0\nvec3 drawBackground() {\n  return mix(sandColour, backgroundColour, bias(0.1, random2(uv+.186)));\n}\n\n\n/********************************************************************************/\n/* ANIMATIONS                                                                   */\n/********************************************************************************/\n\n/********************* SINE_WAVE *********************/\n#if defined(SINE_WAVE)\n\nvec4 mixColour(float dst, vec4 colour, int idx) {\n  colour.rgb = mix(colour.rgb, colourTable[idx], dst);\n  colour.a = max(colour.a, dst);\n  return colour;\n}\n\nvec4 computeWedge(int idx, vec4 colour, float angle) {\n  float dist = globalScale * record.dispMag.z;\n  vec2 deriv = vec2(cos(angle), -sin(angle));\n  float f = smoothstep(arc, 1.0, saturate(dot(deriv, record.dir)));\n  return mixColour(f, colour, idx);\n}\n\nvec3 computeColour() {\n  vec3 bg = drawBackground();\n  vec4 colour = vec4(bg, .0);\n\n  float l = dot(record.normal, lightDir) * .5 + .5;\n\n  for(int i = 0; i < 1; ++i) colour = computeWedge(colourID, colour, angle + float(i) * 3.14 * .25);\n\n  colour.rgb = mix(colour.rgb, backgroundColour, saturate(random2(uv) * colour.a - normalScale));\n  colour.rgb = mix(colour.rgb, backgroundColour, saturate(fract(time * 0.2 + random2(uv)) - 0.1));\n  colour.rgb = mix(mix(bg, backgroundColour, 0.6), colour.rgb, record.annulus);\n  return mix(colour.rgb, backgroundColour, bias(0.2, l) - 0.4 * colour.a);\n}\n\n// Compute the flat centre, start, and end of the entire disc as scalar\nfloat computeAnnulus(float dist) {\n  record.annulus = min(smoothstep(rings.x * PI, rings.y * PI, dist) - smoothstep(rings.z * PI, rings.w * PI, dist), 1.0);\n  return record.annulus;\n}\n\nfloat computePosition() {\n  float dist = globalScale * record.dispMag.z;\n  return computeAnnulus(dist) * sin(dist - 1.0 * time);\n}\n\n/********************* BREAKING_WAVE *********************/\n#elif defined(BREAKING_WAVE)\n\nconst float scalar = 2.0;\nconst float width = scalar * 100.;\nconst float divisor = scalar * 300.;\n\nvec3 computeColour() {\n  return mix(drawBackground(), vec3(1.), record.height/(width));\n}\n\nfloat length2(vec2 A) { return dot(A, A); }\n\nfloat computePosition() {\n  vec2 P = record.dispMag.xy;\n  vec2 A = vec2(-600. * scalar, -600.); vec2 B = vec2(+600. * scalar, -600.); vec2 C = vec2(0., 500.);\n  float s = sdBezier(A, C, B, P);\n  float b = abs(s);\n  float d = max(width - b, 0.0) * sqrt(min(length2(A-P), length2(B-P)))/divisor;\n  return d;\n}\n\n#endif\n\n/********************************************************************************/\n/* ENTRY                                                                        */\n/********************************************************************************/\n\nvoid initAnimation(vec2 fragCoord) {\n  lightDir = normalize(vec3(1.0, 1.0, 1.0));\n  centre = screen / 2.0 + vec2(globalPos.x, -globalPos.y);\n  record.fragCoord = fragCoord;\n  record.dispMag.xy = fragCoord - centre;\n  record.dispMag.z = length(record.dispMag.xy);\n  record.dir = record.dispMag.xy / record.dispMag.z;\n  record.height = computePosition();\n  record.normal = computeNormal(record.height, globalScale / normalScale); // This ratio works across resolutions...\n}\n\nvoid renderImage(out vec4 fragColour, vec2 fragCoord) {\n  initAnimation(fragCoord);\n\n  vec3 outColour = computeColour();\n  fragColour = vec4(outColour, 1.0);\n}\n';
+var final_default = '#include <commonDefs>\n#include <functions>\n#include <colourTable>\n#include <computeNormal>\n#include <simplex2D>\n#include <simplex3D>\n#include <rotate2D>\n#include <noises>\n\n#define RAND_TEX\n\nin vec2 uv;\n\n/********************************************************************************/\n/* UNIFORMS                                                                     */\n/********************************************************************************/\n\nuniform vec3 lDir; // { "value": [1.0, 1.0, 1.0], "min": -1.0, "max": 1.0, "step": 0.01 }\nuniform vec2 position; // { "value": [0.0, 0.0], "min": -1000.0, "max": 1000.0, "step": 1.0 }\nuniform float ringScale; // { "value": 0.02, "min": 0.01, "max": 1.0, "step": 0.001 }\nuniform float colourScale; // { "value": 0.02, "min": 0.0, "max": 1.0, "step": 0.001 }\nuniform float normalScale; // { "value": 1.0, "min": 0.0, "max": 1.0, "step": 0.001 }\nuniform vec4 rings; // { "value": [0.0, 1.0, 6.0, 8.0], "min": 0.0, "max": 20.0, "step": 1.0 }\nuniform float angle; // { "value": 0.0, "min": 0.0, "max": 6.28319, "step": 0.01 }\nuniform float arc; // { "value": 0.5, "min": -1.0, "max": 1.0, "step": 0.01 }\nuniform int colourID; // { "value": 6, "min": 0, "max": 8, "step": 1 }\nuniform float rotation; // { "value": 3.10, "min": 0.0, "max": 6.28319, "step": 0.1 }\n\n#define globalScale (ringScale / dPR)\n#define globalPos (position * dPR)\n\n/********************************************************************************/\n/* GLOBALS                                                                      */\n/********************************************************************************/\n\nvec3 lightDir; // The position of the light (points towards)\nvec2 centre; // The centre of the animation\nvec2 invRes; // The inverse of the viewport (may be a region of the window)\n\nstruct Record {\n  vec2 fragCoord;\n  vec3 dispMag; // displacement from centre, mag of distance\n  vec2 dir; // normalised direction from centre\n  float height; // The height of the computed position\n  vec3 normal; // The computed normal from the height\n  float annulus; // The annulus scalar\n  float sign; // Which side of the bezier curve is this?\n};\n\nRecord record;\n\n/********************************************************************************/\n/* FUNCTIONS                                                                    */\n/********************************************************************************/\n\n#if defined(RAND_TEX)\n\nuniform sampler2D randTex;\nfloat random2(vec2 co) {\n  return texture(randTex, uv).r;\n}\n\n#else\n\nfloat random2(vec2 co) {\n  return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\n#endif\n\nfloat length2(vec2 A) { return dot(A, A); }\n\n// Draws the background colour - stippled sand where the annulus is 0\nvec3 drawBackground(float b) {\n  return mix(sandColour, backgroundColour, bias(b, random2(uv+.186)));\n}\n\nvec4 mixColour(float dst, vec4 colour, int idx) {\n  colour.rgb = mix(colour.rgb, colourTable[idx], dst);\n  colour.a = max(colour.a, dst);\n  return colour;\n}\n\n/********************************************************************************/\n/* ANIMATIONS                                                                   */\n/********************************************************************************/\n\n/********************* SINE_WAVE *********************/\n#if defined(SINE_WAVE)\n\nvec4 computeWedge(int idx, vec4 colour, float angle) {\n  // float dist = globalScale * record.dispMag.z;\n  vec2 deriv = vec2(cos(angle), -sin(angle));\n  float f = smoothstep(arc, 1.0, saturate(dot(deriv, record.dir)));\n  return mixColour(f, colour, idx);\n}\n\nvec3 computeColour() {\n  vec3 bg = drawBackground(0.1);\n  vec4 colour = vec4(bg, .0);\n\n  float l = dot(record.normal, lightDir) * .5 + .5;\n\n  for(int i = 0; i < 2; ++i) colour = computeWedge(colourID+i, colour, angle + float(i) * 3.14 * .25);\n\n  colour.rgb = mix(colour.rgb, backgroundColour, saturate(random2(uv) * colour.a - normalScale));\n  colour.rgb = mix(colour.rgb, backgroundColour, saturate(fract(time * 0.2 + random2(uv)) - 0.1));\n  colour.rgb = mix(mix(bg, backgroundColour, 0.6), colour.rgb, record.annulus);\n  return mix(colour.rgb, backgroundColour, bias(0.2, l) - 0.4 * colour.a);\n}\n\n// Compute the flat centre, start, and end of the entire disc as scalar\nfloat computeAnnulus(float dist) {\n  record.annulus = saturate(smoothstep(rings.x * PI, rings.y * PI, dist) - smoothstep(rings.z * PI, rings.w * PI, dist));\n  return record.annulus;\n}\n\nfloat computePosition() {\n  // This does not work on older mobile devices???: float dist = globalScale * record.dispMag.z;\n  float dist = globalScale * sqrt(length2(record.dispMag.xy));\n  return computeAnnulus(dist) * sin(dist - time);\n}\n\n/********************* BREAKING_WAVE *********************/\n#elif defined(BREAKING_WAVE)\n\nconst float scale = 1e-3;\n\nuniform vec4 waveSize; // { "value": [1.27, 1.06, 5.81, 3.72], "min": 0.0, "max": 20.0, "step": 0.01 }\n\nvec4 computeZone(int idx, vec4 colour) {\n  float f = saturate(smoothstep(-1.0, 1.0, record.sign) * .5 + .5);\n  return mixColour(f, colour, idx);\n}\n\nvec3 computeColour() {\n  vec3 bg = drawBackground(0.1);\n  vec4 colour = vec4(bg, .0);\n\n  float l = dot(record.normal, lightDir) * .5 + .5;\n\n  colour = computeZone(1, colour);\n\n  colour.rgb = mix(colour.rgb, backgroundColour, saturate(random2(uv) * colour.a - normalScale));\n  colour.rgb = mix(colour.rgb, backgroundColour, saturate(fract(time * 0.2 + random2(uv)) - 0.1));\n  colour.rgb = mix(mix(bg, backgroundColour, 0.6), colour.rgb, record.annulus);\n  return mix(colour.rgb, backgroundColour, bias(0.2, l) - 0.7 * colour.a);\n}\n\nfloat computePosition() {\n  vec2 P = scale * record.dispMag.xy;\n  vec2 A = vec2(-waveSize.x, -waveSize.y); vec2 B = vec2(+waveSize.x, -waveSize.y); vec2 C = vec2(0., +waveSize.y);\n  record.sign = sdBezier(A, C, B, P);\n  float b = abs(record.sign);\n  float d = max(scale * 50. * waveSize.w - b, 0.0) * 0.01*min(length2(A - P), length2(B - P));\n  return d / scale;\n}\n\n#endif\n\n/********************************************************************************/\n/* ENTRY                                                                        */\n/********************************************************************************/\n\nvoid initAnimation(vec2 fragCoord) {\n  mat2 rot = rotate2D(rotation);\n  lightDir = normalize(lDir);\n\n  centre = rot * (screen / 2.0 + vec2(globalPos.x, -globalPos.y));\n  record.fragCoord = rot * fragCoord;\n  record.dispMag.xy = record.fragCoord - centre;\n  record.dispMag.z = length(record.dispMag.xy);\n  record.dir = record.dispMag.xy / record.dispMag.z;\n  record.height = computePosition();\n  record.normal = computeNormal(record.height, globalScale / normalScale); // This ratio works across resolutions...\n}\n\nvoid renderImage(out vec4 fragColour, vec2 fragCoord) {\n  initAnimation(fragCoord);\n\n  vec3 outColour = computeColour();\n  fragColour = vec4(outColour, 1.0);\n}\n';
+
+// src/lib/engine/Texture.ts
+var Texture = class {
+  gl_;
+  texture_;
+  width_;
+  height_;
+  conf = { type: WebGL2RenderingContext.TEXTURE_2D };
+  constructor(gl, conf, tex, width, height) {
+    this.gl_ = gl;
+    this.texture_ = tex ?? gl.createTexture();
+    this.width_ = width ?? 0;
+    this.height_ = height ?? 0;
+    this.config = conf ?? { type: gl.TEXTURE_2D };
+    console.log("this.conf:", this.conf);
+  }
+  get config() {
+    return this.conf;
+  }
+  set config(conf) {
+    const gl = WebGL2RenderingContext;
+    this.conf = {
+      type: conf?.type ?? gl.TEXTURE_2D,
+      format: conf?.format ?? [gl.RGBA8, gl.RGBA],
+      dataType: conf?.dataType ?? gl.UNSIGNED_BYTE,
+      wrap: conf?.wrap ?? [gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE],
+      filter: conf?.filter ?? [
+        conf?.mipmaps ?? false ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR,
+        gl.LINEAR
+      ],
+      mipmaps: conf?.mipmaps ?? false,
+      aniso: conf?.aniso ?? 1,
+      flip: conf?.flip ?? false
+    };
+  }
+  dispose() {
+    if (this.texture_) {
+      const gl = this.gl_;
+      gl.deleteTexture(this.texture_);
+    }
+  }
+  get width() {
+    return this.width_;
+  }
+  get height() {
+    return this.height_;
+  }
+  get mipmaps() {
+    return this.conf.mipmaps ?? true;
+  }
+  set mipmaps(value) {
+    this.conf.mipmaps = value;
+  }
+  get aniso() {
+    return this.conf.aniso ?? 1;
+  }
+  set aniso(value) {
+    this.conf.aniso = value;
+  }
+  get format() {
+    return this.conf.format ?? [];
+  }
+  set format(value) {
+    this.conf.format = [...value];
+  }
+  get texture() {
+    return this.texture_;
+  }
+  set texture(value) {
+    this.texture_ = value;
+  }
+  bind(unit = 0) {
+    const gl = this.gl_;
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(this.conf.type, this.texture_);
+  }
+  release(unit = 0) {
+    const gl = this.gl_;
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(this.conf.type, null);
+  }
+  allocate(width, height, data, conf) {
+    if (conf)
+      this.conf = { ...this.conf, ...conf };
+    this.width_ = Math.floor(width);
+    this.height_ = Math.floor(height);
+    this.defineTexture(width, height, data);
+  }
+  loadURL(url, conf, onLoaded) {
+    const img = new Image();
+    if (conf)
+      this.config = conf;
+    img.onload = () => {
+      this.width_ = img.naturalWidth;
+      this.height_ = img.naturalHeight;
+      this.defineTexture(this.width_, this.height_, img, conf?.flip);
+      if (onLoaded)
+        onLoaded(this);
+    };
+    img.src = url;
+  }
+  defineTexture(width, height, data, flipY) {
+    const gl = this.gl_;
+    gl.bindTexture(this.conf.type, this.texture_);
+    const mipmaps = this.conf?.mipmaps ?? true;
+    const format = this.conf.format ?? [gl.RGBA8, gl.RGBA];
+    const wrap = this.conf.wrap ?? [gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE];
+    const filter = this.conf.filter ?? [mipmaps ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR, gl.LINEAR];
+    const dataType = this.conf.dataType ?? gl.UNSIGNED_BYTE;
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY ?? false);
+    if (data instanceof HTMLImageElement) {
+      gl.texImage2D(this.conf.type, 0, format[0], format[1], dataType, data ?? null);
+    } else {
+      gl.texImage2D(this.conf.type, 0, format[0], width, height, 0, format[1], dataType, data ?? null);
+    }
+    gl.texParameteri(this.conf.type, gl.TEXTURE_WRAP_S, wrap[0]);
+    gl.texParameteri(this.conf.type, gl.TEXTURE_WRAP_T, wrap[1]);
+    gl.texParameteri(this.conf.type, gl.TEXTURE_MIN_FILTER, filter[0]);
+    gl.texParameteri(this.conf.type, gl.TEXTURE_MAG_FILTER, filter[1]);
+    if (this.conf?.aniso ?? true) {
+      const ext = gl.getExtension("EXT_texture_filter_anisotropic") ?? gl.getExtension("MOZ_EXT_texture_filter_anisotropic") ?? gl.getExtension("WEBKIT_EXT_texture_filter_anisotropic");
+      if (ext) {
+        const max = gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+        gl.texParameterf(gl.TEXTURE_2D, ext.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(max, this.aniso));
+      }
+    }
+    if (this.conf?.mipmaps)
+      gl.generateMipmap(this.conf.type);
+    gl.bindTexture(this.conf.type, null);
+  }
+};
 
 // src/apps/kore/kore2.ts
 var colourTable = `
@@ -3243,6 +3375,7 @@ void main() {
 }
 `;
 var Kore = class {
+  randomTexture;
   host;
   constructor() {
     const conf = {
@@ -3273,13 +3406,16 @@ var Kore = class {
           data = JSON.parse(dataStr.replace(/'/g, '"'));
         else {
           data = {
+            lDir: [1, 1, 1],
             position: [0, 0],
             ringScale: 0.04,
+            // colourScale: 0.0,
             normalScale: 0.8,
             rings: [0, 1, 6, 8],
             angle: 0,
             arc: 0,
-            colourID: 0
+            colourID: 0,
+            rotation: 0
           };
         }
         return data;
@@ -3287,6 +3423,7 @@ var Kore = class {
       offscreen: true
     };
     this.host = new Host(conf);
+    this.randomTexture = this.generateRandTexture(window.innerWidth, window.innerHeight);
     this.host.start();
   }
   onInitialise(renderPipeline) {
@@ -3296,46 +3433,30 @@ var Kore = class {
   }
   resize(width, height) {
     console.log("resize", width, height);
+    this.randomTexture = this.generateRandTexture(width, height, this.randomTexture);
   }
-  /*
-    private texWidth: number = 0
-    private texHeight: number = 0
-  
-    private generateRandTexture (w: number, h: number, unit: number, tex?: WebGLTexture | null): WebGLTexture | null {
-      w = Math.round(w)
-      h = Math.round(h)
-  
-      const buffer = new Uint8Array(w * h)
-      for (let i = 0; i < w * h; i++) buffer[i] = Math.random() * 255.999
-  
-      const gl = this.host.context
-      if (!tex) tex = gl.createTexture()
-      if (tex == null) throw new Error('tex is null')
-  
-      gl.activeTexture(unit)
-      gl.bindTexture(gl.TEXTURE_2D, tex)
-      gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1)
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, w, h, 0, gl.RED, gl.UNSIGNED_BYTE, buffer)
-      gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-  
-      return tex
-    }
-  
-    public generateMapTexture (w: number, h: number, dPR: number): void {
-      w = Math.round(w / dPR)
-      h = Math.round(h / dPR)
-      if ((w !== this.texWidth || h !== this.texHeight) && this.host.context) {
-        console.log('w:', w, 'h:', h)
-        this.randomTexture = this.generateRandTexture(w, h, this.host.context.TEXTURE2, this.randomTexture)
-        this.texWidth = w
-        this.texHeight = h
-      }
-    }
-    */
+  generateRandTexture(w, h, tex) {
+    console.log(this.host);
+    if (!this.host?.context)
+      return void 0;
+    w = Math.round(w);
+    h = Math.round(h);
+    const buffer = new Uint8Array(w * h);
+    for (let i = 0; i < w * h; i++)
+      buffer[i] = Math.random() * 255.999;
+    const gl = this.host.context;
+    tex = tex ?? new Texture(gl);
+    tex.allocate(w, h, buffer, {
+      type: gl.TEXTURE_2D,
+      format: [gl.R8, gl.RED],
+      dataType: gl.UNSIGNED_BYTE,
+      wrap: [gl.REPEAT, gl.REPEAT],
+      filter: [gl.NEAREST, gl.NEAREST]
+    });
+    console.log("texture allocated:", w, h);
+    tex.bind(0);
+    return tex;
+  }
 };
 var load = () => {
   const kore = new Kore();
