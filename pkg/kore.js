@@ -2998,7 +2998,12 @@ var Host = class {
       canvas.style.height = `${div.offsetHeight}px`;
       canvas.style.zIndex = "-1";
       const ctx2 = canvas.getContext("2d", { alpha: false });
-      ctx2.imageSmoothingEnabled = true;
+      if (this.config_.canvasAA) {
+        ctx2.imageSmoothingEnabled = true;
+        ctx2.imageSmoothingQuality = "high";
+      } else {
+        ctx2.imageSmoothingEnabled = false;
+      }
       ctx2.scale(1 / dPR, 1 / dPR);
       const data = this.config_.viewDataFnc?.(div) ?? {};
       arr.push({
@@ -3103,10 +3108,10 @@ var Host = class {
   }
   renderView(view, pass) {
     const rect = view.div.getBoundingClientRect();
-    const rb = rect.bottom;
-    const rt = rect.top;
-    const rr = rect.right;
-    const rl = rect.left;
+    const rb = Math.floor(rect.bottom);
+    const rt = Math.floor(rect.top);
+    const rr = Math.floor(rect.right);
+    const rl = Math.floor(rect.left);
     if (rb < 0 || rt > window.innerHeight || rr < 0 || rl > window.innerWidth) {
       view.canvas.style.display = "none";
       return;
@@ -3133,8 +3138,8 @@ var Host = class {
       view.canvas.height,
       0,
       0,
-      view.canvas.width * dPR,
-      view.canvas.height * dPR
+      Math.floor(view.canvas.width * dPR),
+      Math.floor(view.canvas.height * dPR)
     );
   }
   render() {
