@@ -3828,7 +3828,11 @@ var Kore = class {
         onResize: this.resize.bind(this),
         onInitialise: this.onInitialise.bind(this)
       },
-      views: Array.from(document.querySelectorAll(".kore")),
+      views: Array.from(document.querySelectorAll(".kore")).map((v, i) => {
+        if (v.id.length === 0)
+          v.id = "kore-" + i.toString() + "-gen";
+        return v;
+      }),
       viewDataFnc: (div) => {
         const dataStr = div.getAttribute("data-kore");
         let data;
