@@ -3862,7 +3862,7 @@ var Kore = class {
       view[1].control = new AnimationControlUI(
         view[1].div,
         controls,
-        view[1].div.getAttribute("data-kore"),
+        view[1].div.getAttribute("data-kore").replace(/'/g, '"'),
         (json) => {
           view[1].data = JSON.parse(json);
         }
