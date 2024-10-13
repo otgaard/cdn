@@ -3198,14 +3198,14 @@ var AnimationControlUI = class _AnimationControlUI {
     if (!_AnimationControlUI.styleInjected)
       _AnimationControlUI.injectStyle();
     const wrapper = document.createElement("div");
-    wrapper.className = "button-wrapper";
+    wrapper.className = "zed-button-wrapper";
     this.container.appendChild(wrapper);
     this.toggleButton = document.createElement("div");
-    this.toggleButton.className = "animation-control-button";
+    this.toggleButton.className = "zed-animation-control-button";
     this.toggleButton.innerHTML = "\u2699\uFE0F";
     wrapper.appendChild(this.toggleButton);
     this.controlWindow = document.createElement("div");
-    this.controlWindow.className = "animation-control-window";
+    this.controlWindow.className = "zed-animation-control-window";
     this.controlWindow.style.top = "28px";
     this.controlWindow.style.right = "0";
     wrapper.appendChild(this.controlWindow);
@@ -3221,11 +3221,12 @@ var AnimationControlUI = class _AnimationControlUI {
     header.style.alignItems = "center";
     header.style.justifyContent = "space-between";
     const divID = document.createElement("span");
-    divID.textContent = "#" + this.container.id;
+    divID.textContent = "#" + (this.container.id ?? "no_id");
     divID.style.font = "bold 20px Arial, sans-serif";
+    divID.style.color = "white";
     header.appendChild(divID);
     const notification = document.createElement("span");
-    notification.className = "notification";
+    notification.className = "zed-notification";
     notification.innerHTML = "Copied!";
     const showNotification = () => {
       notification.classList.add("show");
@@ -3237,6 +3238,7 @@ var AnimationControlUI = class _AnimationControlUI {
     exportButtonContainer.style.position = "relative";
     const exportButton = document.createElement("button");
     exportButton.textContent = "Export";
+    exportButton.style.color = "black";
     exportButton.appendChild(notification);
     exportButton.onclick = async () => {
       const json = JSON.stringify(this.values);
@@ -3260,7 +3262,7 @@ var AnimationControlUI = class _AnimationControlUI {
   }
   createControlElement(name, control) {
     const controlElement = document.createElement("div");
-    controlElement.className = "animation-control";
+    controlElement.className = "zed-animation-control";
     const label = document.createElement("label");
     label.textContent = name;
     controlElement.appendChild(label);
@@ -3268,7 +3270,7 @@ var AnimationControlUI = class _AnimationControlUI {
     if (Array.isArray(value)) {
       value.forEach((v, index) => {
         const sliderContainer = document.createElement("div");
-        sliderContainer.className = "slider-container";
+        sliderContainer.className = "zed-slider-container";
         const slider = this.createSlider(name, control, v !== void 0 ? v : 0, index);
         const valueLabel = this.createValueLabel(v !== void 0 ? v : 0);
         sliderContainer.appendChild(slider);
@@ -3277,7 +3279,7 @@ var AnimationControlUI = class _AnimationControlUI {
       });
     } else {
       const sliderContainer = document.createElement("div");
-      sliderContainer.className = "slider-container";
+      sliderContainer.className = "zed-slider-container";
       const slider = this.createSlider(name, control, value !== void 0 ? value : 0);
       const valueLabel = this.createValueLabel(value !== void 0 ? value : 0);
       sliderContainer.appendChild(slider);
@@ -3302,13 +3304,13 @@ var AnimationControlUI = class _AnimationControlUI {
   }
   createValueLabel(value) {
     const valueLabel = document.createElement("span");
-    valueLabel.className = "value-label";
+    valueLabel.className = "zed-value-label";
     valueLabel.textContent = this.formatValue(value);
     return valueLabel;
   }
   updateValueLabel(slider, value) {
     const valueLabel = slider.nextElementSibling;
-    if (valueLabel?.classList.contains("value-label")) {
+    if (valueLabel?.classList.contains("zed-value-label")) {
       valueLabel.textContent = this.formatValue(value);
     }
   }
@@ -3332,18 +3334,18 @@ var AnimationControlUI = class _AnimationControlUI {
       return;
     const style = document.createElement("style");
     style.textContent = `
-        .animation-control-button {
+        .zed-animation-control-button {
             background-color: #000;
             margin-top: -1px;
             color: #ccc;
             padding: 5px 10px;
             cursor: pointer;
         }
-        .button-wrapper {
+        .zed-button-wrapper {
             position: relative;
             float: right;
         }
-        .animation-control-window {
+        .zed-animation-control-window {
             position: absolute;
             top: 32px;
             right: 5px;
@@ -3373,16 +3375,16 @@ var AnimationControlUI = class _AnimationControlUI {
             scrollbar-color: #888888 #000000;
             scrollbar-width: thin;
         }
-        .animation-control label {
+        .zed-animation-control label {
             display: block;
             margin-bottom: 3px;
         }
-        .slider-container {
+        .zed-slider-container {
             display: flex;
             align-items: center;
             margin-bottom: 5px;
         }
-        .animation-control input[type="range"] {
+        .zed-animation-control input[type="range"] {
             -webkit-appearance: none;
             width: calc(100% - 40px);
             margin: 2px 5px 2px 0;
@@ -3392,10 +3394,10 @@ var AnimationControlUI = class _AnimationControlUI {
             opacity: 0.7;
             transition: opacity .2s;
         }
-        .animation-control input[type="range"]:hover {
+        .zed-animation-control input[type="range"]:hover {
             opacity: 1;
         }
-        .animation-control input[type="range"]::-webkit-slider-thumb {
+        .zed-animation-control input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
             width: 14px;
@@ -3404,14 +3406,14 @@ var AnimationControlUI = class _AnimationControlUI {
             border: solid 1px #000000;
             cursor: pointer;
         }
-        .animation-control input[type="range"]::-moz-range-thumb {
+        .zed-animation-control input[type="range"]::-moz-range-thumb {
             width: 14px;
             height: 14px;
             background: #bbb;
             border: solid 1px #000000;
             cursor: pointer;
         }
-        .value-label {
+        .zed-value-label {
             background-color: #000;
             color: #fff;
             padding: 2px 4px;
@@ -3420,7 +3422,7 @@ var AnimationControlUI = class _AnimationControlUI {
             min-width: 30px;
             text-align: center;
         }
-        .notification {
+        .zed-notification {
             position: absolute;
             background-color: #4CAF50;
             color: white;
@@ -3435,11 +3437,12 @@ var AnimationControlUI = class _AnimationControlUI {
             pointer-events: none;
             z-index: 100;
         }
-        .notification.show {
+        .zed-notification.show {
             opacity: 1;
         }
-        .animation-control-window button {
+        .zed-animation-control-window button {
             padding: 2px 4px;
+            color: black;
         }
     `;
     document.head.appendChild(style);
