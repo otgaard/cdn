@@ -2983,10 +2983,13 @@ var Host = class {
       this.resize(this.rndr.screen.x, this.rndr.screen.y);
     });
   }
+  getView(name) {
+    return this.config_.pipeline.multipleViews?.get(name);
+  }
   initialiseViews() {
+    const map = /* @__PURE__ */ new Map();
     if (!this.config_.views)
-      return [];
-    const arr = new Array();
+      return map;
     for (let i = 0; i < this.config_.views.length; ++i) {
       const div = this.config_.views[i];
       const canvas = document.createElement("canvas");
@@ -3007,14 +3010,9 @@ var Host = class {
       }
       ctx2.scale(1 / dPR, 1 / dPR);
       const data = this.config_.viewDataFnc?.(div) ?? {};
-      arr.push({
-        div,
-        canvas,
-        ctx: ctx2,
-        data
-      });
+      map.set(div.id, { div, canvas, ctx: ctx2, data });
     }
-    return arr;
+    return map;
   }
   buildPipeline(pipeline) {
     if (pipeline.passes.length === 0)
@@ -3122,7 +3120,7 @@ var Host = class {
     view.canvas.style.top = `${rt + window.scrollY}px`;
     if (pass.context) {
       this.rndr.context.useProgram(pass.program);
-      const data = this.config_?.viewDataFnc?.(view.div) ?? {};
+      const data = view.data;
       for (const key in data) {
         if (key in pass.context)
           pass.context[key].value = data[key];
@@ -3151,9 +3149,9 @@ var Host = class {
         const pass = pipeline.passes[idx];
         this.config_.handlers.onPassPreRender?.(pass);
         for (const view of pipeline.multipleViews) {
-          if (view.data.model !== idx)
+          if (view[1].data.model !== idx)
             continue;
-          this.renderView(view, pass);
+          this.renderView(view[1], pass);
         }
         this.config_.handlers.onPassPostRender?.(pass);
       }
@@ -3178,10 +3176,592 @@ var Host = class {
 var vertex_shader_default = "const vec2 position[3] = vec2[3](\n    vec2(-1.0, -1.0),\n    vec2(+3.0, -1.0),\n    vec2(-1.0, +3.0)\n);\n\nout vec2 uv;\n\nvoid main() {\n    gl_Position = vec4(position[gl_VertexID], 0.0, 1.0);\n    uv = position[gl_VertexID] * .5 + .5;\n}\n";
 
 // src/apps/kore/shaders/final.glsl
-var final_default = '#include <commonDefs>\n#include <functions>\n#include <colourTable>\n#include <computeNormal>\n#include <simplex2D>\n#include <simplex3D>\n#include <rotate2D>\n#include <noises>\n\n#define SINE_WAVE 0\n#define BREAKING_WAVE 1\n\n#if defined(ZED)\n#define MODEL 1\n#define NEW_COLOUR 1\n#define DRAW_SWATCH\n#else\n#define NEW_COLOUR 1\nin vec2 uv;\n#endif\n\n/********************************************************************************/\n/* UNIFORMS                                                                     */\n/********************************************************************************/\n\nuniform vec3 lDir;            // { "value": [0.0, -1.0, 1.0], "min": -1.0, "max": 1.0, "step": 0.01 }\nuniform vec2 position;        // { "value": [0.0, 0.0], "min": -1000.0, "max": 1000.0, "step": 1.0 }\nuniform float ringScale;      // { "value": 0.04, "min": 0.01, "max": 1.0, "step": 0.001 }\nuniform float colourScale;    // { "value": 0.2, "min": 0.0, "max": 1.0, "step": 0.001 }\nuniform float normalScale;    // { "value": 1.0, "min": 0.0, "max": 1.0, "step": 0.001 }\nuniform float bgStrength;     // { "value": 0.1, "min": 0.0, "max": 1.0, "step": 0.01 }\n// Sine properties\nuniform vec4 rings;           // { "value": [1.0, 2.0, 6.0, 12.0], "min": 0.0, "max": 20.0, "step": 1.0 }\nuniform vec2 angle;           // { "value": [0.0, 3.14], "min": 0.0, "max": 6.28319, "step": 0.01 }\nuniform vec2 arc;             // { "value": [0.5, 0.5], "min": -1.0, "max": 1.0, "step": 0.01 }\nuniform vec2 colourID;        // { "value": [6, 7], "min": 0, "max": 8, "step": 1 }\nuniform vec4 colourRing0;     // { "value": [1.0, 2.0, 18.0, 19.0], "min": 0.0, "max": 20.0, "step": 0.1 }\nuniform vec4 colourRing1;     // { "value": [1.0, 2.0, 18.0, 19.0], "min": 0.0, "max": 20.0, "step": 0.1 }\nuniform float rotation;       // { "value": 3.14, "min": 0.0, "max": 6.28319, "step": 0.01 }\n// Breaking properties\nuniform float steepness;      // { "value": 2.0, "min": 0.1, "max": 10.0, "step": 0.01 }\nuniform float waveScale;      // { "value": 1.6, "min": 0.1, "max": 2.0, "step": 0.01 }\nuniform float waveWidth;      // { "value": 22.0, "min": 1.0, "max": 100.0, "step": 0.1 }\nuniform float waveColOffset;  // { "value": 1.5, "min": 0.1, "max": 20.0, "step": 0.1 }\nuniform float waveOrigin;     // { "value": 0, "min": 0.0, "max": 3.0, "step": 1.0 }\nuniform float shape;          // { "value": 0.56, "min": 0.001, "max": 1.0, "step": 0.01 }\n\n#if MODEL == 0\n#define globalScale (ringScale / dPR)\n#else\n#define globalScale 0.0003 * (100. * (3000. / max(screen.x, screen.y)))\n#endif\n\n#define globalPos (position * dPR)\n#define dPRScale (dPR / 2.0)\n\n/********************************************************************************/\n/* GLOBALS                                                                      */\n/********************************************************************************/\n\nvec3 lightDir; // The position of the light (points towards)\nvec2 invRes; // The inverse of the viewport (may be a region of the window)\n\nstruct Record {\n  mat3 T; // The world transform\n  vec2 centre; // The current centre of the animation\n  vec2 fragCoord; // Copy of the fragCoord in world space\n  vec3 dispMag; // displacement from centre, mag of distance\n  vec2 dir; // normalised direction from centre\n  float height; // The height of the computed position\n  vec3 normal; // The computed normal from the height\n  float annulus; // The annulus scalar\n  float sign; // Which side of the bezier curve is this?\n  float dist; // The distance of the point from the centre (for rings)\n};\n\nRecord record;\n\n/********************************************************************************/\n/* FUNCTIONS                                                                    */\n/********************************************************************************/\n\n#if defined(RAND_TEX) && RAND_TEX\n\nuniform sampler2D randTex;\n\nfloat random2(vec2 co) {\n  vec2 size = vec2(textureSize(randTex, 0));\n  return texture(randTex, fract(co * screen / size)).r;\n}\n\n#else\n\nfloat random2(vec2 co) {\n  return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\n#endif\n\nfloat length2(vec2 A) { return dot(A, A); }\n\n// Draws the background colour - stippled sand where the annulus is 0\nvec3 drawBackground(float b) {\n  return mix(sandColour, backgroundColour, clamp(bias(b, random2(uv)), 0.01, 0.999));\n}\n\nvec4 mixColour(float dst, vec4 colour, int idx) {\n  colour.rgb = mix(colour.rgb, colourTable[idx], dst);\n  colour.a = max(colour.a, dst);\n  return colour;\n}\n\nvec3 computeColourNew() {\n  const float sandFlicker = 0.1;\n  vec3 bg = drawBackground(bgStrength);\n  vec3 fg = backgroundColour;\n  float l = dot(record.normal, lightDir);\n\n\n\n  return mix(bg, fg, l);\n}\n\n/********************************************************************************/\n/* ANIMATIONS                                                                   */\n/********************************************************************************/\n\n/********************* SINE_WAVE *********************/\n#if defined(SINE_WAVE) && MODEL == 0\n\nfloat computeAnnulus(float dist, vec4 rings) {\n  return saturate(smoothstep(rings.x * PI, rings.y * PI, dist) - smoothstep(rings.z * PI, rings.w * PI, dist));\n}\n\nvec4 computeWedge(int idx, vec4 colour, float angle, float arc, vec4 ring) {\n  vec2 deriv = vec2(cos(angle), -sin(angle));\n  float f = smoothstep(arc, 1.0, saturate(dot(deriv, record.dir)));\n  f *= computeAnnulus(mod(record.dist - time, 60.), ring);\n\n  return mixColour(f, colour, idx);\n}\n\nvec3 computeColour() {\n  #if NEW_COLOUR\n  return computeColourNew();\n  #endif\n  const float sandFlicker = 0.1;\n\n  vec3 bg = drawBackground(bgStrength);\n  vec3 fg = mix(backgroundColour - .1, saturate(backgroundColour + .1), random2(uv+.192));\n  vec4 colour = vec4(bg, .2);\n\n  float l = dot(record.normal, lightDir) * .5 + .5;\n\n  colour = computeWedge(int(colourID[0]), colour, angle[0], arc[0], colourRing0);\n  colour = computeWedge(int(colourID[1]), colour, angle[1], arc[1], colourRing1);\n\n  colour.rgb = mix(colour.rgb, fg, fract(bias(0.2, fract(sandFlicker * time + random2(uv)))));\n  colour.rgb = mix(fg, colour.rgb, record.annulus);\n  return mix(colour.rgb, fg, bias(0.2, l) - colourScale * colour.a);\n}\n\n// Compute the flat centre, start, and end of the entire disc as scalar\nfloat computeDisc(float dist) {\n  record.annulus = computeAnnulus(dist, rings);\n  return record.annulus;\n}\n\nfloat computePosition(vec2 P) {\n  // This does not work on older mobile devices???: float dist = globalScale * record.dispMag.z;\n  record.dist = globalScale * sqrt(length2(P));\n  return computeDisc(record.dist) * sin(record.dist - time);\n}\n\n/********************* BREAKING_WAVE *********************/\n#elif defined(BREAKING_WAVE) && MODEL == 1\n\nvec2 quadratic(float A, float x) {\n  return vec2(x, A * x * x);\n}\n\nfloat yPos;\n\nfloat computePosition(vec2 pos) {\n  float A = steepness * -2e-4;\n  vec2 f = quadratic(A, pos.x);\n  yPos = f.y;\n\n  float h = abs(f.y - pos.y);\n  float wS = 200. * waveScale;\n\n  float flare = 1. - smoothstep(0., 100. * waveWidth * waveScale, abs(pos.x));\n  h *= flare;\n\n  float height = 1. / dPRScale * flare * flare * waveScale * waveScale * gain(shape, (1. - smoothstep(0., flare * wS, h)));\n  return height * 1.6;\n}\n\nvec3 computeColourOld() {\n  const float sandFlicker = 0.1;\n  vec3 bg = drawBackground(saturate(bgStrength + .8));\n  vec3 fg = mix(backgroundColour - .1, saturate(backgroundColour + .1), random2(uv + .192));\n  float l = saturate(bias(.3, dot(record.normal, lightDir)));\n  const float colourOffset = .8;\n\n  float zone = smoothstep(-100., 100., yPos - colourOffset * record.dispMag.y + (waveColOffset * 100.) * waveScale);\n  float colourField = zone * (1. - smoothstep(500., 1900., abs(record.dispMag.x)));\n\n  vec3 col = mix(bg, colourTable[int(colourID[0])].rgb, colourField);\n  col = mix(fg, col, bias(clamp(colourScale + .5, .1, .9), fract(step(0.1, record.height) * time * sandFlicker + random2(uv - .13))));\n  return mix(col, fg, saturate(bias(.4, l)));\n}\n\nvec3 computeColour() {\n  #if NEW_COLOUR\n  return computeColourNew();\n  #else\n  return computeColourOld();\n  #endif\n}\n\n#endif\n\n/********************************************************************************/\n/* ENTRY                                                                        */\n/********************************************************************************/\n\nmat3 makeTransform(vec2 pos, float rot, float scale) {\n  return mat3(\n  scale * cos(rot),  scale * sin(rot), 0.0,\n  scale * -sin(rot), scale * cos(rot), 0.0,\n  pos.x,             pos.y,            1.0\n  );\n}\n\nvoid initAnimation(vec2 fragCoord) {\n  lightDir = normalize(lDir);\n  record.centre = screen / 2.0 + vec2(globalPos.x, -globalPos.y);\n\n  // Animate the wave in the plane\n  #if MODEL == 1\n  float t = saturate(1. - mod(time, 30.) / 30.);\n\n  vec2 origin = screen * vec2(floor(waveOrigin / 2.), floor(mod(waveOrigin, 2.)));\n\n  record.centre = mix(screen / 2.0, origin, t * t);\n  vec2 d = normalize(origin - record.centre);\n  record.T = makeTransform(vec2(0.), atan(d.y, d.x)-PI, 3000./(dPRScale * max(screen.x, screen.y)));\n  lightDir.xy = normalize(record.centre);\n  lightDir = normalize(lightDir);\n  #else\n  record.T = makeTransform(vec2(0.), rotation, 1.0);\n  #endif\n  record.T[2] = record.T * vec3(-record.centre, 0.);\n\n  record.fragCoord = (record.T * vec3(fragCoord, 0.)).xy;\n  record.dispMag.xy = (record.T * vec3(fragCoord, 1.)).xy;\n  record.dispMag.z = length(record.dispMag.xy);\n  record.dir = record.dispMag.xy / record.dispMag.z;\n  record.height = computePosition(record.dispMag.xy);\n  record.normal = computeNormal(record.height, globalScale / normalScale); // This ratio works across resolutions...\n}\n\nvec4 drawSwatch(vec2 fragCoord) {\n  vec2 dims = vec2(50. * dPRScale);\n  vec2 coord = floor(fragCoord / dims);\n  return mix(vec4(colourTable[5 * int(coord.y) + int(coord.x)], 1.), vec4(0.), float(any(greaterThan(coord, vec2(4., 1.)))));\n}\n\nvoid renderImage(out vec4 fragColour, vec2 fragCoord) {\n  initAnimation(fragCoord);\n\n  vec3 outColour = computeColour();\n  fragColour = vec4(outColour, 1.0);\n  #if defined(DRAW_SWATCH)\n  vec4 swatch = drawSwatch(fragCoord);\n  fragColour = mix(fragColour, swatch, swatch.a);\n  #endif\n}\n';
+var final_default = '#include <commonDefs>\n#include <functions>\n#include <colourTable>\n#include <computeNormal>\n\n#define SINE_WAVE 0\n#define BREAKING_WAVE 1\n\n#if defined(ZED)\n#define MODEL SINE_WAVE\n#define DRAW_SWATCH\n#else\nin vec2 uv;\n#endif\n\n/********************************************************************************/\n/* UNIFORMS                                                                     */\n/********************************************************************************/\n\nuniform vec3 lDir;            // { "value": [0.0, -1.0, 1.0], "min": -1.0, "max": 1.0, "step": 0.01 }\nuniform vec2 position;        // { "value": [0.0, 0.0], "min": -1000.0, "max": 1000.0, "step": 1.0 }\nuniform float ringScale;      // { "value": 0.04, "min": 0.01, "max": 1.0, "step": 0.001 }\nuniform float colourScale;    // { "value": 0.2, "min": 0.0, "max": 1.0, "step": 0.001 }\nuniform float normalScale;    // { "value": 1.0, "min": 0.0, "max": 1.0, "step": 0.001 }\n// Sine properties\nuniform vec4 rings;           // { "value": [1.0, 2.0, 6.0, 12.0], "min": 0.0, "max": 20.0, "step": 1.0 }\nuniform vec2 angle;           // { "value": [0.0, 3.14], "min": 0.0, "max": 6.28319, "step": 0.01 }\nuniform vec2 arc;             // { "value": [0.5, 0.5], "min": -1.0, "max": 1.0, "step": 0.01 }\nuniform vec2 colourID;        // { "value": [9, 2], "min": 0, "max": 9, "step": 1 }\nuniform vec4 colourRing0;     // { "value": [1.0, 2.0, 18.0, 19.0], "min": 0.0, "max": 20.0, "step": 0.1 }\nuniform vec4 colourRing1;     // { "value": [1.0, 2.0, 18.0, 19.0], "min": 0.0, "max": 20.0, "step": 0.1 }\n// Breaking properties\nuniform float steepness;      // { "value": 2.0, "min": 0.1, "max": 10.0, "step": 0.01 }\nuniform float waveScale;      // { "value": 1.6, "min": 0.1, "max": 2.0, "step": 0.01 }\nuniform float waveWidth;      // { "value": 22.0, "min": 1.0, "max": 100.0, "step": 0.1 }\nuniform float waveOrigin;     // { "value": 0, "min": 0.0, "max": 3.0, "step": 1.0 }\nuniform float shape;          // { "value": 0.56, "min": 0.01, "max": 1.0, "step": 0.01 }\n\n#if MODEL == SINE_WAVE\n#define globalScale (ringScale / dPR)\n#elif MODEL == BREAKING_WAVE\n#define globalScale 0.03 * (3000. / max(screen.x, screen.y))\n#endif\n\n#define globalPos (position * dPR)\n#define dPRScale (dPR / 2.0)\n\n/********************************************************************************/\n/* GLOBALS                                                                      */\n/********************************************************************************/\n\nvec3 lightDir; // The position of the light (points towards)\nvec2 invRes; // The inverse of the viewport (may be a region of the window)\n\nstruct Record {\n  mat3 T; // The world transform\n  vec2 centre; // The current centre of the animation\n  vec2 fragCoord; // Copy of the fragCoord in world space\n  vec3 dispMag; // displacement from centre, mag of distance\n  vec2 dir; // normalised direction from centre\n  float height; // The height of the computed position\n  vec3 normal; // The computed normal from the height\n  float annulus; // The annulus scalar\n  float sign; // Which side of the bezier curve is this?\n  float dist; // The distance of the point from the centre (for rings)\n};\n\nRecord record;\n\n/********************************************************************************/\n/* FUNCTIONS                                                                    */\n/********************************************************************************/\n\n#if defined(RAND_TEX)\nuniform sampler2D randTex;\nfloat random2(vec2 co) {\n  vec2 size = vec2(textureSize(randTex, 0));\n  return texture(randTex, co * screen / size).r;\n}\n#else\nfloat random2(vec2 co) {\n  return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);\n}\n#endif\n\nfloat length2(vec2 A) { return dot(A, A); }\n\n// Draws the background colour - stippled sand where the annulus is 0\nvec3 drawBackground(float b) {\n  return mix(sandColour, backgroundColour, clamp(bias(b, random2(uv)), 0.01, 0.999));\n}\n\nvec4 mixColour(float dst, vec4 colour, int idx) {\n  colour.rgb = mix(colour.rgb, mix(colourTable[idx], backgroundColour, 0.2), dst);\n  colour.a = max(colour.a, dst);\n  return colour;\n}\n\n/********************************************************************************/\n/* ANIMATIONS                                                                   */\n/********************************************************************************/\n\n/********************* SINE_WAVE *********************/\n#if MODEL == SINE_WAVE\n\nfloat computeAnnulus(float dist, vec4 rings) {\n  return saturate(smoothstep(rings.x * PI, rings.y * PI, dist) - smoothstep(rings.z * PI, rings.w * PI, dist));\n}\n\nvec4 computeWedge(int idx, vec4 colour, float angle, float arc, vec4 ring) {\n  vec2 deriv = vec2(cos(angle), -sin(angle));\n  float f = smoothstep(arc, 1.0, saturate(dot(deriv, record.dir)));\n  f *= computeAnnulus(mod(record.dist - time, 60.), ring);\n  return mixColour(f, colour, idx);\n}\n\n// Compute the flat centre, start, and end of the entire disc as scalar\nfloat computeDisc(float dist) {\n  record.annulus = computeAnnulus(dist, rings);\n  return record.annulus;\n}\n\nfloat computePosition(vec2 P) {\n  // This does not work on older mobile devices???: float dist = globalScale * record.dispMag.z;\n  record.dist = globalScale * sqrt(length2(P));\n  return computeDisc(record.dist) * sin(record.dist - time);\n}\n\n/********************* BREAKING_WAVE *********************/\n#elif MODEL == BREAKING_WAVE\n\nvec2 quadratic(float A, float x) {\n  return vec2(x, A * x * x);\n}\n\nfloat yPos;\n\nfloat computePosition(vec2 pos) {\n  float A = steepness * -2e-4;\n  vec2 f = quadratic(A, pos.x);\n  yPos = f.y;\n  record.sign = f.y - pos.y;\n\n  float h = abs(f.y - pos.y);\n  float wS = 200. * waveScale;\n\n  float flare = 1. - smoothstep(0., 100. * waveWidth * waveScale, abs(pos.x));\n  h *= flare;\n\n  float height = 1.6 / dPRScale * flare * flare * waveScale * waveScale * gain(shape, (1. - smoothstep(0., flare * wS, h)));\n  return height;\n}\n\nvec4 computeWave(vec3 baseColour) {\n  return vec4(\n  mix(sandColour+0.1, baseColour, smoothstep(-500., 100., record.sign)),\n  1.0\n  );\n}\n\n#endif\n\nvec3 computeColour() {\n  const float sandFlicker = 0.1;\n  vec3 fg = mix(backgroundColour-0.02, backgroundColour+0.02, random2(uv-.13));\n  float l = dot(record.normal, lightDir) * .5 + .5;\n\n  vec4 kol = vec4(sandColour+0.15, 0.2);\n#if defined(SINE_WAVE) && MODEL == 0\n  kol = computeWedge(int(colourID[0]), kol, angle[0], arc[0], colourRing0);\n  kol = computeWedge(int(colourID[1]), kol, angle[1], arc[1], colourRing1);\n  kol = mix(vec4(sandColour+0.15, 1.), kol, record.annulus);\n#else\n  vec3 baseColour = colourTable[int(colourID[0])];\n  kol = computeWave(baseColour);\n#endif\n\n  float flicker = 10. * dot(kol.rgb, vec3(.2126, .7152, .0722)) * (1. - dot(vec3(0., 0., 1.), record.normal));\n  vec3 cc = mix(mix(sandColour, kol.rgb, 0.1), kol.rgb, l+0.4);\n  vec3 c = mix(cc, fg, 0.45 * step(.5, random2(uv+.11)) * fract(random2(uv-.123) + flicker*sin(TWO_PI*random2(uv)+time)));\n\n  return mix(c, fg, saturate(l-0.4));\n}\n\n/********************************************************************************/\n/* ENTRY                                                                        */\n/********************************************************************************/\n\nmat3 makeTransform(vec2 pos, float rot, float scale) {\n  return mat3(\n    scale * cos(rot),  scale * sin(rot), 0.0,\n    scale * -sin(rot), scale * cos(rot), 0.0,\n    pos.x,             pos.y,            1.0\n  );\n}\n\nvoid initAnimation(vec2 fragCoord) {\n  lightDir = normalize(lDir);\n  record.centre = screen / 2.0 + vec2(globalPos.x, -globalPos.y);\n\n#if MODEL == BREAKING_WAVE\n  float t = saturate(1. - mod(time, 30.) / 30.);\n  vec2 origin = screen * vec2(floor(waveOrigin / 2.), floor(mod(waveOrigin, 2.)));\n\n  record.centre = mix(screen / 2.0, origin, t * t);\n  vec2 d = normalize(origin - record.centre);\n  record.T = makeTransform(vec2(0.), atan(d.y, d.x)-PI, 3000./(dPRScale * max(screen.x, screen.y)));\n  lightDir.xy = normalize(record.centre);\n  lightDir = normalize(lightDir);\n#else // SINE_WAVE\n  record.T = makeTransform(vec2(0.), 0.0, 1.0);\n#endif\n  record.T[2] = record.T * vec3(-record.centre, 0.);\n\n  record.fragCoord = (record.T * vec3(fragCoord, 0.)).xy;\n  record.dispMag.xy = (record.T * vec3(fragCoord, 1.)).xy;\n  record.dispMag.z = length(record.dispMag.xy);\n  record.dir = record.dispMag.xy / record.dispMag.z;\n  record.height = computePosition(record.dispMag.xy);\n  record.normal = computeNormal(record.height, globalScale / normalScale); // This ratio works across resolutions...\n}\n\n#if defined(DRAW_SWATCH)\nvec4 drawSwatch(vec2 fragCoord) {\n  vec2 dims = vec2(50. * dPRScale);\n  vec2 coord = floor(fragCoord / dims);\n  return mix(vec4(colourTable[5 * int(coord.y) + int(coord.x)], 1.), vec4(0.), float(any(greaterThan(coord, vec2(4., 1.)))));\n}\n#endif\n\nvoid renderImage(out vec4 fragColour, vec2 fragCoord) {\n  initAnimation(fragCoord);\n  fragColour = vec4(computeColour(), 1.0);\n#if defined(DRAW_SWATCH)\n  vec4 swatch = drawSwatch(fragCoord);\n  fragColour = mix(fragColour, swatch, swatch.a);\n#endif\n}\n';
 
-// src/apps/kore/shaders/newColour.glsl
-var newColour_default = '#include <commonDefs>\n#include <functions>\n#include <colourTable>\n#include <computeNormal>\n#include <simplex2D>\n#include <simplex3D>\n#include <rotate2D>\n#include <noises>\n\n#define SINE_WAVE 0\n#define BREAKING_WAVE 1\n\n#if defined(ZED)\n#define MODEL 1\n#define NEW_COLOUR 1\n#define DRAW_SWATCH\n#else\n#define NEW_COLOUR 1\nin vec2 uv;\n#endif\n\n/********************************************************************************/\n/* UNIFORMS                                                                     */\n/********************************************************************************/\n\nuniform vec3 lDir;            // { "value": [0.0, -1.0, 1.0], "min": -1.0, "max": 1.0, "step": 0.01 }\nuniform vec2 position;        // { "value": [0.0, 0.0], "min": -1000.0, "max": 1000.0, "step": 1.0 }\nuniform float ringScale;      // { "value": 0.04, "min": 0.01, "max": 1.0, "step": 0.001 }\nuniform float colourScale;    // { "value": 0.2, "min": 0.0, "max": 1.0, "step": 0.001 }\nuniform float normalScale;    // { "value": 1.0, "min": 0.0, "max": 1.0, "step": 0.001 }\nuniform float bgStrength;     // { "value": 0.1, "min": 0.0, "max": 1.0, "step": 0.01 }\n// Sine properties\nuniform vec4 rings;           // { "value": [1.0, 2.0, 6.0, 12.0], "min": 0.0, "max": 20.0, "step": 1.0 }\nuniform vec2 angle;           // { "value": [0.0, 3.14], "min": 0.0, "max": 6.28319, "step": 0.01 }\nuniform vec2 arc;             // { "value": [0.5, 0.5], "min": -1.0, "max": 1.0, "step": 0.01 }\nuniform vec2 colourID;        // { "value": [9, 2], "min": 0, "max": 10, "step": 1 }\nuniform vec4 colourRing0;     // { "value": [1.0, 2.0, 18.0, 19.0], "min": 0.0, "max": 20.0, "step": 0.1 }\nuniform vec4 colourRing1;     // { "value": [1.0, 2.0, 18.0, 19.0], "min": 0.0, "max": 20.0, "step": 0.1 }\nuniform float rotation;       // { "value": 3.14, "min": 0.0, "max": 6.28319, "step": 0.01 }\n// Breaking properties\nuniform float steepness;      // { "value": 2.0, "min": 0.1, "max": 10.0, "step": 0.01 }\nuniform float waveScale;      // { "value": 1.6, "min": 0.1, "max": 2.0, "step": 0.01 }\nuniform float waveWidth;      // { "value": 22.0, "min": 1.0, "max": 100.0, "step": 0.1 }\nuniform float waveColOffset;  // { "value": 1.5, "min": 0.1, "max": 20.0, "step": 0.1 }\nuniform float waveOrigin;     // { "value": 0, "min": 0.0, "max": 3.0, "step": 1.0 }\nuniform float shape;          // { "value": 0.56, "min": 0.001, "max": 1.0, "step": 0.01 }\n\n#if MODEL == 0\n#define globalScale (ringScale / dPR)\n#else\n#define globalScale 0.03 * (3000. / max(screen.x, screen.y))\n#endif\n\n#define globalPos (position * dPR)\n#define dPRScale (dPR / 2.0)\n\n/********************************************************************************/\n/* GLOBALS                                                                      */\n/********************************************************************************/\n\nvec3 lightDir; // The position of the light (points towards)\nvec2 invRes; // The inverse of the viewport (may be a region of the window)\n\nstruct Record {\n  mat3 T; // The world transform\n  vec2 centre; // The current centre of the animation\n  vec2 fragCoord; // Copy of the fragCoord in world space\n  vec3 dispMag; // displacement from centre, mag of distance\n  vec2 dir; // normalised direction from centre\n  float height; // The height of the computed position\n  vec3 normal; // The computed normal from the height\n  float annulus; // The annulus scalar\n  float sign; // Which side of the bezier curve is this?\n  float dist; // The distance of the point from the centre (for rings)\n};\n\nRecord record;\n\n/********************************************************************************/\n/* FUNCTIONS                                                                    */\n/********************************************************************************/\n\n#if defined(RAND_TEX)\n\nuniform sampler2D randTex;\n\nfloat random2(vec2 co) {\n  vec2 size = vec2(textureSize(randTex, 0));\n  return texture(randTex, co * screen / size).r;\n}\n\n#else\n\nfloat random2(vec2 co) {\n  return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\n#endif\n\nfloat length2(vec2 A) { return dot(A, A); }\n\n// Draws the background colour - stippled sand where the annulus is 0\nvec3 drawBackground(float b) {\n  return mix(sandColour, backgroundColour, clamp(bias(b, random2(uv)), 0.01, 0.999));\n}\n\nvec4 mixColour(float dst, vec4 colour, int idx) {\n  colour.rgb = mix(colour.rgb, mix(colourTable[idx], backgroundColour, 0.2), dst);\n  colour.a = max(colour.a, dst);\n  return colour;\n}\n\n/********************************************************************************/\n/* ANIMATIONS                                                                   */\n/********************************************************************************/\n\n/********************* SINE_WAVE *********************/\n#if defined(SINE_WAVE) && MODEL == 0\n\nfloat computeAnnulus(float dist, vec4 rings) {\n  return saturate(smoothstep(rings.x * PI, rings.y * PI, dist) - smoothstep(rings.z * PI, rings.w * PI, dist));\n}\n\nvec4 computeWedge(int idx, vec4 colour, float angle, float arc, vec4 ring) {\n  vec2 deriv = vec2(cos(angle), -sin(angle));\n  float f = smoothstep(arc, 1.0, saturate(dot(deriv, record.dir)));\n  f *= computeAnnulus(mod(record.dist - time, 60.), ring);\n  return mixColour(f, colour, idx);\n}\n\nvec3 computeColour() {\n  const float sandFlicker = 0.1;\n\n  vec3 bg = drawBackground(bgStrength);\n  vec3 fg = mix(backgroundColour - .1, saturate(backgroundColour + .1), random2(uv+.192));\n  vec4 colour = vec4(bg, .2);\n\n  float l = dot(record.normal, lightDir) * .5 + .5;\n\n  colour = computeWedge(int(colourID[0]), colour, angle[0], arc[0], colourRing0);\n  colour = computeWedge(int(colourID[1]), colour, angle[1], arc[1], colourRing1);\n\n  colour.rgb = mix(colour.rgb, fg, fract(bias(0.2, fract(sandFlicker * time + random2(uv)))));\n  colour.rgb = mix(fg, colour.rgb, record.annulus);\n  return mix(colour.rgb, fg, bias(0.2, l) - colourScale * colour.a);\n}\n\n// Compute the flat centre, start, and end of the entire disc as scalar\nfloat computeDisc(float dist) {\n  record.annulus = computeAnnulus(dist, rings);\n  return record.annulus;\n}\n\nfloat computePosition(vec2 P) {\n  // This does not work on older mobile devices???: float dist = globalScale * record.dispMag.z;\n  record.dist = globalScale * sqrt(length2(P));\n  return computeDisc(record.dist) * sin(record.dist - time);\n}\n\n/********************* BREAKING_WAVE *********************/\n#elif defined(BREAKING_WAVE) && MODEL == 1\n\nvec2 quadratic(float A, float x) {\n  return vec2(x, A * x * x);\n}\n\nfloat yPos;\n\nfloat computePosition(vec2 pos) {\n  float A = steepness * -2e-4;\n  vec2 f = quadratic(A, pos.x);\n  yPos = f.y;\n  record.sign = f.y - pos.y;\n\n  float h = abs(f.y - pos.y);\n  float wS = 200. * waveScale;\n\n  float flare = 1. - smoothstep(0., 100. * waveWidth * waveScale, abs(pos.x));\n  h *= flare;\n\n  float height = flare * flare * waveScale * waveScale * gain(shape, (1. - smoothstep(0., flare * wS, h)));\n  return height * 1.6;\n}\n\nvec4 computeWave(vec3 baseColour) {\n  //return vec4(mix(sandColour, baseColour, step(0., sign(record.sign))), 1.);\n  return vec4(\n  mix(sandColour+0.1, baseColour, smoothstep(-500., 100., record.sign)),\n  1.0\n  );\n}\n\nvec3 computeColour() {\n  const float sandFlicker = 0.1;\n  vec3 bg = drawBackground(saturate(bgStrength + .8));\n  vec3 fg = mix(backgroundColour - .1, saturate(backgroundColour + .1), random2(uv + .192));\n  float l = saturate(bias(.3, dot(record.normal, lightDir)));\n  const float colourOffset = .8;\n\n  float zone = smoothstep(-100., 100., yPos - colourOffset * record.dispMag.y + (waveColOffset * 100.) * waveScale);\n  float colourField = zone * (1. - smoothstep(500., 1900., abs(record.dispMag.x)));\n\n  vec3 col = mix(bg, colourTable[int(colourID[0])].rgb, colourField);\n  col = mix(fg, col, bias(clamp(colourScale + .5, .1, .9), fract(step(0.1, record.height) * time * sandFlicker + random2(uv - .13))));\n  return mix(col, fg, saturate(bias(.4, l)));\n}\n\n#endif\n\nvec3 computeNewColour() {\n  const float sandFlicker = 0.1;\n  vec3 fg = mix(backgroundColour-0.02, backgroundColour+0.02, random2(uv-.13));\n  float l = dot(record.normal, lightDir) * .5 + .5;\n\n  vec4 kol = vec4(sandColour+0.15, 0.2);\n  #if defined(SINE_WAVE) && MODEL == 0\n  kol = computeWedge(int(colourID[0]), kol, angle[0], arc[0], colourRing0);\n  kol = computeWedge(int(colourID[1]), kol, angle[1], arc[1], colourRing1);\n  kol = mix(vec4(sandColour+0.15, 1.), kol, record.annulus);\n  #else\n  //kol = vec4(mix(colourTable[int(colourID[0])], backgroundColour, 0.2), 1.);\n  vec3 baseColour = colourTable[int(colourID[0])];\n  kol = computeWave(baseColour);\n  #endif\n\n  float flicker = 10. * dot(kol.rgb, vec3(.2126, .7152, .0722)) * (1. - dot(vec3(0., 0., 1.), record.normal));\n  vec3 cc = mix(mix(sandColour, kol.rgb, 0.1), kol.rgb, l+0.4);\n  vec3 c = mix(cc, fg, 0.45 * step(.5, random2(uv+.11)) * fract(random2(uv-.123) + flicker*sin(TWO_PI*random2(uv)+time)));\n\n  return mix(c, fg, saturate(l-0.4));\n}\n\n/********************************************************************************/\n/* ENTRY                                                                        */\n/********************************************************************************/\n\nmat3 makeTransform(vec2 pos, float rot, float scale) {\n  return mat3(\n  scale * cos(rot),  scale * sin(rot), 0.0,\n  scale * -sin(rot), scale * cos(rot), 0.0,\n  pos.x,             pos.y,            1.0\n  );\n}\n\nvoid initAnimation(vec2 fragCoord) {\n  lightDir = normalize(lDir);\n  record.centre = screen / 2.0 + vec2(globalPos.x, -globalPos.y);\n\n  // Animate the wave in the plane\n  #if MODEL == 1\n  float t = saturate(1. - mod(time, 30.) / 30.);\n\n  vec2 origin = screen * vec2(floor(waveOrigin / 2.), floor(mod(waveOrigin, 2.)));\n\n  record.centre = mix(screen / 2.0, origin, t * t);\n  vec2 d = normalize(origin - record.centre);\n  record.T = makeTransform(vec2(0.), atan(d.y, d.x)-PI, 3000./(dPRScale * max(screen.x, screen.y)));\n  lightDir.xy = normalize(record.centre);\n  lightDir = normalize(lightDir);\n  #else\n  record.T = makeTransform(vec2(0.), rotation, 1.0);\n  #endif\n  record.T[2] = record.T * vec3(-record.centre, 0.);\n\n  record.fragCoord = (record.T * vec3(fragCoord, 0.)).xy;\n  record.dispMag.xy = (record.T * vec3(fragCoord, 1.)).xy;\n  record.dispMag.z = length(record.dispMag.xy);\n  record.dir = record.dispMag.xy / record.dispMag.z;\n  record.height = computePosition(record.dispMag.xy);\n  record.normal = computeNormal(record.height, globalScale / normalScale); // This ratio works across resolutions...\n}\n\nvec4 drawSwatch(vec2 fragCoord) {\n  vec2 dims = vec2(50. * dPRScale);\n  vec2 coord = floor(fragCoord / dims);\n  return mix(vec4(colourTable[5 * int(coord.y) + int(coord.x)], 1.), vec4(0.), float(any(greaterThan(coord, vec2(4., 1.)))));\n}\n\nvoid renderImage(out vec4 fragColour, vec2 fragCoord) {\n  initAnimation(fragCoord);\n\n  #if NEW_COLOUR\n  vec3 outColour = computeNewColour();\n  #else\n  vec3 outColour = computeColour();\n  #endif\n\n  fragColour = vec4(outColour, 1.0);\n  #if defined(DRAW_SWATCH)\n  vec4 swatch = drawSwatch(fragCoord);\n  fragColour = mix(fragColour, swatch, swatch.a);\n  #endif\n}\n';
+// src/lib/zed/AnimationControlUI.ts
+var AnimationControlUI = class _AnimationControlUI {
+  container;
+  controls;
+  values;
+  onUpdateCallback;
+  controlWindow;
+  toggleButton;
+  static styleInjected = false;
+  constructor(containerElement, controls, json, onUpdate) {
+    this.container = containerElement;
+    this.controls = controls;
+    this.values = JSON.parse(json);
+    this.onUpdateCallback = onUpdate;
+    this.initialise();
+  }
+  initialise() {
+    if (!_AnimationControlUI.styleInjected)
+      _AnimationControlUI.injectStyle();
+    const wrapper = document.createElement("div");
+    wrapper.className = "button-wrapper";
+    this.container.appendChild(wrapper);
+    this.toggleButton = document.createElement("div");
+    this.toggleButton.className = "animation-control-button";
+    this.toggleButton.innerHTML = "\u2699\uFE0F";
+    wrapper.appendChild(this.toggleButton);
+    this.controlWindow = document.createElement("div");
+    this.controlWindow.className = "animation-control-window";
+    this.controlWindow.style.top = "28px";
+    this.controlWindow.style.right = "0";
+    wrapper.appendChild(this.controlWindow);
+    this.toggleButton.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.controlWindow.style.display = this.controlWindow.style.display === "block" ? "none" : "block";
+    });
+    this.createControls();
+  }
+  createControls() {
+    const header = document.createElement("div");
+    header.style.display = "flex";
+    header.style.alignItems = "center";
+    header.style.justifyContent = "space-between";
+    const divID = document.createElement("span");
+    divID.textContent = "#" + this.container.id;
+    divID.style.font = "bold 20px Arial, sans-serif";
+    header.appendChild(divID);
+    const notification = document.createElement("span");
+    notification.className = "notification";
+    notification.innerHTML = "Copied!";
+    const showNotification = () => {
+      notification.classList.add("show");
+      setTimeout(() => {
+        notification.classList.remove("show");
+      }, 2e3);
+    };
+    const exportButtonContainer = document.createElement("div");
+    exportButtonContainer.style.position = "relative";
+    const exportButton = document.createElement("button");
+    exportButton.textContent = "Export";
+    exportButton.appendChild(notification);
+    exportButton.onclick = async () => {
+      const json = JSON.stringify(this.values);
+      try {
+        await navigator.clipboard.writeText(json);
+      } catch (err) {
+        fallbackCopyTextToClipboard(json);
+      }
+      showNotification();
+    };
+    exportButtonContainer.appendChild(exportButton);
+    exportButtonContainer.appendChild(notification);
+    header.appendChild(exportButtonContainer);
+    this.controlWindow?.appendChild(header);
+    Object.entries(this.controls).forEach(([name, control]) => {
+      if (this.isNumericType(control.type)) {
+        const controlElement = this.createControlElement(name, control);
+        this.controlWindow?.appendChild(controlElement);
+      }
+    });
+  }
+  createControlElement(name, control) {
+    const controlElement = document.createElement("div");
+    controlElement.className = "animation-control";
+    const label = document.createElement("label");
+    label.textContent = name;
+    controlElement.appendChild(label);
+    const value = this.values[name] !== void 0 ? this.values[name] : 0;
+    if (Array.isArray(value)) {
+      value.forEach((v, index) => {
+        const sliderContainer = document.createElement("div");
+        sliderContainer.className = "slider-container";
+        const slider = this.createSlider(name, control, v !== void 0 ? v : 0, index);
+        const valueLabel = this.createValueLabel(v !== void 0 ? v : 0);
+        sliderContainer.appendChild(slider);
+        sliderContainer.appendChild(valueLabel);
+        controlElement.appendChild(sliderContainer);
+      });
+    } else {
+      const sliderContainer = document.createElement("div");
+      sliderContainer.className = "slider-container";
+      const slider = this.createSlider(name, control, value !== void 0 ? value : 0);
+      const valueLabel = this.createValueLabel(value !== void 0 ? value : 0);
+      sliderContainer.appendChild(slider);
+      sliderContainer.appendChild(valueLabel);
+      controlElement.appendChild(sliderContainer);
+    }
+    return controlElement;
+  }
+  createSlider(name, control, value, index) {
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.min = (control.min ?? 0).toString();
+    slider.max = (control.max ?? 1).toString();
+    slider.step = (control.step ?? 0.01).toString();
+    slider.value = value.toString();
+    slider.addEventListener("input", (e) => {
+      const newValue = parseFloat(e.target.value);
+      this.handleSliderChange(name, newValue, index);
+      this.updateValueLabel(slider, newValue);
+    });
+    return slider;
+  }
+  createValueLabel(value) {
+    const valueLabel = document.createElement("span");
+    valueLabel.className = "value-label";
+    valueLabel.textContent = this.formatValue(value);
+    return valueLabel;
+  }
+  updateValueLabel(slider, value) {
+    const valueLabel = slider.nextElementSibling;
+    if (valueLabel?.classList.contains("value-label")) {
+      valueLabel.textContent = this.formatValue(value);
+    }
+  }
+  formatValue(value) {
+    return value.toFixed(2);
+  }
+  handleSliderChange(name, value, index) {
+    if (index !== void 0 && Array.isArray(this.values[name])) {
+      this.values[name][index] = value;
+    } else {
+      this.values[name] = value;
+    }
+    const newJsonString = JSON.stringify(this.values);
+    this.onUpdateCallback(newJsonString);
+  }
+  isNumericType(type) {
+    return ["bool", "int", "float", "vec2", "vec3", "vec4", "ivec2", "ivec3", "ivec4"].includes(type);
+  }
+  static injectStyle() {
+    if (_AnimationControlUI.styleInjected)
+      return;
+    const style = document.createElement("style");
+    style.textContent = `
+        .animation-control-button {
+            background-color: #000;
+            margin-top: -1px;
+            color: #ccc;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .button-wrapper {
+            position: relative;
+            float: right;
+        }
+        .animation-control-window {
+            position: absolute;
+            top: 32px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #ffffff;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            width: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1001;
+            &::-webkit-scrollbar {
+                width: 10px;
+            }
+            &::-webkit-scrollbar-track {
+                background: #000000;
+            }
+            &::-webkit-scrollbar-thumb {
+                background: #888888;
+            }
+            &::-webkit-scrollbar-thumb:hover {
+                background: #555555;
+            }
+            scrollbar-color: #888888 #000000;
+            scrollbar-width: thin;
+        }
+        .animation-control label {
+            display: block;
+            margin-bottom: 3px;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .animation-control input[type="range"] {
+            -webkit-appearance: none;
+            width: calc(100% - 40px);
+            margin: 2px 5px 2px 0;
+            height: 4px;
+            background: #4caf50;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+        .animation-control input[type="range"]:hover {
+            opacity: 1;
+        }
+        .animation-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #bbb;
+            border: solid 1px #000000;
+            cursor: pointer;
+        }
+        .animation-control input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            background: #bbb;
+            border: solid 1px #000000;
+            cursor: pointer;
+        }
+        .value-label {
+            background-color: #000;
+            color: #fff;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 10px;
+            min-width: 30px;
+            text-align: center;
+        }
+        .notification {
+            position: absolute;
+            background-color: #4CAF50;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            bottom: -5%;
+            left: -140%;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 100;
+        }
+        .notification.show {
+            opacity: 1;
+        }
+        .animation-control-window button {
+            padding: 2px 4px;
+        }
+    `;
+    document.head.appendChild(style);
+    _AnimationControlUI.styleInjected = true;
+  }
+};
+function fallbackCopyTextToClipboard(text) {
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.style.position = "fixed";
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  try {
+    document.execCommand("copy");
+  } catch (err) {
+    console.error("Fallback: Oops, unable to copy", err);
+  }
+  document.body.removeChild(textArea);
+}
+
+// src/lib/engine/Texture.ts
+var Texture = class {
+  gl_;
+  texture_;
+  width_;
+  height_;
+  conf = { type: WebGL2RenderingContext.TEXTURE_2D };
+  constructor(gl, conf, tex, width, height) {
+    this.gl_ = gl;
+    this.texture_ = tex ?? gl.createTexture();
+    this.width_ = width ?? 0;
+    this.height_ = height ?? 0;
+    this.config = conf ?? { type: gl.TEXTURE_2D };
+    console.log("this.conf:", this.conf);
+  }
+  get config() {
+    return this.conf;
+  }
+  set config(conf) {
+    const gl = WebGL2RenderingContext;
+    this.conf = {
+      type: conf?.type ?? gl.TEXTURE_2D,
+      format: conf?.format ?? [gl.RGBA8, gl.RGBA],
+      dataType: conf?.dataType ?? gl.UNSIGNED_BYTE,
+      wrap: conf?.wrap ?? [gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE],
+      filter: conf?.filter ?? [
+        conf?.mipmaps ?? false ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR,
+        gl.LINEAR
+      ],
+      mipmaps: conf?.mipmaps ?? false,
+      aniso: conf?.aniso ?? 1,
+      flip: conf?.flip ?? false
+    };
+  }
+  dispose() {
+    if (this.texture_) {
+      const gl = this.gl_;
+      gl.deleteTexture(this.texture_);
+    }
+  }
+  get width() {
+    return this.width_;
+  }
+  get height() {
+    return this.height_;
+  }
+  get mipmaps() {
+    return this.conf.mipmaps ?? true;
+  }
+  set mipmaps(value) {
+    this.conf.mipmaps = value;
+  }
+  get aniso() {
+    return this.conf.aniso ?? 1;
+  }
+  set aniso(value) {
+    this.conf.aniso = value;
+  }
+  get format() {
+    return this.conf.format ?? [];
+  }
+  set format(value) {
+    this.conf.format = [...value];
+  }
+  get texture() {
+    return this.texture_;
+  }
+  set texture(value) {
+    this.texture_ = value;
+  }
+  bind(unit = 0) {
+    const gl = this.gl_;
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(this.conf.type, this.texture_);
+  }
+  release(unit = 0) {
+    const gl = this.gl_;
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(this.conf.type, null);
+  }
+  allocate(width, height, data, conf) {
+    if (conf)
+      this.conf = { ...this.conf, ...conf };
+    this.width_ = Math.floor(width);
+    this.height_ = Math.floor(height);
+    this.defineTexture(width, height, data);
+  }
+  loadURL(url, conf, onLoaded) {
+    const img = new Image();
+    if (conf)
+      this.config = conf;
+    img.onload = () => {
+      this.width_ = img.naturalWidth;
+      this.height_ = img.naturalHeight;
+      this.defineTexture(this.width_, this.height_, img, conf?.flip);
+      if (onLoaded)
+        onLoaded(this);
+    };
+    img.src = url;
+  }
+  defineTexture(width, height, data, flipY) {
+    const gl = this.gl_;
+    gl.bindTexture(this.conf.type, this.texture_);
+    const mipmaps = this.conf?.mipmaps ?? true;
+    const format = this.conf.format ?? [gl.RGBA8, gl.RGBA];
+    const wrap = this.conf.wrap ?? [gl.CLAMP_TO_EDGE, gl.CLAMP_TO_EDGE];
+    const filter = this.conf.filter ?? [mipmaps ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR, gl.LINEAR];
+    const dataType = this.conf.dataType ?? gl.UNSIGNED_BYTE;
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY ?? false);
+    if (data instanceof HTMLImageElement) {
+      gl.texImage2D(this.conf.type, 0, format[0], format[1], dataType, data ?? null);
+    } else {
+      gl.texImage2D(this.conf.type, 0, format[0], width, height, 0, format[1], dataType, data ?? null);
+    }
+    if (flipY === true)
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.texParameteri(this.conf.type, gl.TEXTURE_WRAP_S, wrap[0]);
+    gl.texParameteri(this.conf.type, gl.TEXTURE_WRAP_T, wrap[1]);
+    gl.texParameteri(this.conf.type, gl.TEXTURE_MIN_FILTER, filter[0]);
+    gl.texParameteri(this.conf.type, gl.TEXTURE_MAG_FILTER, filter[1]);
+    if (this.conf?.aniso ?? true) {
+      const ext = gl.getExtension("EXT_texture_filter_anisotropic") ?? gl.getExtension("MOZ_EXT_texture_filter_anisotropic") ?? gl.getExtension("WEBKIT_EXT_texture_filter_anisotropic");
+      if (ext) {
+        const max = gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+        gl.texParameterf(gl.TEXTURE_2D, ext.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(max, this.aniso));
+      }
+    }
+    if (this.conf?.mipmaps)
+      gl.generateMipmap(this.conf.type);
+    gl.bindTexture(this.conf.type, null);
+  }
+};
+
+// src/lib/zed/ControlParser.ts
+var numericTypes = ["bool", "int", "float", "vec2", "vec3", "vec4", "ivec2", "ivec3", "ivec4"];
+function createImage(gl, imgData, cb) {
+  const t = new Texture(gl);
+  t.loadURL(imgData, void 0, cb);
+  return t;
+}
+var ControlParser = class _ControlParser {
+  gl;
+  uniforms;
+  callbacks;
+  constructor(gl) {
+    this.gl = gl;
+    this.uniforms = {};
+    this.callbacks = {};
+  }
+  parseGLSL(glslCode) {
+    this.clear();
+    this.uniforms = _ControlParser.extractControls(glslCode);
+  }
+  static extractControls(glslCode) {
+    const uniformRegex = /uniform\s+(\w+)\s+(\w+)\s*;\s*\/\/\s*(\{.*?\})/g;
+    let match;
+    const controls = {};
+    while ((match = uniformRegex.exec(glslCode)) !== null) {
+      const [, type, name, jsonString] = match;
+      try {
+        const config = JSON.parse(jsonString);
+        controls[name] = { type, ...config };
+      } catch (error) {
+        console.error(`Error parsing JSON for uniform ${name}:`, error);
+      }
+    }
+    return controls;
+  }
+  updateTexture(name, unit, file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const uri = e.target?.result;
+      if (typeof uri === "string") {
+        createImage(this.gl, uri, (tex) => {
+          this.uniforms[name].texture = tex;
+          tex.bind(unit);
+          if (this.callbacks[name])
+            this.callbacks[name](unit);
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+  async exportJSON() {
+    const data = {};
+    for (const key in this.uniforms) {
+      data[key] = this.uniforms[key].value;
+    }
+    const jsonString = JSON.stringify(data);
+    try {
+      await navigator.clipboard.writeText(jsonString);
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+    }
+  }
+  generateHTML() {
+    let html = '<div class="shader-controls">';
+    html += '<button onclick="window.controlGenerator.exportJSON()" style="margin-bottom: 20px; padding: 5px">Export JSON</button>';
+    for (const [name, config] of Object.entries(this.uniforms)) {
+      html += `<div class="control-group">
+                        <label for="${name}">${name}</label>
+                        <div class="control-wrapper">`;
+      if (numericTypes.includes(config.type)) {
+        html += this.generateNumericControl(name, config);
+      } else if (config.type === "sampler2D") {
+        html += this.generateTextureControl(name, config);
+      }
+      html += "</div></div>";
+    }
+    html += "</div>";
+    return html;
+  }
+  generateTextureControl(name, config) {
+    return `<input type="file" id="${name}" name="${name}" accept="image/*"
+                onchange="window.controlGenerator.updateTexture('${name}', ${config.unit}, this.files[0])">`;
+  }
+  generateNumericControl(name, config) {
+    let isArray = false;
+    let count = 0;
+    switch (config.type) {
+      case "float":
+      case "int":
+      case "bool":
+        isArray = false;
+        break;
+      case "ivec2":
+      case "vec2":
+        isArray = true;
+        count = 2;
+        break;
+      case "vec3":
+      case "ivec3":
+        isArray = true;
+        count = 3;
+        break;
+      case "vec4":
+      case "ivec4":
+        isArray = true;
+        count = 4;
+        break;
+    }
+    if (isArray) {
+      let html = "";
+      const components = ["x", "y", "z", "w"];
+      for (let i = 0; i < count; i++) {
+        html += `<div class="slider-container">
+                  <label>${components[i]}</label>
+                  <input type="range" id="${name}_${i}" name="${name}_${i}"
+                      min="${config.min ?? 0}" max="${config.max ?? 1}" step="${config.step ?? 0.1}"
+                      value="${config.value[i]}"
+                      oninput="window.controlGenerator.updateUniformVec('${name}', ${i}, this.value)">
+                  <span class="value-display">${config.value[i].toFixed(2)}</span>
+              </div>`;
+      }
+      return html;
+    } else {
+      return `<div class="slider-container">
+              <label>v</label>
+              <input type="range" id="${name}" name="${name}"
+                  min="${config.min ?? 0}" max="${config.max ?? 1}" step="${config.step ?? 0.1}"
+                  value="${config.value}"
+                  oninput="window.controlGenerator.updateUniform('${name}', this.value)">
+              <span class="value-display">${config.value.toFixed(2)}</span>
+            </div>`;
+    }
+  }
+  updateUniform(name, value) {
+    const parsedValue = parseFloat(value);
+    this.uniforms[name].value = parsedValue;
+    const displayElement = document.querySelector(`#${name}`).nextElementSibling;
+    displayElement.textContent = parsedValue.toFixed(2);
+    if (this.callbacks[name])
+      this.callbacks[name](parsedValue);
+  }
+  updateUniformVec(name, index, value) {
+    const parsedValue = parseFloat(value);
+    this.uniforms[name].value[index] = parsedValue;
+    const displayElement = document.querySelector(`#${name}_${index}`).nextElementSibling;
+    displayElement.textContent = parsedValue.toFixed(2);
+    if (this.callbacks[name])
+      this.callbacks[name](this.uniforms[name].value);
+  }
+  setUpdateCallback(name, callback) {
+    this.callbacks[name] = callback;
+  }
+  injectControls(container) {
+    if (container) {
+      container.innerHTML = this.generateHTML();
+      window.controlGenerator = this;
+    } else {
+      console.error("injectControls failed: container not found");
+    }
+  }
+  getUniforms() {
+    return this.uniforms;
+  }
+  clear() {
+    this.uniforms = {};
+    this.callbacks = {};
+  }
+};
 
 // src/apps/kore/kore2.ts
 var colourTable = `
@@ -3216,11 +3796,11 @@ var Kore = class {
         passes: [
           {
             name: "kore-sine",
-            shaderDef: [vertex_shader_default, newColour_default + mainDef],
+            shaderDef: [vertex_shader_default, final_default + mainDef],
             blockDef: [],
             isQuad: true,
             defines: /* @__PURE__ */ new Map([
-              ["MODEL", "1"],
+              ["MODEL", "0"],
               ["RAND_TEX", "1"]
             ])
           },
@@ -3274,6 +3854,20 @@ var Kore = class {
   }
   onInitialise(renderPipeline) {
     console.log("pipeline:", renderPipeline);
+    for (const view of renderPipeline.multipleViews ?? []) {
+      const controls = {
+        model: { type: "int", value: 0, min: 0, max: 1, step: 1 },
+        ...ControlParser.extractControls(renderPipeline.passes[0].shaderDef[1])
+      };
+      view[1].control = new AnimationControlUI(
+        view[1].div,
+        controls,
+        view[1].div.getAttribute("data-kore"),
+        (json) => {
+          view[1].data = JSON.parse(json);
+        }
+      );
+    }
   }
   update(time, dt) {
   }
