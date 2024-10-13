@@ -3206,8 +3206,8 @@ var AnimationControlUI = class _AnimationControlUI {
     wrapper.appendChild(this.toggleButton);
     this.controlWindow = document.createElement("div");
     this.controlWindow.className = "zed-animation-control-window";
-    this.controlWindow.style.top = "28px";
-    this.controlWindow.style.right = "0";
+    this.controlWindow.style.top = "34px";
+    this.controlWindow.style.right = "8px";
     wrapper.appendChild(this.controlWindow);
     this.toggleButton.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -3336,9 +3336,10 @@ var AnimationControlUI = class _AnimationControlUI {
     style.textContent = `
         .zed-animation-control-button {
             background-color: #000;
-            margin-top: -1px;
+            margin-top: 8px;
+            margin-right: 8px;
             color: #ccc;
-            padding: 5px 10px;
+            padding: 4px 4px;
             cursor: pointer;
         }
         .zed-button-wrapper {
@@ -3347,8 +3348,8 @@ var AnimationControlUI = class _AnimationControlUI {
         }
         .zed-animation-control-window {
             position: absolute;
-            top: 32px;
-            right: 5px;
+            /*top: 32px;
+            right: 5px;*/
             background: rgba(0, 0, 0, 0.7);
             color: #ffffff;
             padding: 10px;
