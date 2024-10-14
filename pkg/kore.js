@@ -2997,6 +2997,7 @@ var Host = class {
       canvas.height = Math.floor(div.offsetHeight * dPR);
       console.log("w, h:", canvas.width, canvas.height, div.offsetWidth, div.offsetHeight);
       div.insertBefore(canvas, div.firstChild);
+      canvas.style.position = "absolute";
       canvas.style.width = `${div.offsetWidth}px`;
       canvas.style.height = `${div.offsetHeight}px`;
       canvas.style.zIndex = "-1";
@@ -3341,6 +3342,7 @@ var AnimationControlUI = class _AnimationControlUI {
             color: #ccc;
             padding: 4px 4px;
             cursor: pointer;
+            position: relative;
         }
         .zed-button-wrapper {
             position: relative;
