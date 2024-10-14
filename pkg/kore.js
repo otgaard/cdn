@@ -2769,7 +2769,6 @@ var Renderer = class {
   resize() {
     const canvas = this.config.offscreen ? this.config.canvas : this.config.canvas;
     const bound = this.config.offscreen ? { width: window.innerWidth, height: window.innerHeight } : canvas.getBoundingClientRect();
-    console.log(bound, this.config.offscreen);
     const w = Math.round(bound.width);
     const h = Math.round(bound.height);
     const rW = Math.round(this.dPR * w);
@@ -2965,7 +2964,6 @@ var Host = class {
   standardBlock;
   raf;
   constructor(config) {
-    console.log("hostConfig:", config);
     this.rndr = config.canvas ? new Renderer({ canvas: config.canvas }) : new Renderer({ offscreen: config.offscreen });
     this.config_ = config;
     this.timer_ = new Timer();
@@ -2995,7 +2993,6 @@ var Host = class {
       const canvas = document.createElement("canvas");
       canvas.width = Math.floor(div.offsetWidth * dPR);
       canvas.height = Math.floor(div.offsetHeight * dPR);
-      console.log("w, h:", canvas.width, canvas.height, div.offsetWidth, div.offsetHeight);
       canvas.style.position = "absolute";
       canvas.style.width = `${div.offsetWidth}px`;
       canvas.style.height = `${div.offsetHeight}px`;
@@ -3243,7 +3240,7 @@ var AnimationControlUI = class _AnimationControlUI {
     exportButton.appendChild(notification);
     exportButton.onclick = async () => {
       let json = JSON.stringify(this.values);
-      if (Webflow)
+      if (typeof Webflow !== "undefined")
         json = json.replace(/"/g, "'");
       try {
         await navigator.clipboard.writeText(json);
@@ -3770,6 +3767,7 @@ var ControlParser = class _ControlParser {
 };
 
 // src/apps/kore/kore2.ts
+var defaultConf = '{"model":0,"lDir":[0,-1,1],"position":[0,0],"ringScale":0.04,"colourScale":0.2,"normalScale":1,"rings":[1,2,6,12],"angle":[0,3.14],"arc":[0.5,0.5],"colourID":[9,2],"colourRing0":[1,2,18,19],"colourRing1":[1,2,18,19],"steepness":2,"waveScale":1.6,"waveWidth":22,"waveOrigin":0,"shape":0.56}';
 var colourTable = `
   const vec3 colourTable[] = vec3[10](
     vec3(0.957, 0.298, 0.498), // Magenta
@@ -3834,6 +3832,8 @@ var Kore = class {
       views: Array.from(document.querySelectorAll(".kore")).map((v, i) => {
         if (v.id.length === 0)
           v.id = "kore-" + i.toString() + "-gen";
+        if (!v.hasAttribute("data-kore"))
+          v.setAttribute("data-kore", defaultConf);
         return v;
       }),
       viewDataFnc: (div) => {
@@ -3842,17 +3842,7 @@ var Kore = class {
         if (dataStr)
           data = JSON.parse(dataStr.replace(/'/g, '"'));
         else {
-          data = {
-            lDir: [1, 1, 1],
-            position: [0, 0],
-            ringScale: 0.04,
-            normalScale: 0.8,
-            rings: [0, 1, 6, 8],
-            angle: 0,
-            arc: 0,
-            colourID: 0,
-            rotation: 0
-          };
+          data = JSON.parse(defaultConf);
         }
         return data;
       },
@@ -3863,7 +3853,6 @@ var Kore = class {
     this.generateMapTexture(1024, 1024, window.devicePixelRatio);
   }
   onInitialise(renderPipeline) {
-    console.log("pipeline:", renderPipeline);
     for (const view of renderPipeline.multipleViews ?? []) {
       const controls = {
         model: { type: "int", value: 0, min: 0, max: 1, step: 1 },
@@ -3872,7 +3861,7 @@ var Kore = class {
       view[1].control = new AnimationControlUI(
         view[1].div,
         controls,
-        view[1].div.getAttribute("data-kore").replace(/'/g, '"'),
+        (view[1].div.getAttribute("data-kore") ?? defaultConf).replace(/'/g, '"'),
         (json) => {
           view[1].data = JSON.parse(json);
         }
@@ -3882,7 +3871,6 @@ var Kore = class {
   update(time, dt) {
   }
   resize(width, height) {
-    console.log("resize", width, height);
   }
   texWidth = 0;
   texHeight = 0;
