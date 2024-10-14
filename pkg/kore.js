@@ -2996,11 +2996,11 @@ var Host = class {
       canvas.width = Math.floor(div.offsetWidth * dPR);
       canvas.height = Math.floor(div.offsetHeight * dPR);
       console.log("w, h:", canvas.width, canvas.height, div.offsetWidth, div.offsetHeight);
-      div.insertBefore(canvas, div.firstChild);
       canvas.style.position = "absolute";
       canvas.style.width = `${div.offsetWidth}px`;
       canvas.style.height = `${div.offsetHeight}px`;
       canvas.style.zIndex = "-1";
+      div.insertBefore(canvas, div.firstChild);
       const ctx2 = canvas.getContext("2d", { alpha: false });
       if (this.config_.canvasAA) {
         console.log("enableAA");
@@ -3242,7 +3242,9 @@ var AnimationControlUI = class _AnimationControlUI {
     exportButton.style.color = "black";
     exportButton.appendChild(notification);
     exportButton.onclick = async () => {
-      const json = JSON.stringify(this.values);
+      let json = JSON.stringify(this.values);
+      if (Webflow)
+        json = json.replace(/"/g, "'");
       try {
         await navigator.clipboard.writeText(json);
       } catch (err) {
@@ -3350,8 +3352,6 @@ var AnimationControlUI = class _AnimationControlUI {
         }
         .zed-animation-control-window {
             position: absolute;
-            /*top: 32px;
-            right: 5px;*/
             background: rgba(0, 0, 0, 0.7);
             color: #ffffff;
             padding: 10px;
@@ -3432,8 +3432,8 @@ var AnimationControlUI = class _AnimationControlUI {
             padding: 5px 10px;
             border-radius: 4px;
             font-size: 14px;
-            bottom: -5%;
-            left: -140%;
+            bottom: -8%;
+            left: -160%;
             white-space: nowrap;
             opacity: 0;
             transition: opacity 0.3s;
