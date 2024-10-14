@@ -1,3 +1,18 @@
+// src/lib/maths/functions.ts
+var EPSILON = 1e-6;
+var PI = Math.PI;
+var TWO_PI = 2 * PI;
+var HALF_PI = PI / 2;
+function unused(...args) {
+  return args.length;
+}
+function eq(A, B, epsilon = EPSILON) {
+  return Math.abs(A - B) < epsilon;
+}
+function clamp(val, min, max) {
+  return val < min ? min : val > max ? max : val;
+}
+
 // src/lib/utils/Timer.ts
 var Timer = class {
   currTime;
@@ -49,21 +64,6 @@ var Timer = class {
     this.prevTime = this.currTime;
   }
 };
-
-// src/lib/maths/functions.ts
-var EPSILON = 1e-6;
-var PI = Math.PI;
-var TWO_PI = 2 * PI;
-var HALF_PI = PI / 2;
-function unused(...args) {
-  return args.length;
-}
-function eq(A, B, epsilon = EPSILON) {
-  return Math.abs(A - B) < epsilon;
-}
-function clamp(val, min, max) {
-  return val < min ? min : val > max ? max : val;
-}
 
 // src/lib/maths/Vec2.ts
 var Vec2 = class _Vec2 extends Float32Array {
@@ -3767,7 +3767,7 @@ var ControlParser = class _ControlParser {
 };
 
 // src/apps/kore/kore2.ts
-var defaultConf = '{"model":0,"lDir":[0,-1,1],"position":[0,0],"ringScale":0.04,"colourScale":0.2,"normalScale":1,"rings":[1,2,6,12],"angle":[0,3.14],"arc":[0.5,0.5],"colourID":[9,2],"colourRing0":[1,2,18,19],"colourRing1":[1,2,18,19],"steepness":2,"waveScale":1.6,"waveWidth":22,"waveOrigin":0,"shape":0.56}';
+var defaultConf = '{"model":0,"randTex":2,"lDir":[0,-1,1],"position":[0,0],"ringScale":0.04,"colourScale":0.2,"normalScale":1,"rings":[1,2,6,12],"angle":[0,3.14],"arc":[0.5,0.5],"colourID":[9,2],"colourRing0":[1,2,18,19],"colourRing1":[1,2,18,19],"steepness":2,"waveScale":1.6,"waveWidth":22,"waveOrigin":0,"shape":0.56}';
 var colourTable = `
   const vec3 colourTable[] = vec3[10](
     vec3(0.957, 0.298, 0.498), // Magenta
