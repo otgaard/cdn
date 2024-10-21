@@ -1852,10 +1852,10 @@ var common_defs_default = "#define PI 3.141593\n#define TWO_PI 6.283185\n#define
 var rotate2D_default = "mat2 rotate2D(float angle) {\n  float s = sin(angle);\n  float c = cos(angle);\n  return mat2(c, -s, s, c);\n}\n\nvec2 rotate2D(float angle, vec2 v) {\n  mat2 m = rotate2D(angle);\n  return m * v;\n}\n\nvec3 rotate2D(float angle, vec3 v) {\n  mat2 m = rotate2D(angle);\n  return vec3(m * v.xy, v.z);\n}\n";
 
 // src/lib/ShaderLibrary/includes/functions.glsl
-var functions_default = "float bias(float b, float x) {\n  return pow(x, log(b) / LOG_HALF);\n}\n\nfloat gain(float g, float x) {\n  return mix(\n  bias(1. - g, 2. * x) / 2.,\n  1. - bias(1. - g, 2. - 2. * x) / 2.,\n  step(.5, x)\n  );\n}\n\n// a = amplitude, b = centre, c = variance\nfloat gaussian(float x, float a, float b, float c) {\n  float d = x - b;\n  return a * exp(-(d * d) / (2. * c * c));\n}\n\nfloat pulse(float x, float a, float b) {\n  return step(a, x) - step(b, x);\n}\n\n// All components are in the range [0\u20261], including hue.\nvec3 rgb2hsv(vec3 c) {\n  vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);\n  vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));\n  vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));\n\n  float d = q.x - min(q.w, q.y);\n  float e = 1.0e-10;\n  return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);\n}\n\n// All components are in the range [0\u20261], including hue.\nvec3 hsv2rgb(vec3 c) {\n  vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);\n  vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);\n  return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);\n}\n";
+var functions_default = "float bias(float b, float x) {\n  return pow(x, log(b) / LOG_HALF);\n}\n\nfloat gain(float g, float x) {\n  return mix(\n  bias(1. - g, 2. * x) / 2.,\n  1. - bias(1. - g, 2. - 2. * x) / 2.,\n  step(.5, x)\n  );\n}\n\n// a = amplitude, b = centre, c = variance\nfloat gaussian(float x, float a, float b, float c) {\n  float d = x - b;\n  return a * exp(-(d * d) / (2. * c * c));\n}\n\nfloat pulse(float x, float a, float b) {\n  return step(a, x) - step(b, x);\n}\n\n// All components are in the range [0\u20261], including hue.\nvec3 rgb2hsv(vec3 c) {\n  vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);\n  vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));\n  vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));\n\n  float d = q.x - min(q.w, q.y);\n  float e = 1.0e-10;\n  return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);\n}\n\n// All components are in the range [0\u20261], including hue.\nvec3 hsv2rgb(vec3 c) {\n  vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);\n  vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);\n  return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);\n}\n\nfloat getT(float t, float alpha, vec3 p0, vec3 p1) {\n  vec3 d = p1 - p0;\n  float a = dot(d, d);\n  float b = pow(a, alpha * .5);\n  return (b + t);\n}\n\nvec3 catmullRom(vec3 p0, vec3 p1, vec3 p2, vec3 p3, float t) {\n  float alpha = .5;\n  float t0 = 0.;\n  float t1 = getT(t0, alpha, p0, p1);\n  float t2 = getT(t1, alpha, p1, p2);\n  float t3 = getT(t2, alpha, p2, p3);\n  t = mix(t1, t2, t);\n  vec3 A1 = (t1-t)/(t1-t0)*p0 + (t-t0)/(t1-t0)*p1;\n  vec3 A2 = (t2-t)/(t2-t1)*p1 + (t-t1)/(t2-t1)*p2;\n  vec3 A3 = (t3-t)/(t3-t2)*p2 + (t-t2)/(t3-t2)*p3;\n  vec3 B1 = (t2-t)/(t2-t0)*A1 + (t-t0)/(t2-t0)*A2;\n  vec3 B2 = (t3-t)/(t3-t1)*A2 + (t-t1)/(t3-t1)*A3;\n  vec3 C  = (t2-t)/(t2-t1)*B1 + (t-t1)/(t2-t1)*B2;\n  return C;\n}\n";
 
 // src/lib/ShaderLibrary/includes/noises.glsl
-var noises_default = "/*\nThese are my personal noise routines that I've developed based on my understanding and knowledge so they're more\ncustomised to my personal preferences.\n*/\n\n#define USE_RANDOM_TEXTURE\n\n#if defined(USE_RANDOM_TEXTURE)\nuniform sampler2D randTexture;\n\nfloat random(vec2 st) {\n  return texture(randTexture, st).r;\n}\n\nfloat random(vec2 st, sampler2D tex) {\n  return texture(tex, st).r;\n}\n\nfloat random(ivec2 uv) {\n  return texelFetch(randTexture, uv, 0).r;\n}\n\nfloat random(int u) {\n  return texelFetch(randTexture, ivec2(u, 0), 0).r;\n}\n\nfloat random(ivec2 uv, sampler2D tex) {\n  return texelFetch(tex, uv, 0).r;\n}\n\nfloat random(ivec2 coord, ivec2 period) {\n  ivec2 wrappedCoord = ivec2(mod(vec2(coord), vec2(period)));\n  return texelFetch(randTexture, wrappedCoord, 0).r;\n}\n\nfloat random(int u, int period) {\n  return texelFetch(randTexture, ivec2(mod(float(u), float(period)), 0), 0).r;\n}\n\nfloat random(ivec2 coord, ivec2 period, sampler2D tex) {\n  ivec2 wrappedCoord = ivec2(mod(vec2(coord), vec2(period)));\n  return texelFetch(tex, wrappedCoord, 0).r;\n}\n\n#else\nfloat random(vec2 co) {\n  return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\nfloat random(ivec2 uv) {\n  return random(vec2(uv));\n}\n\nfloat random(ivec2 coord, ivec2 period) {\n  ivec2 wrappedCoord = ivec2(mod(vec2(coord), vec2(period)));\n  return random(wrappedCoord);\n}\n#endif\n\n// Bilinear value noise\nfloat valueNoise(vec2 uv) {\n  ivec2 coord = ivec2(floor(uv));\n  vec2 dd = uv - vec2(coord);\n\n  return mix(\n    mix(random(coord), random(coord + ivec2(1, 0)), dd.x),\n    mix(random(coord + ivec2(0, 1)), random(coord + ivec2(1, 1)), dd.x),\n    dd.y\n  );\n}\n\nfloat valueNoise(vec2 uv, ivec2 period) {\n  ivec2 coord = ivec2(floor(uv));\n  vec2 dd = uv - vec2(coord);\n\n  return mix(\n    mix(random(coord, period), random(coord + ivec2(1, 0), period), dd.x),\n    mix(random(coord + ivec2(0, 1), period), random(coord + ivec2(1), period), dd.x),\n    dd.y\n  );\n}\n\n// Bicubic value noise (nice, but expensive)\nconst mat4 bicubic = mat4(\n  vec4(0., -1., 2., -1.),\n  vec4(2., 0., -5., 3.),\n  vec4(0., 1., 4., -3.),\n  vec4(0., 0., -1., 1.)\n);\n\nfloat bicubicNoise(vec2 uv) {\n  ivec2 coord = ivec2(floor(uv));\n  vec2 dd = uv - vec2(coord);\n\n  vec4 px = .5 * vec4(1., dd.x, dd.x * dd.x, dd.x * dd.x * dd.x);\n  vec4 py = .5 * vec4(1., dd.y, dd.y * dd.y, dd.y * dd.y * dd.y);\n\n  vec4 b;\n  for(int i = -1; i < 3; ++i) {\n    b[i+1] = dot(px, bicubic * vec4(\n        random(coord + ivec2(-1, i)),\n        random(coord + ivec2( 0, i)),\n        random(coord + ivec2( 1, i)),\n        random(coord + ivec2( 2, i))\n    ));\n  }\n\n  return dot(py, bicubic * b);\n}\n\nfloat bicubicNoise(float u, int period) {\n  int coord = int(floor(u));\n  float dd = u - float(coord);\n\n  vec4 px = .5 * vec4(1., dd, dd * dd, dd * dd * dd);\n\n  return dot(\n    px,\n    bicubic * vec4(\n      random(coord - 1, period),\n      random(coord, period),\n      random(coord + 1, period),\n      random(coord + 2, period)\n  ));\n}\n\nfloat bicubicNoise(vec2 uv, ivec2 period) {\n  ivec2 coord = ivec2(floor(uv));\n  vec2 dd = uv - vec2(coord);\n\n  vec4 px = .5 * vec4(1., dd.x, dd.x * dd.x, dd.x * dd.x * dd.x);\n  vec4 py = .5 * vec4(1., dd.y, dd.y * dd.y, dd.y * dd.y * dd.y);\n\n  vec4 b;\n  for(int i = -1; i < 3; ++i) {\n    b[i+1] = dot(px, bicubic * vec4(\n      random(coord + ivec2(-1, i), period),\n      random(coord + ivec2( 0, i), period),\n      random(coord + ivec2( 1, i), period),\n      random(coord + ivec2( 2, i), period)\n    ));\n  }\n\n  return dot(py, bicubic * b);\n}\n\nfloat bicubicNoise(vec2 uv, ivec2 period, sampler2D tex) {\n  ivec2 coord = ivec2(floor(uv));\n  vec2 dd = uv - vec2(coord);\n\n  vec4 px = .5 * vec4(1., dd.x, dd.x * dd.x, dd.x * dd.x * dd.x);\n  vec4 py = .5 * vec4(1., dd.y, dd.y * dd.y, dd.y * dd.y * dd.y);\n\n  vec4 b;\n  for(int i = -1; i < 3; ++i) {\n    b[i+1] = dot(px, bicubic * vec4(\n      random(coord + ivec2(-1, i), period, tex),\n      random(coord + ivec2( 0, i), period, tex),\n      random(coord + ivec2( 1, i), period, tex),\n      random(coord + ivec2( 2, i), period, tex)\n    ));\n  }\n\n  return dot(py, bicubic * b);\n}\n";
+var noises_default = "/*\nThese are my personal noise routines that I've developed based on my understanding and knowledge so they're more\ncustomised to my personal preferences.\n*/\n\n#if defined(RAND_TEX)\nuniform sampler2D randTex;\n\nfloat random(vec2 st) {\n  return texture(randTex, st).r;\n}\n\nfloat random(vec2 st, sampler2D tex) {\n  return texture(tex, st).r;\n}\n\nfloat random(ivec2 uv) {\n  return texelFetch(randTex, uv, 0).r;\n}\n\nfloat random(int u) {\n  return texelFetch(randTex, ivec2(u, 0), 0).r;\n}\n\nfloat random(ivec2 uv, sampler2D tex) {\n  return texelFetch(tex, uv, 0).r;\n}\n\nfloat random(ivec2 coord, ivec2 period) {\n  ivec2 wrappedCoord = ivec2(mod(vec2(coord), vec2(period)));\n  return texelFetch(randTex, wrappedCoord, 0).r;\n}\n\nfloat random(int u, int period) {\n  return texelFetch(randTex, ivec2(mod(float(u), float(period)), 0), 0).r;\n}\n\nfloat random(ivec2 coord, ivec2 period, sampler2D tex) {\n  ivec2 wrappedCoord = ivec2(mod(vec2(coord), vec2(period)));\n  return texelFetch(tex, wrappedCoord, 0).r;\n}\n\n#else\nfloat random(vec2 co) {\n  return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\nfloat random(ivec2 uv) {\n  return random(vec2(uv));\n}\n\nfloat random(ivec2 coord, ivec2 period) {\n  ivec2 wrappedCoord = ivec2(mod(vec2(coord), vec2(period)));\n  return random(wrappedCoord);\n}\n#endif\n\n// Bilinear value noise\nfloat valueNoise(vec2 uv) {\n  ivec2 coord = ivec2(floor(uv));\n  vec2 dd = uv - vec2(coord);\n\n  return mix(\n    mix(random(coord), random(coord + ivec2(1, 0)), dd.x),\n    mix(random(coord + ivec2(0, 1)), random(coord + ivec2(1, 1)), dd.x),\n    dd.y\n  );\n}\n\nfloat valueNoise(vec2 uv, ivec2 period) {\n  ivec2 coord = ivec2(floor(uv));\n  vec2 dd = uv - vec2(coord);\n\n  return mix(\n    mix(random(coord, period), random(coord + ivec2(1, 0), period), dd.x),\n    mix(random(coord + ivec2(0, 1), period), random(coord + ivec2(1), period), dd.x),\n    dd.y\n  );\n}\n\n// Bicubic value noise (nice, but expensive)\nconst mat4 bicubic = mat4(\n  vec4(0., -1., 2., -1.),\n  vec4(2., 0., -5., 3.),\n  vec4(0., 1., 4., -3.),\n  vec4(0., 0., -1., 1.)\n);\n\nfloat bicubicNoise(vec2 uv) {\n  ivec2 coord = ivec2(floor(uv));\n  vec2 dd = uv - vec2(coord);\n\n  vec4 px = .5 * vec4(1., dd.x, dd.x * dd.x, dd.x * dd.x * dd.x);\n  vec4 py = .5 * vec4(1., dd.y, dd.y * dd.y, dd.y * dd.y * dd.y);\n\n  vec4 b;\n  for(int i = -1; i < 3; ++i) {\n    b[i+1] = dot(px, bicubic * vec4(\n        random(coord + ivec2(-1, i)),\n        random(coord + ivec2( 0, i)),\n        random(coord + ivec2( 1, i)),\n        random(coord + ivec2( 2, i))\n    ));\n  }\n\n  return dot(py, bicubic * b);\n}\n\nfloat bicubicNoise(float u, int period) {\n  int coord = int(floor(u));\n  float dd = u - float(coord);\n\n  vec4 px = .5 * vec4(1., dd, dd * dd, dd * dd * dd);\n\n  return dot(\n    px,\n    bicubic * vec4(\n      random(coord - 1, period),\n      random(coord, period),\n      random(coord + 1, period),\n      random(coord + 2, period)\n  ));\n}\n\nfloat bicubicNoise(vec2 uv, ivec2 period) {\n  ivec2 coord = ivec2(floor(uv));\n  vec2 dd = uv - vec2(coord);\n\n  vec4 px = .5 * vec4(1., dd.x, dd.x * dd.x, dd.x * dd.x * dd.x);\n  vec4 py = .5 * vec4(1., dd.y, dd.y * dd.y, dd.y * dd.y * dd.y);\n\n  vec4 b;\n  for(int i = -1; i < 3; ++i) {\n    b[i+1] = dot(px, bicubic * vec4(\n      random(coord + ivec2(-1, i), period),\n      random(coord + ivec2( 0, i), period),\n      random(coord + ivec2( 1, i), period),\n      random(coord + ivec2( 2, i), period)\n    ));\n  }\n\n  return dot(py, bicubic * b);\n}\n\nfloat bicubicNoise(vec2 uv, ivec2 period, sampler2D tex) {\n  ivec2 coord = ivec2(floor(uv));\n  vec2 dd = uv - vec2(coord);\n\n  vec4 px = .5 * vec4(1., dd.x, dd.x * dd.x, dd.x * dd.x * dd.x);\n  vec4 py = .5 * vec4(1., dd.y, dd.y * dd.y, dd.y * dd.y * dd.y);\n\n  vec4 b;\n  for(int i = -1; i < 3; ++i) {\n    b[i+1] = dot(px, bicubic * vec4(\n      random(coord + ivec2(-1, i), period, tex),\n      random(coord + ivec2( 0, i), period, tex),\n      random(coord + ivec2( 1, i), period, tex),\n      random(coord + ivec2( 2, i), period, tex)\n    ));\n  }\n\n  return dot(py, bicubic * b);\n}\n";
 
 // src/lib/ShaderLibrary/ShaderLibrary.ts
 var screenQuadVertex = `
@@ -3168,13 +3168,89 @@ var Host = class {
     this.standardBlock.block.resolution.set([width, height, width / height, dPR]);
     this.config_.handlers.onResize?.(width, height);
   }
+  captureView(view) {
+    const url = view.canvas.toDataURL("image/png");
+    const downloadLink = document.createElement("a");
+    downloadLink.href = url;
+    downloadLink.download = `${view.div.id}.png`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  }
 };
 
 // src/apps/kore/shaders/vertex-shader.glsl
 var vertex_shader_default = "const vec2 position[3] = vec2[3](\n    vec2(-1.0, -1.0),\n    vec2(+3.0, -1.0),\n    vec2(-1.0, +3.0)\n);\n\nout vec2 uv;\n\nvoid main() {\n    gl_Position = vec4(position[gl_VertexID], 0.0, 1.0);\n    uv = position[gl_VertexID] * .5 + .5;\n}\n";
 
 // src/apps/kore/shaders/final.glsl
-var final_default = '#include <commonDefs>\n#include <functions>\n#include <colourTable>\n#include <computeNormal>\n\n#define SINE_WAVE 0\n#define BREAKING_WAVE 1\n\n#if defined(ZED)\n#define MODEL SINE_WAVE\n#define DRAW_SWATCH\n#else\nin vec2 uv;\n#endif\n\n/********************************************************************************/\n/* UNIFORMS                                                                     */\n/********************************************************************************/\n\nuniform vec3 lDir;            // { "value": [0.0, -1.0, 1.0], "min": -1.0, "max": 1.0, "step": 0.01 }\nuniform vec2 position;        // { "value": [0.0, 0.0], "min": -1000.0, "max": 1000.0, "step": 1.0 }\nuniform float ringScale;      // { "value": 0.04, "min": 0.01, "max": 1.0, "step": 0.001 }\nuniform float colourScale;    // { "value": 0.2, "min": 0.0, "max": 1.0, "step": 0.001 }\nuniform float normalScale;    // { "value": 1.0, "min": 0.0, "max": 1.0, "step": 0.001 }\n// Sine properties\nuniform vec4 rings;           // { "value": [1.0, 2.0, 6.0, 12.0], "min": 0.0, "max": 20.0, "step": 1.0 }\nuniform vec2 angle;           // { "value": [0.0, 3.14], "min": 0.0, "max": 6.28319, "step": 0.01 }\nuniform vec2 arc;             // { "value": [0.5, 0.5], "min": -1.0, "max": 1.0, "step": 0.01 }\nuniform vec2 colourID;        // { "value": [9, 2], "min": 0, "max": 9, "step": 1 }\nuniform vec4 colourRing0;     // { "value": [1.0, 2.0, 18.0, 19.0], "min": 0.0, "max": 20.0, "step": 0.1 }\nuniform vec4 colourRing1;     // { "value": [1.0, 2.0, 18.0, 19.0], "min": 0.0, "max": 20.0, "step": 0.1 }\n// Breaking properties\nuniform float steepness;      // { "value": 2.0, "min": 0.1, "max": 10.0, "step": 0.01 }\nuniform float waveScale;      // { "value": 1.6, "min": 0.1, "max": 2.0, "step": 0.01 }\nuniform float waveWidth;      // { "value": 22.0, "min": 1.0, "max": 100.0, "step": 0.1 }\nuniform float waveOrigin;     // { "value": 0, "min": 0.0, "max": 3.0, "step": 1.0 }\nuniform float shape;          // { "value": 0.56, "min": 0.01, "max": 1.0, "step": 0.01 }\n\n#if MODEL == SINE_WAVE\n#define globalScale (ringScale / dPR)\n#elif MODEL == BREAKING_WAVE\n#define globalScale 0.03 * (3000. / max(screen.x, screen.y))\n#endif\n\n#define globalPos (position * dPR)\n#define dPRScale (dPR / 2.0)\n\n/********************************************************************************/\n/* GLOBALS                                                                      */\n/********************************************************************************/\n\nvec3 lightDir; // The position of the light (points towards)\nvec2 invRes; // The inverse of the viewport (may be a region of the window)\n\nstruct Record {\n  mat3 T; // The world transform\n  vec2 centre; // The current centre of the animation\n  vec2 fragCoord; // Copy of the fragCoord in world space\n  vec3 dispMag; // displacement from centre, mag of distance\n  vec2 dir; // normalised direction from centre\n  float height; // The height of the computed position\n  vec3 normal; // The computed normal from the height\n  float annulus; // The annulus scalar\n  float sign; // Which side of the bezier curve is this?\n  float dist; // The distance of the point from the centre (for rings)\n};\n\nRecord record;\n\n/********************************************************************************/\n/* FUNCTIONS                                                                    */\n/********************************************************************************/\n\n#if defined(RAND_TEX)\nuniform sampler2D randTex;\nfloat random2(vec2 co) {\n  vec2 size = vec2(textureSize(randTex, 0));\n  return texture(randTex, co * screen / size).r;\n}\n#else\nfloat random2(vec2 co) {\n  return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);\n}\n#endif\n\nfloat length2(vec2 A) { return dot(A, A); }\n\n// Draws the background colour - stippled sand where the annulus is 0\nvec3 drawBackground(float b) {\n  return mix(sandColour, backgroundColour, clamp(bias(b, random2(uv)), 0.01, 0.999));\n}\n\nvec4 mixColour(float dst, vec4 colour, int idx) {\n  colour.rgb = mix(colour.rgb, mix(colourTable[idx], backgroundColour, 0.2), dst);\n  colour.a = max(colour.a, dst);\n  return colour;\n}\n\n/********************************************************************************/\n/* ANIMATIONS                                                                   */\n/********************************************************************************/\n\n/********************* SINE_WAVE *********************/\n#if MODEL == SINE_WAVE\n\nfloat computeAnnulus(float dist, vec4 rings) {\n  return saturate(smoothstep(rings.x * PI, rings.y * PI, dist) - smoothstep(rings.z * PI, rings.w * PI, dist));\n}\n\nvec4 computeWedge(int idx, vec4 colour, float angle, float arc, vec4 ring) {\n  vec2 deriv = vec2(cos(angle), -sin(angle));\n  float f = smoothstep(arc, 1.0, saturate(dot(deriv, record.dir)));\n  f *= computeAnnulus(mod(record.dist - time, 60.), ring);\n  return mixColour(f, colour, idx);\n}\n\n// Compute the flat centre, start, and end of the entire disc as scalar\nfloat computeDisc(float dist) {\n  record.annulus = computeAnnulus(dist, rings);\n  return record.annulus;\n}\n\nfloat computePosition(vec2 P) {\n  // This does not work on older mobile devices???: float dist = globalScale * record.dispMag.z;\n  record.dist = globalScale * sqrt(length2(P));\n  return computeDisc(record.dist) * sin(record.dist - time);\n}\n\n/********************* BREAKING_WAVE *********************/\n#elif MODEL == BREAKING_WAVE\n\nvec2 quadratic(float A, float x) {\n  return vec2(x, A * x * x);\n}\n\nfloat yPos;\n\nfloat computePosition(vec2 pos) {\n  float A = steepness * -2e-4;\n  vec2 f = quadratic(A, pos.x);\n  yPos = f.y;\n  record.sign = f.y - pos.y;\n\n  float h = abs(f.y - pos.y);\n  float wS = 200. * waveScale;\n\n  float flare = 1. - smoothstep(0., 100. * waveWidth * waveScale, abs(pos.x));\n  h *= flare;\n\n  float height = 1.6 / dPRScale * flare * flare * waveScale * waveScale * gain(shape, (1. - smoothstep(0., flare * wS, h)));\n  return height;\n}\n\nvec4 computeWave(vec3 baseColour) {\n  return vec4(\n  mix(sandColour+0.1, baseColour, smoothstep(-500., 100., record.sign)),\n  1.0\n  );\n}\n\n#endif\n\nvec3 computeColour() {\n  const float sandFlicker = 0.1;\n  vec3 fg = mix(backgroundColour-0.02, backgroundColour+0.02, random2(uv-.13));\n  float l = dot(record.normal, lightDir) * .5 + .5;\n\n  vec4 kol = vec4(sandColour+0.15, 0.2);\n#if defined(SINE_WAVE) && MODEL == 0\n  kol = computeWedge(int(colourID[0]), kol, angle[0], arc[0], colourRing0);\n  kol = computeWedge(int(colourID[1]), kol, angle[1], arc[1], colourRing1);\n  kol = mix(vec4(sandColour+0.15, 1.), kol, record.annulus);\n#else\n  vec3 baseColour = colourTable[int(colourID[0])];\n  kol = computeWave(baseColour);\n#endif\n\n  float flicker = 10. * dot(kol.rgb, vec3(.2126, .7152, .0722)) * (1. - dot(vec3(0., 0., 1.), record.normal));\n  vec3 cc = mix(mix(sandColour, kol.rgb, 0.1), kol.rgb, l+0.4);\n  vec3 c = mix(cc, fg, 0.45 * step(.5, random2(uv+.11)) * fract(random2(uv-.123) + flicker*sin(TWO_PI*random2(uv)+time)));\n\n  return mix(c, fg, saturate(l-0.4));\n}\n\n/********************************************************************************/\n/* ENTRY                                                                        */\n/********************************************************************************/\n\nmat3 makeTransform(vec2 pos, float rot, float scale) {\n  return mat3(\n    scale * cos(rot),  scale * sin(rot), 0.0,\n    scale * -sin(rot), scale * cos(rot), 0.0,\n    pos.x,             pos.y,            1.0\n  );\n}\n\nvoid initAnimation(vec2 fragCoord) {\n  lightDir = normalize(lDir);\n  record.centre = screen / 2.0 + vec2(globalPos.x, -globalPos.y);\n\n#if MODEL == BREAKING_WAVE\n  float t = saturate(1. - mod(time, 30.) / 30.);\n  vec2 origin = screen * vec2(floor(waveOrigin / 2.), floor(mod(waveOrigin, 2.)));\n\n  record.centre = mix(screen / 2.0, origin, t * t);\n  vec2 d = normalize(origin - record.centre);\n  record.T = makeTransform(vec2(0.), atan(d.y, d.x)-PI, 3000./(dPRScale * max(screen.x, screen.y)));\n  lightDir.xy = normalize(record.centre);\n  lightDir = normalize(lightDir);\n#else // SINE_WAVE\n  record.T = makeTransform(vec2(0.), 0.0, 1.0);\n#endif\n  record.T[2] = record.T * vec3(-record.centre, 0.);\n\n  record.fragCoord = (record.T * vec3(fragCoord, 0.)).xy;\n  record.dispMag.xy = (record.T * vec3(fragCoord, 1.)).xy;\n  record.dispMag.z = length(record.dispMag.xy);\n  record.dir = record.dispMag.xy / record.dispMag.z;\n  record.height = computePosition(record.dispMag.xy);\n  record.normal = computeNormal(record.height, globalScale / normalScale); // This ratio works across resolutions...\n}\n\n#if defined(DRAW_SWATCH)\nvec4 drawSwatch(vec2 fragCoord) {\n  vec2 dims = vec2(50. * dPRScale);\n  vec2 coord = floor(fragCoord / dims);\n  return mix(vec4(colourTable[5 * int(coord.y) + int(coord.x)], 1.), vec4(0.), float(any(greaterThan(coord, vec2(4., 1.)))));\n}\n#endif\n\nvoid renderImage(out vec4 fragColour, vec2 fragCoord) {\n  initAnimation(fragCoord);\n  fragColour = vec4(computeColour(), 1.0);\n#if defined(DRAW_SWATCH)\n  vec4 swatch = drawSwatch(fragCoord);\n  fragColour = mix(fragColour, swatch, swatch.a);\n#endif\n}\n';
+var final_default = '#include <commonDefs>\n#include <functions>\n#include <simplex2D>\n#include <simplex3D>\n#include <noises>\n#include <colourTable>\n#include <computeNormal>\n\n#define SINE_WAVE 0\n#define BREAKING_WAVE 1\n#define SINE_WAVE_DM 2\n\n#if defined(ZED)\n#define MODEL SINE_WAVE_DM\n#define DRAW_SWATCH\n#define DARK_MODE 1\n#else\nin vec2 uv;\n#endif\n\n/********************************************************************************/\n/* UNIFORMS                                                                     */\n/********************************************************************************/\n\nuniform vec3 lDir;            // { "value": [0.0, -1.0, 1.0], "min": -1.0, "max": 1.0, "step": 0.01 }\nuniform vec2 position;        // { "value": [0.0, 0.0], "min": -1000.0, "max": 1000.0, "step": 1.0 }\nuniform float ringScale;      // { "value": 0.04, "min": 0.01, "max": 1.0, "step": 0.001 }\nuniform float colourScale;    // { "value": 0.2, "min": 0.0, "max": 1.0, "step": 0.001 }\nuniform float normalScale;    // { "value": 1.0, "min": 0.001, "max": 1.0, "step": 0.001 }\n// Sine properties\nuniform vec4 rings;           // { "value": [1.0, 2.0, 6.0, 12.0], "min": 0.0, "max": 20.0, "step": 1.0 }\nuniform vec2 angle;           // { "value": [0.0, 3.14], "min": 0.0, "max": 6.28319, "step": 0.01 }\nuniform vec2 arc;             // { "value": [0.5, 0.5], "min": -1.0, "max": 1.0, "step": 0.01 }\nuniform vec2 colourID;        // { "value": [1, 7], "min": 0, "max": 10, "step": 1 }\nuniform vec4 colourRing0;     // { "value": [1.0, 2.0, 8.5, 11.3], "min": 0.0, "max": 20.0, "step": 0.1 }\nuniform vec4 colourRing1;     // { "value": [1.0, 2.0, 18.0, 19.0], "min": 0.0, "max": 20.0, "step": 0.1 }\n// Breaking properties\nuniform float steepness;      // { "value": 2.0, "min": 0.1, "max": 10.0, "step": 0.01 }\nuniform float waveScale;      // { "value": 1.6, "min": 0.1, "max": 2.0, "step": 0.01 }\nuniform float waveWidth;      // { "value": 22.0, "min": 1.0, "max": 100.0, "step": 0.1 }\nuniform float waveOrigin;     // { "value": 0, "min": 0.0, "max": 3.0, "step": 1.0 }\nuniform float shape;          // { "value": 0.56, "min": 0.01, "max": 1.0, "step": 0.01 }\n\n#if MODEL == SINE_WAVE || MODEL == SINE_WAVE_DM\n#define globalScale (ringScale / dPR)\n#elif MODEL == BREAKING_WAVE\n#define globalScale 0.03 * (3000. / max(screen.x, screen.y))\n#endif\n\n#define globalPos (position * dPR)\n#define dPRScale (dPR / 2.0)\n\n/********************************************************************************/\n/* GLOBALS                                                                      */\n/********************************************************************************/\n\nvec3 lightDir; // The position of the light (points towards)\nvec2 invRes; // The inverse of the viewport (may be a region of the window)\n\nstruct Record {\n  mat3 T; // The world transform\n  vec2 centre; // The current centre of the animation\n  vec2 fragCoord; // Copy of the fragCoord in world space\n  vec3 dispMag; // displacement from centre, mag of distance\n  vec2 dir; // normalised direction from centre\n  float height; // The height of the computed position\n  vec3 normal; // The computed normal from the height\n  float annulus; // The annulus scalar\n  float sign; // Which side of the bezier curve is this?\n  float dist; // The distance of the point from the centre (for rings)\n};\n\nRecord record;\n\n/********************************************************************************/\n/* FUNCTIONS                                                                    */\n/********************************************************************************/\n\n#if defined(RAND_TEX)\n\nfloat random2(vec2 co) {\n  vec2 size = vec2(textureSize(randTex, 0));\n  return texture(randTex, co * screen / size).r;\n}\n\n#else\n\nfloat random2(vec2 co) {\n  return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\n#endif\n\nfloat length2(vec2 A) { return dot(A, A); }\n\n// Draws the background colour - stippled sand where the annulus is 0\nvec3 drawBackground(float b) {\n  return mix(sandColour, backgroundColour, clamp(bias(b, random2(uv)), 0.01, 0.999));\n}\n\nvec4 mixColour(float dst, vec4 colour, int idx) {\n  colour.rgb = mix(colour.rgb, mix(colourTable[idx], backgroundColour, 0.2), dst);\n  colour.a = max(colour.a, dst);\n  return colour;\n}\n\n/********************************************************************************/\n/* ANIMATIONS                                                                   */\n/********************************************************************************/\n\n/********************* SINE_WAVE *********************/\n#if MODEL == SINE_WAVE || MODEL == SINE_WAVE_DM\n\nfloat computeAnnulus(float dist, vec4 rings) {\n  return saturate(smoothstep(rings.x * PI, rings.y * PI, dist) - smoothstep(rings.z * PI, rings.w * PI, dist));\n}\n\nvec4 computeWedge(int idx, vec4 colour, float angle, float arc, vec4 ring) {\n  vec2 deriv = vec2(cos(angle), -sin(angle));\n  float f = smoothstep(arc, 1.0, saturate(dot(deriv, record.dir)));\n  f *= computeAnnulus(mod(record.dist - time, 60.), ring);\n  return mixColour(f, colour, idx);\n}\n\n// Compute the flat centre, start, and end of the entire disc as scalar\nfloat computeDisc(float dist) {\n  record.annulus = computeAnnulus(dist, rings);\n  return record.annulus;\n}\n\nfloat computePosition(vec2 P) {\n  // This does not work on older mobile devices???: float dist = globalScale * record.dispMag.z;\n  record.dist = globalScale * sqrt(length2(P));\n  return computeDisc(record.dist) * sin(record.dist - mod(time, 60. * TWO_PI)); // Mod to prevent drift\n}\n\n/********************* BREAKING_WAVE *********************/\n#elif MODEL == BREAKING_WAVE\n\nvec2 quadratic(float A, float x) {\n  return vec2(x, A * x * x);\n}\n\nfloat yPos;\n\nfloat computePosition(vec2 pos) {\n  float A = steepness * -2e-4;\n  vec2 f = quadratic(A, pos.x);\n  yPos = f.y;\n  record.sign = f.y - pos.y;\n\n  float h = abs(f.y - pos.y);\n  float wS = 200. * waveScale;\n\n  float flare = 1. - smoothstep(0., 100. * waveWidth * waveScale, abs(pos.x));\n  h *= flare;\n\n  float height = 1.6 / dPRScale * flare * flare * waveScale * waveScale * gain(shape, (1. - smoothstep(0., flare * wS, h)));\n  return height;\n}\n\nvec4 computeWave(vec3 baseColour) {\n  return vec4(\n  mix(sandColour+0.1, baseColour, smoothstep(-500., 100., record.sign)),\n  1.0\n  );\n}\n\n#endif\n\n#if defined(MODEL) & MODEL == SINE_WAVE_DM\n\nconst vec3 darkBgColour = vec3(0.12549, 0.14118, 0.1529);\n\nfloat radialTest(vec2 fragCoord) {\n  vec2 coord = fragCoord - screen * .5;\n  float h = length(coord) / (max(screen.x, screen.y) * .5);\n  vec2 st = vec2((atan(coord.y, coord.x) + PI) / TWO_PI, sqrt(h) - .02 * time);\n  return bicubicNoise(vec2(3., 6.) * st, ivec2(3, 30));\n}\n\nvec3 computeColourOld() {\n  float l = dot(record.normal, lightDir) * .5 + .5;\n  float v = smoothstep(0., 1., radialTest(record.fragCoord));\n  v *= (snoise(2. * uv) * .5 + .5);\n\n  vec3 field = saturate(mix(colourTable[int(colourID[0])], colourTable[int(colourID[1])], v));\n  vec3 base = mix(darkBgColour, field, bias(.1, l) * clamp(random2(uv - .13), .35, .5));\n  base += 0.4 * mix(vec3(0.), vec3(1.), random2(uv) * saturate(bias(0.4, sqrt(record.height))));\n  base = mix(darkBgColour, base, record.annulus);\n  return base;\n}\n\nvec3 adjustHSV(vec3 colour, vec3 v) {\n  colour = rgb2hsv(colour);\n  colour += v;\n  saturate(colour);\n  return hsv2rgb(colour);\n}\n\nvec4 mixDarkColour(float dst, vec4 colour, vec3 source) {\n  colour.rgb = mix(colour.rgb, mix(source, darkBgColour, 0.2), dst);\n  colour.a = max(colour.a, dst);\n  return colour;\n}\n\nvec4 computeDarkWedge(vec3 source, vec4 colour, float angle, float arc, vec4 ring) {\n  vec2 deriv = vec2(cos(angle), -sin(angle));\n  float f = smoothstep(arc, 1.0, saturate(dot(deriv, record.dir)));\n  f *= computeAnnulus(mod(record.dist - time, 60.), ring);\n  return mixDarkColour(f, colour, source);\n}\n\nvec3 computeColour() {\n  // return computeColourOld();\n  float l = dot(record.normal, lightDir) * .5 + .5;\n  vec3 c = adjustHSV(colourTable[int(colourID[0])], vec3(0., 0., -.60 + 0.2 * (random2(uv) * 2. - 1.)));\n  vec3 d = adjustHSV(colourTable[int(colourID[1])], vec3(0., 0., -.60 + 0.2 * (random2(uv - .283) * 2. - 1.)));\n\n  vec3 e = mix(c, d, /*(snoise(uv * 2.) * .5 + .5) */ radialTest(record.fragCoord));\n  float a = random2(uv) * 0.15 * smoothstep(-1.0, 1.0, record.height * dot(record.normal, vec3(0., 0., 1.)));\n  e += bias(0.48, a);\n\n  return mix(darkBgColour, e, l * computeAnnulus(mod(record.dist, 60.), vec4(0., 0., colourRing0.zw)));\n}\n\n#else\n\nvec3 computeColour() {\n  const float sandFlicker = 0.1;\n  vec3 fg = mix(backgroundColour-0.02, backgroundColour+0.02, random2(uv-.13));\n  float l = dot(record.normal, lightDir) * .5 + .5;\n\n  vec4 kol = vec4(sandColour + 0.15, 0.2);\n  #if defined(SINE_WAVE) && MODEL == 0\n  kol = computeWedge(int(colourID[0]), kol, angle[0], arc[0], colourRing0);\n  kol = computeWedge(int(colourID[1]), kol, angle[1], arc[1], colourRing1);\n  kol = mix(vec4(sandColour+0.15, 1.), kol, record.annulus);\n  #else\n  vec3 baseColour = colourTable[int(colourID[0])];\n  kol = computeWave(baseColour);\n  #endif\n\n  float flicker = 10. * dot(kol.rgb, vec3(.2126, .7152, .0722)) * (1. - dot(vec3(0., 0., 1.), record.normal));\n  vec3 cc = mix(mix(sandColour, kol.rgb, 0.1), kol.rgb, l+0.4);\n  vec3 c = mix(cc, fg, 0.45 * step(.5, random2(uv+.11)) * fract(random2(uv-.123) + flicker*sin(TWO_PI*random2(uv)+time)));\n\n  return mix(c, fg, saturate(l - 0.4));\n}\n\n#endif\n\n/********************************************************************************/\n/* ENTRY                                                                        */\n/********************************************************************************/\n\nmat3 makeTransform(vec2 pos, float rot, float scale) {\n  return mat3(\n  scale * cos(rot),  scale * sin(rot), 0.0,\n  scale * -sin(rot), scale * cos(rot), 0.0,\n  pos.x,             pos.y,            1.0\n  );\n}\n\nvoid initAnimation(vec2 fragCoord) {\n  lightDir = normalize(lDir);\n  record.centre = screen / 2.0 + vec2(globalPos.x, -globalPos.y);\n\n  #if MODEL == BREAKING_WAVE\n  float t = saturate(1. - mod(time, 30.) / 30.);\n  vec2 origin = screen * vec2(floor(waveOrigin / 2.), floor(mod(waveOrigin, 2.)));\n\n  record.centre = mix(screen / 2.0, origin, t * t);\n  vec2 d = normalize(origin - record.centre);\n  record.T = makeTransform(vec2(0.), atan(d.y, d.x)-PI, 3000./(dPRScale * max(screen.x, screen.y)));\n  lightDir.xy = normalize(record.centre);\n  lightDir = normalize(lightDir);\n  #else // SINE_WAVE\n  record.T = makeTransform(vec2(0.), 0.0, 1.0);\n  #endif\n  record.T[2] = record.T * vec3(-record.centre, 0.);\n\n  record.fragCoord = (record.T * vec3(fragCoord, 0.)).xy;\n  record.dispMag.xy = (record.T * vec3(fragCoord, 1.)).xy;\n  record.dispMag.z = length(record.dispMag.xy);\n  record.dir = record.dispMag.xy / record.dispMag.z;\n  record.height = computePosition(record.dispMag.xy);\n  record.normal = computeNormal(record.height, globalScale / normalScale); // This ratio works across resolutions...\n}\n\n#if defined(DRAW_SWATCH)\nvec4 drawSwatch(vec2 fragCoord) {\n  vec2 dims = vec2(50. * dPRScale);\n  vec2 coord = floor(fragCoord / dims);\n  return mix(vec4(colourTable[5 * int(coord.y) + int(coord.x)], 1.), vec4(0.), float(any(greaterThan(coord, vec2(4., 1.)))));\n}\n#endif\n\nvoid renderImage(out vec4 fragColour, vec2 fragCoord) {\n  initAnimation(fragCoord);\n  fragColour = vec4(computeColour(), 1.0);\n  #if defined(DRAW_SWATCH)\n  vec4 swatch = drawSwatch(fragCoord);\n  fragColour = mix(fragColour, swatch, swatch.a);\n  #endif\n}\n';
+
+// src/lib/zed/injector.ts
+var ICONS = {
+  save: "\u{1F4BE}",
+  copy: "\u{1F4CB}",
+  new: "\u{1F195}",
+  import: "\u{1F4E5}",
+  export: "\u{1F4E4}",
+  play: "\u25B6\uFE0F",
+  pause: "\u23F8\uFE0F",
+  stop: "\u23F9\uFE0F",
+  delete: "\u{1F5D1}\uFE0F",
+  noError: "\u{1F7E2}",
+  error: "\u{1F534}",
+  camera: "\u{1F4F7}"
+};
+var injectHTML = `
+<!-- Canvas -->
+<div id="canvas-container">
+    <canvas id="canvas"></canvas>
+</div>
+
+<!-- Editor -->
+<div id="editor">
+    <div class="toolbar">
+      <div class="tab-buttons">
+          <button class="tab-button active" data-tab="text">Shader</button>
+          <button class="tab-button" data-tab="lib">Library</button>
+          <button class="tab-button" data-tab="html">Controls</button>
+      </div>
+      <div class="toolbar-controls">
+          <button id="status" class="button">${ICONS.noError}</button>
+          <select name="snippets" id="snippet-select" title="Snippet Library"></select>
+         
+          <button id="new-snippet" title="New Snippet">${ICONS.new}</button>
+          <button id="save-snippet" title="Save Snippet">${ICONS.save}</button>
+          <button id="delete-snippet" title="Delete Snippet">${ICONS.delete}</button>
+          
+          <!-- Shaders -->
+          <select name="shaders" id="shader-select" title="Shader Library"></select>
+          
+          <button id="new-shader" title="New Shader">${ICONS.new}</button>
+          <button id="save-shader" title="Save Shader">${ICONS.save}</button>
+          <button id="delete-shader" title="Delete Shader">${ICONS.delete}</button>
+          <button id="play-pause" title="Play/Pause">${ICONS.play}</button>
+      </div>
+    </div>
+    <div class="tab-content active" id="text-tab"></div>
+    <div class="tab-content" id="lib-tab"></div>
+    <div class="tab-content" id="html-tab"></div>
+</div>
+
+<!-- Modals -->
+<div id="modal-container" class="modal-container">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="modal-title"></h2>
+            <button id="modal-close">&times;</button>
+        </div>
+        <div id="modal-content" class="modal-content"></div>
+        <div class="modal-footer">
+            <button id="modal-confirm">Confirm</button>
+            <button id="modal-cancel">Cancel</button>
+        </div>
+    </div>
+</div>
+`;
 
 // src/lib/zed/AnimationControlUI.ts
 var AnimationControlUI = class _AnimationControlUI {
@@ -3182,14 +3258,16 @@ var AnimationControlUI = class _AnimationControlUI {
   controls;
   values;
   onUpdateCallback;
+  onSnapshot;
   controlWindow;
   toggleButton;
   static styleInjected = false;
-  constructor(containerElement, controls, json, onUpdate) {
+  constructor(containerElement, controls, json, onUpdate, onSnapshot) {
     this.container = containerElement;
     this.controls = controls;
     this.values = JSON.parse(json);
     this.onUpdateCallback = onUpdate;
+    this.onSnapshot = onSnapshot;
     this.initialise();
   }
   initialise() {
@@ -3220,7 +3298,7 @@ var AnimationControlUI = class _AnimationControlUI {
     header.style.justifyContent = "space-between";
     const divID = document.createElement("span");
     divID.textContent = "#" + (this.container.id ?? "no_id");
-    divID.style.font = "bold 20px Arial, sans-serif";
+    divID.style.font = "bold 16px Arial, sans-serif";
     divID.style.color = "white";
     header.appendChild(divID);
     const notification = document.createElement("span");
@@ -3235,7 +3313,7 @@ var AnimationControlUI = class _AnimationControlUI {
     const exportButtonContainer = document.createElement("div");
     exportButtonContainer.style.position = "relative";
     const exportButton = document.createElement("button");
-    exportButton.textContent = "Export";
+    exportButton.innerHTML = ICONS.export;
     exportButton.style.color = "black";
     exportButton.appendChild(notification);
     exportButton.onclick = async () => {
@@ -3252,6 +3330,12 @@ var AnimationControlUI = class _AnimationControlUI {
     exportButtonContainer.appendChild(exportButton);
     exportButtonContainer.appendChild(notification);
     header.appendChild(exportButtonContainer);
+    const snapshotButton = document.createElement("button");
+    snapshotButton.innerHTML = ICONS.camera;
+    snapshotButton.onclick = async () => {
+      this.onSnapshot?.();
+    };
+    header.appendChild(snapshotButton);
     this.controlWindow?.appendChild(header);
     Object.entries(this.controls).forEach(([name, control]) => {
       if (this.isNumericType(control.type)) {
@@ -3430,7 +3514,7 @@ var AnimationControlUI = class _AnimationControlUI {
             border-radius: 4px;
             font-size: 14px;
             bottom: -8%;
-            left: -160%;
+            left: -300%;
             white-space: nowrap;
             opacity: 0;
             transition: opacity 0.3s;
@@ -3573,6 +3657,11 @@ var Texture = class {
     const filter = this.conf.filter ?? [mipmaps ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR, gl.LINEAR];
     const dataType = this.conf.dataType ?? gl.UNSIGNED_BYTE;
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY ?? false);
+    if (data && ArrayBuffer.isView(data)) {
+      const r = data.byteLength % 4;
+      if (r !== 0)
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    }
     if (data instanceof HTMLImageElement) {
       gl.texImage2D(this.conf.type, 0, format[0], format[1], dataType, data ?? null);
     } else {
@@ -3580,6 +3669,7 @@ var Texture = class {
     }
     if (flipY === true)
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
     gl.texParameteri(this.conf.type, gl.TEXTURE_WRAP_S, wrap[0]);
     gl.texParameteri(this.conf.type, gl.TEXTURE_WRAP_T, wrap[1]);
     gl.texParameteri(this.conf.type, gl.TEXTURE_MIN_FILTER, filter[0]);
@@ -3817,6 +3907,16 @@ var Kore = class {
               ["MODEL", "1"],
               ["RAND_TEX", "1"]
             ])
+          },
+          {
+            name: "kore-sine-darkMode",
+            shaderDef: [vertex_shader_default, final_default + mainDef],
+            blockDef: [],
+            isQuad: true,
+            defines: /* @__PURE__ */ new Map([
+              ["MODEL", "2"],
+              ["RAND_TEX", "1"]
+            ])
           }
         ],
         library: {
@@ -3855,7 +3955,7 @@ var Kore = class {
   onInitialise(renderPipeline) {
     for (const view of renderPipeline.multipleViews ?? []) {
       const controls = {
-        model: { type: "int", value: 0, min: 0, max: 1, step: 1 },
+        model: { type: "int", value: 0, min: 0, max: 2, step: 1 },
         ...ControlParser.extractControls(renderPipeline.passes[0].shaderDef[1])
       };
       view[1].control = new AnimationControlUI(
@@ -3864,6 +3964,9 @@ var Kore = class {
         (view[1].div.getAttribute("data-kore") ?? defaultConf).replace(/'/g, '"'),
         (json) => {
           view[1].data = JSON.parse(json);
+        },
+        () => {
+          this.host.captureView(view[1]);
         }
       );
     }
