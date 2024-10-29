@@ -2935,6 +2935,289 @@ var Renderer = class {
   }
 };
 
+// src/lib/Renderer/RenderTarget.ts
+function getOptValue(opt, name, idx) {
+  if (name in opt) {
+    return Array.isArray(opt[name]) ? opt[name][idx] : opt[name];
+  }
+}
+var RenderTarget = class _RenderTarget {
+  gl;
+  width_ = 1;
+  height_ = 1;
+  samples_ = 1;
+  options;
+  framebuffer;
+  renderbuffer;
+  depthbuffer;
+  constructor(gl, dimensions, options) {
+    this.gl = gl;
+    this.width_ = dimensions[0];
+    this.height_ = dimensions[1];
+    this.samples_ = dimensions[2] != null ? dimensions[2] : 1;
+    this.options = options ?? {
+      renderTargetType: "texture",
+      attachments: 1,
+      internalFormat: gl.RGBA8,
+      format: gl.RGBA,
+      dataType: gl.UNSIGNED_BYTE,
+      wrapMode: { s: gl.CLAMP_TO_EDGE, t: gl.CLAMP_TO_EDGE },
+      filterMode: { min: gl.NEAREST, mag: gl.NEAREST },
+      generateMipmaps: false,
+      depthBufferType: "none",
+      internalDepthFormat: gl.DEPTH_COMPONENT16,
+      depthFormat: gl.DEPTH_COMPONENT,
+      depthDataType: gl.UNSIGNED_INT
+    };
+    if (!("wrapMode" in this.options))
+      this.options.wrapMode = { s: gl.CLAMP_TO_EDGE, t: gl.CLAMP_TO_EDGE };
+    if (!("filterMode" in this.options))
+      this.options.filterMode = { min: gl.NEAREST, mag: gl.NEAREST };
+    if (this.options.internalFormat === gl.RGBA32F || this.options.internalFormat === gl.RGBA16F) {
+      const ext2 = gl.getExtension("EXT_color_buffer_float");
+      if (ext2 == null) {
+        throw new Error("EXT_color_buffer_float is required");
+      }
+    }
+    let ext = null;
+    if (this.options.anisotropy != null) {
+      ext = gl.getExtension("EXT_texture_filter_anisotropic");
+      if (ext == null) {
+        throw new Error("EXT_texture_filter_anisotropic is required");
+      }
+    }
+    this.framebuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+    const opt = this.options;
+    this.renderbuffer = [];
+    const attachments = this.options.attachments ?? 1;
+    for (let attachment = 0; attachment < attachments; ++attachment) {
+      const internalFormat = getOptValue(opt, "internalFormat", attachment);
+      const format = getOptValue(opt, "format", attachment);
+      const dataType = getOptValue(opt, "dataType", attachment);
+      const wrapMode = getOptValue(opt, "wrapMode", attachment);
+      const filterMode = getOptValue(opt, "filterMode", attachment) ?? { min: gl.NEAREST, mag: gl.NEAREST };
+      console.log(internalFormat, format, dataType, wrapMode, filterMode);
+      if (opt.renderTargetType === "texture" && this.samples_ === 1) {
+        const renderBuffer = gl.createTexture();
+        if (!renderBuffer)
+          throw Error("Failed to create attachment texture");
+        gl.bindTexture(gl.TEXTURE_2D, renderBuffer);
+        gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, this.width_, this.height_, 0, format, dataType, null);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrapMode.s);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrapMode.t);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filterMode.min);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filterMode.mag);
+        if (ext && this.options.anisotropy != null) {
+          const max = gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+          gl.texParameterf(gl.TEXTURE_2D, ext.TEXTURE_MAX_ANISOTROPY_EXT, max);
+        }
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + attachment, gl.TEXTURE_2D, renderBuffer, 0);
+        this.renderbuffer?.push(renderBuffer);
+      } else if (opt.renderTargetType === "renderbuffer") {
+        const renderBuffer = gl.createRenderbuffer();
+        if (!renderBuffer)
+          throw Error("Failed to create attachment texture");
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this.renderbuffer);
+        if (this.samples_ > 1) {
+          gl.renderbufferStorageMultisample(gl.RENDERBUFFER, this.samples_, internalFormat, this.width_, this.height_);
+        } else {
+          gl.renderbufferStorage(gl.RENDERBUFFER, internalFormat, this.width_, this.height_);
+        }
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + attachment, gl.RENDERBUFFER, renderBuffer);
+        this.renderbuffer?.push(renderBuffer);
+      }
+    }
+    if (opt.depthBufferType !== "none" && opt.internalDepthFormat != null && opt.depthFormat != null && opt.depthDataType != null) {
+      if (opt.depthBufferType === "texture" && this.samples_ === 1) {
+        this.depthbuffer = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.depthbuffer);
+        gl.texImage2D(
+          gl.TEXTURE_2D,
+          0,
+          opt.internalDepthFormat,
+          this.width_,
+          this.height_,
+          0,
+          opt.depthFormat,
+          opt.depthDataType,
+          null
+        );
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depthbuffer, 0);
+      } else {
+        this.depthbuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthbuffer);
+        if (this.samples_ > 1) {
+          gl.renderbufferStorageMultisample(gl.RENDERBUFFER, this.samples_, opt.internalDepthFormat, this.width_, this.height_);
+        } else {
+          gl.renderbufferStorage(gl.RENDERBUFFER, opt.internalDepthFormat, this.width_, this.height_);
+        }
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depthbuffer);
+      }
+    } else {
+      this.depthbuffer = null;
+    }
+    checkFramebufferStatus(gl.getError());
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+  destroy() {
+    if (!this.framebuffer)
+      return;
+    for (const b of this.renderbuffer ?? []) {
+      console.log(b);
+      if (this.options.renderTargetType === "renderbuffer")
+        this.gl.deleteRenderbuffer(b);
+      else if (this.options.renderTargetType === "texture")
+        this.gl.deleteTexture(b);
+    }
+    if (this.options.depthBufferType === "renderbuffer")
+      this.gl.deleteRenderbuffer(this.depthBuffer);
+    else if (this.options.depthBufferType === "texture")
+      this.gl.deleteTexture(this.depthBuffer);
+    this.gl.deleteFramebuffer(this.framebuffer);
+  }
+  get width() {
+    return this.width_;
+  }
+  get height() {
+    return this.height_;
+  }
+  get samples() {
+    return this.samples_;
+  }
+  get isMultisample() {
+    return this.samples_ > 1;
+  }
+  get frameBuffer() {
+    return this.framebuffer;
+  }
+  get colourBuffer() {
+    return this.renderbuffer?.[0];
+  }
+  get depthBuffer() {
+    return this.depthbuffer;
+  }
+  target(idx) {
+    return this.renderbuffer?.[idx];
+  }
+  bind() {
+    const gl = this.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2, gl.COLOR_ATTACHMENT3]);
+  }
+  release() {
+    if (this.options.generateMipmaps === true) {
+      this.gl.activeTexture(this.gl.TEXTURE0);
+      this.gl.bindTexture(this.gl.TEXTURE_2D, this.renderbuffer);
+      this.gl.generateMipmap(this.gl.TEXTURE_2D);
+      this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+    }
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+  }
+  resolve(fbuffer) {
+    const gl = this.gl;
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.framebuffer);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, fbuffer instanceof _RenderTarget ? fbuffer.framebuffer : fbuffer);
+    gl.blitFramebuffer(
+      0,
+      0,
+      this.width_,
+      this.height_,
+      0,
+      0,
+      this.width_,
+      this.height_,
+      gl.COLOR_BUFFER_BIT,
+      gl.NEAREST
+    );
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+  resize(width, height, samples = 1) {
+    if (this.width_ !== width || this.height_ !== height || this.samples_ !== samples) {
+      this.width_ = width;
+      this.height_ = height;
+      this.samples_ = samples;
+      const gl = this.gl;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+      const opt = this.options;
+      const attachments = this.options.attachments ?? 1;
+      for (let attachment = 0; attachment < attachments; ++attachment) {
+        const internalFormat = getOptValue(opt, "internalFormat", attachment);
+        const format = getOptValue(opt, "format", attachment);
+        const dataType = getOptValue(opt, "dataType", attachment);
+        if (opt.renderTargetType === "texture" && this.samples_ === 1) {
+          const renderBuffer = this.renderbuffer?.[attachment];
+          gl.bindTexture(gl.TEXTURE_2D, renderBuffer);
+          gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, this.width_, this.height_, 0, format, dataType, null);
+          gl.bindTexture(gl.TEXTURE_2D, null);
+          gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + attachment, gl.TEXTURE_2D, renderBuffer, 0);
+        } else {
+          const renderBuffer = this.renderbuffer?.[attachment];
+          gl.bindRenderbuffer(gl.RENDERBUFFER, renderBuffer);
+          if (this.samples_ > 1) {
+            gl.renderbufferStorageMultisample(gl.RENDERBUFFER, this.samples_, internalFormat, this.width_, this.height_);
+          } else {
+            gl.renderbufferStorage(gl.RENDERBUFFER, internalFormat, this.width_, this.height_);
+          }
+          gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + attachment, gl.RENDERBUFFER, renderBuffer);
+        }
+      }
+      if (opt.depthBufferType !== "none" && opt.internalDepthFormat != null && opt.depthFormat != null && opt.depthDataType != null) {
+        if (opt.depthBufferType === "texture" && this.samples_ === 1) {
+          gl.bindTexture(gl.TEXTURE_2D, this.depthbuffer);
+          gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            opt.internalDepthFormat,
+            this.width_,
+            this.height_,
+            0,
+            opt.depthFormat,
+            opt.depthDataType,
+            null
+          );
+          gl.bindTexture(gl.TEXTURE_2D, null);
+          gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depthbuffer, 0);
+        } else {
+          gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthbuffer);
+          if (this.samples_ > 1) {
+            gl.renderbufferStorageMultisample(gl.RENDERBUFFER, this.samples_, opt.internalDepthFormat, this.width_, this.height_);
+          } else {
+            gl.renderbufferStorage(gl.RENDERBUFFER, opt.internalDepthFormat, this.width_, this.height_);
+          }
+          gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depthbuffer);
+        }
+      }
+      checkFramebufferStatus(gl.getError());
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+  }
+};
+function checkFramebufferStatus(status) {
+  const gl = WebGL2RenderingContext;
+  switch (status) {
+    case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+      return "FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
+    case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+      return "FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
+    case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+      return "FRAMEBUFFER_INCOMPLETE_DIMENSIONS";
+    case gl.FRAMEBUFFER_UNSUPPORTED:
+      return "FRAMEBUFFER_UNSUPPORTED";
+    case gl.FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+      return "FRAMEBUFFER_INCOMPLETE_MULTISAMPLE";
+    case gl.FRAMEBUFFER_COMPLETE:
+      return "FRAMEBUFFER_COMPLETE";
+  }
+  return null;
+}
+
 // src/lib/zed/Host.ts
 var dPR = window.devicePixelRatio ?? 1;
 var hostBlock = `
@@ -3122,8 +3405,6 @@ var Host = class {
       for (const key in data) {
         if (key in pass.context)
           pass.context[key].value = data[key];
-        else
-          console.log("missing:", key);
       }
       bindContext(this.rndr.context, pass.context);
     }
@@ -3170,99 +3451,437 @@ var Host = class {
     this.standardBlock.block.resolution.set([width, height, width / height, dPR]);
     this.config_.handlers.onResize?.(width, height);
   }
-  captureView(view) {
-    const url = view.canvas.toDataURL("image/png");
+  /*
+  public captureView (view: View): void {
+    const url = view.canvas.toDataURL('image/png')
+    const downloadLink = document.createElement('a')
+    downloadLink.href = url
+    downloadLink.download = `${view.div.id}.png`
+    document.body.appendChild(downloadLink)
+    downloadLink.click()
+    document.body.removeChild(downloadLink)
+  }
+  */
+  captureView(view, scale) {
+    console.log(view.canvas.width, view.canvas.height, scale);
+    const W = Math.floor(view.canvas.width * scale);
+    const H = Math.floor(view.canvas.height * scale);
+    const rt = new RenderTarget(this.context, [W, H], {
+      renderTargetType: "texture",
+      internalFormat: this.context.RGBA8,
+      format: this.context.RGBA,
+      dataType: this.context.UNSIGNED_BYTE,
+      depthBufferType: "none"
+    });
+    rt.bind();
+    this.context.disable(this.context.SCISSOR_TEST);
+    this.context.viewport(0, 0, W, H);
+    this.context.clearColor(1, 0, 0, 1);
+    this.context.clear(this.context.COLOR_BUFFER_BIT);
+    const vp = Array.from(this.standardBlock.block.viewport);
+    const rs = Array.from(this.standardBlock.block.resolution);
+    this.standardBlock.block.viewport.set([0, 0, W, H]);
+    this.standardBlock.block.resolution.set([W, H, rs[2], rs[3] * scale]);
+    this.standardBlock.update();
+    const pipeline = this.config_.pipeline;
+    for (let idx = 0; idx < pipeline.passes.length; ++idx) {
+      const pass = pipeline.passes[idx];
+      console.log(pass, view, view.data.model);
+      if (view.data.model === idx) {
+        this.config_.handlers.onPassPreRender?.(pass);
+        if (pass.context) {
+          this.rndr.context.useProgram(pass.program);
+          const data = view.data;
+          for (const key in data)
+            if (key in pass.context)
+              pass.context[key].value = data[key];
+          bindContext(this.rndr.context, pass.context);
+        }
+        console.log("render");
+        this.rndr.renderPass(pass);
+        this.config_.handlers.onPassPostRender?.(pass);
+      }
+    }
+    this.standardBlock.block.viewport.set(vp);
+    this.standardBlock.block.resolution.set(rs);
+    this.standardBlock.update();
+    rt.release();
+    this.downloadFramebufferAsPNG(rt, W, H, `${view.div.id ?? "capture"}.png`);
+    rt.destroy();
+  }
+  downloadFramebufferAsPNG(rt, width, height, filename) {
+    const gl = this.context;
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx2 = canvas.getContext("2d");
+    const pixels = new Uint8Array(width * height * 4);
+    rt.bind();
+    gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+    const imageData = new ImageData(width, height);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const sourceIndex = (y * width + x) * 4;
+        const targetIndex = ((height - y - 1) * width + x) * 4;
+        imageData.data[targetIndex] = pixels[sourceIndex];
+        imageData.data[targetIndex + 1] = pixels[sourceIndex + 1];
+        imageData.data[targetIndex + 2] = pixels[sourceIndex + 2];
+        imageData.data[targetIndex + 3] = pixels[sourceIndex + 3];
+      }
+    }
+    ctx2.putImageData(imageData, 0, 0);
+    const url = canvas.toDataURL("image/png");
     const downloadLink = document.createElement("a");
     downloadLink.href = url;
-    downloadLink.download = `${view.div.id}.png`;
+    downloadLink.download = filename || "framebuffer.png";
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
+    rt.release();
   }
-  /*
-    public captureView (view: View): void {
-      const rt = new RenderTarget(this.context, [view.canvas.width, view.canvas.height], {
-        renderTargetType: 'texture',
-        internalFormat: this.context.RGBA8,
-        format: this.context.RGBA,
-        dataType: this.context.UNSIGNED_BYTE,
-        depthBufferType: 'none'
-      })
-  
-      rt.bind()
-      this.context.disable(this.context.SCISSOR_TEST)
-      this.context.viewport(0, 0, view.canvas.width, view.canvas.height)
-      this.context.clearColor(1., 0., 0., 1.)
-      this.context.clear(this.context.COLOR_BUFFER_BIT)
-      this.standardBlock.block.viewport.set([0, 0, view.canvas.width, view.canvas.height])
-      this.standardBlock.update()
-  
-      const pipeline = this.config_.pipeline
-      for (let idx = 0; idx < pipeline.passes.length; ++idx) {
-        const pass = pipeline.passes[idx]
-        if (view.data.mode === idx) {
-          this.config_.handlers.onPassPreRender?.(pass)
-          if (pass.context) {
-            this.rndr.context.useProgram(pass.program!)
-            const data = view.data
-            for (const key in data) if (key in pass.context) pass.context[key].value = data[key]
-            bindContext(this.rndr.context, pass.context)
-          }
-  
-          this.rndr.renderPass(pass)
-          this.config_.handlers.onPassPostRender?.(pass)
-        }
-      }
-  
-      rt.release()
-      this.downloadFramebufferAsPNG(rt, view.canvas.width, view.canvas.height, `${view.div.id ?? 'capture'}.png`)
-      rt.destroy()
-    }
-  
-    private downloadFramebufferAsPNG (rt: RenderTarget, width: number, height: number, filename: string): void {
-      const gl = this.context
-      const canvas = document.createElement('canvas')
-      canvas.width = width
-      canvas.height = height
-      const ctx = canvas.getContext('2d')!
-  
-      // Read pixels from framebuffer
-      const pixels = new Uint8Array(width * height * 4)
-      rt.bind()
-      gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
-  
-      const imageData = new ImageData(width, height)
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          const sourceIndex = (y * width + x) * 4
-          const targetIndex = ((height - y - 1) * width + x) * 4
-          imageData.data[targetIndex] = pixels[sourceIndex] // R
-          imageData.data[targetIndex + 1] = pixels[sourceIndex + 1] // G
-          imageData.data[targetIndex + 2] = pixels[sourceIndex + 2] // B
-          imageData.data[targetIndex + 3] = pixels[sourceIndex + 3] // A
-        }
-      }
-  
-      ctx.putImageData(imageData, 0, 0)
-      const url = canvas.toDataURL('image/png')
-      const downloadLink = document.createElement('a')
-      downloadLink.href = url
-      downloadLink.download = filename || 'framebuffer.png'
-  
-      document.body.appendChild(downloadLink)
-      downloadLink.click()
-      document.body.removeChild(downloadLink)
-  
-      rt.release()
-    }
-    */
 };
 
 // src/apps/kore/shaders/vertex-shader.glsl
 var vertex_shader_default = "const vec2 position[3] = vec2[3](\n    vec2(-1.0, -1.0),\n    vec2(+3.0, -1.0),\n    vec2(-1.0, +3.0)\n);\n\nout vec2 uv;\n\nvoid main() {\n    gl_Position = vec4(position[gl_VertexID], 0.0, 1.0);\n    uv = position[gl_VertexID] * .5 + .5;\n}\n";
 
 // src/apps/kore/shaders/final.glsl
-var final_default = '#include <commonDefs>\n#include <functions>\n#include <simplex2D>\n#include <simplex3D>\n#include <noises>\n#include <colourTable>\n#include <computeNormal>\n\n#define SINE_WAVE 0\n#define BREAKING_WAVE 1\n#define SINE_WAVE_DM 2\n#define SW_OLD_COLOUR_MODEL 3\n\n#if defined(ZED)\n#define MODEL SINE_WAVE\n#define DRAW_SWATCH\n#else\nin vec2 uv;\n#endif\n\n/********************************************************************************/\n/* UNIFORMS                                                                     */\n/********************************************************************************/\n\nuniform vec3 lDir;            // { "value": [0.0, -1.0, 1.0], "min": -1.0, "max": 1.0, "step": 0.01 }\nuniform float speed;          // { "value": 7.0, "min": 0.01, "max": 10.0, "step": 0.01 }\nuniform float duration;       // { "value": 20.0, "min": 20.0, "max": 60.0, "step": 1.0 }\nuniform vec2 position;        // { "value": [0.0, 0.0], "min": -1000.0, "max": 1000.0, "step": 1.0 }\nuniform float ringScale;      // { "value": 0.04, "min": 0.01, "max": 0.15, "step": 0.001 }\nuniform vec2 colourScale;     // { "value": [2.0, 2.0], "min": 0.0, "max": 2.0, "step": 0.001 }\nuniform float normalScale;    // { "value": 1.0, "min": 0.001, "max": 1.0, "step": 0.001 }\n// Sine properties\nuniform vec4 rings;           // { "value": [0.0, 2.0, 6.0, 12.0], "min": 0.0, "max": 40.0, "step": 0.1 }\nuniform vec2 angle;           // { "value": [0.0, 3.14], "min": 0.0, "max": 6.28319, "step": 0.01 }\nuniform vec2 arc;             // { "value": [0.5, 0.5], "min": -1.0, "max": 1.0, "step": 0.01 }\nuniform vec2 fade;            // { "value": [1.0, 1.0], "min": 0.01, "max": 0.99, "step": 0.01 }\nuniform vec2 fadeScale;       // { "value": [1.0, 1.0], "min": 0.0, "max": 10.0, "step": 1.0 }\nuniform vec2 colourID;        // { "value": [1, 7], "min": 0, "max": 10, "step": 1 }\nuniform vec4 colourRing0;     // { "value": [1.0, 2.0, 8.0, 11.0], "min": 1.0, "max": 20.0, "step": 0.1 }\nuniform vec4 colourRing1;     // { "value": [1.0, 2.0, 18.0, 19.0], "min": 1.0, "max": 20.0, "step": 0.1 }\n// Breaking properties\nuniform float steepness;      // { "value": 2.0, "min": 0.1, "max": 10.0, "step": 0.01 }\nuniform float waveScale;      // { "value": 1.6, "min": 0.1, "max": 2.0, "step": 0.01 }\nuniform float waveWidth;      // { "value": 22.0, "min": 1.0, "max": 100.0, "step": 0.1 }\nuniform float waveOrigin;     // { "value": 0, "min": 0.0, "max": 3.0, "step": 1.0 }\nuniform float shape;          // { "value": 0.56, "min": 0.01, "max": 1.0, "step": 0.01 }\n\n// old colour model (sigh)\nuniform vec4 colourVector1A; // "value": [0.1, 0.1, 0.1, 0.1], "min": 0.0, "max": 1.0, "step": 0.01\nuniform vec4 colourVector1B; // "value": [0.1, 0.1, 0.1, 0.1], "min": 0.0, "max": 1.0, "step": 0.01\nuniform vec4 colourVector2A; // "value": [0.1, 0.1, 0.1, 0.1], "min": 0.0, "max": 1.0, "step": 0.01\nuniform vec4 colourVector2B; // "value": [0.1, 0.1, 0.1, 0.1], "min": 0.0, "max": 1.0, "step": 0.01\n\n#if MODEL == SINE_WAVE || MODEL == SINE_WAVE_DM || MODEL == SW_OLD_COLOUR_MODEL\n#define globalScale (ringScale / dPR)\n#elif MODEL == BREAKING_WAVE\n#define globalScale 0.03 * (3000. / max(screen.x, screen.y))\n#endif\n\n#define globalPos (position * dPR)\n#define dPRScale (dPR / 2.0)\n\n#define TIME (speed * time)\n\n/********************************************************************************/\n/* GLOBALS                                                                      */\n/********************************************************************************/\n\nvec3 lightDir; // The position of the light (points towards)\nvec2 invRes; // The inverse of the viewport (may be a region of the window)\n\nstruct Record {\n  mat3 T; // The world transform\n  vec2 centre; // The current centre of the animation\n  vec2 fragCoord; // Copy of the fragCoord in world space\n  vec3 dispMag; // displacement from centre, mag of distance\n  vec2 dir; // normalised direction from centre\n  float height; // The height of the computed position\n  vec3 normal; // The computed normal from the height\n  float annulus; // The annulus scalar\n  float sign; // Which side of the bezier curve is this?\n  float dist; // The distance of the point from the centre (for rings)\n};\n\nRecord record;\n\n/********************************************************************************/\n/* FUNCTIONS                                                                    */\n/********************************************************************************/\n\n#if defined(RAND_TEX)\n\nfloat random2(vec2 co) {\n  vec2 size = vec2(textureSize(randTex, 0));\n  return texture(randTex, co * screen / size).r;\n}\n\n#else\n\nfloat random2(vec2 co) {\n  return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\n#endif\n\nfloat length2(vec2 A) { return dot(A, A); }\n\n// Draws the background colour - stippled sand where the annulus is 0\nvec3 drawBackground(float b) {\n  return mix(sandColour, backgroundColour, clamp(bias(b, random2(uv)), 0.01, 0.999));\n}\n\nvec4 mixColour(float dst, vec4 colour, int idx) {\n  colour.rgb = mix(colour.rgb, mix(colourTable[idx], backgroundColour, 0.2), dst);\n  colour.a = max(colour.a, dst);\n  return colour;\n}\n\n/********************************************************************************/\n/* ANIMATIONS                                                                   */\n/********************************************************************************/\n\n/********************* SINE_WAVE *********************/\n#if MODEL == SINE_WAVE || MODEL == SINE_WAVE_DM || MODEL == SW_OLD_COLOUR_MODEL\n\nfloat computeAnnulus(float dist, vec4 rings) {\n  return saturate(smoothstep(rings.x * TWO_PI, rings.y * TWO_PI, dist) - smoothstep(rings.z * TWO_PI, rings.w * TWO_PI, dist));\n}\n\nvec4 computeWedge(int id, vec4 colour, vec4 ring) {\n  vec2 deriv = vec2(cos(angle[id]), -sin(angle[id]));\n  float f = saturate(dot(deriv, record.dir));\n\n  float nn = bicubicNoise(vec2(fadeScale[id] * (atan(record.dir.y, record.dir.x)+PI)/TWO_PI, fadeScale[id] * 0.1 *(record.dist - TIME)), ivec2(int(fadeScale[id]), 200.));\n\n  f = smoothstep(arc[id], 1.0, f);\n\n  f *= computeAnnulus(mod(record.dist - TIME, duration * TWO_PI), ring) * colourScale[id] * mix(1.0, nn, fade[id]);\n  return mixColour(f, colour, int(colourID[id]));\n}\n\n// Compute the flat centre, start, and end of the entire disc as scalar\nfloat computeDisc(float dist) {\n  record.annulus = computeAnnulus(dist, rings);\n  return record.annulus;\n}\n\nfloat computePosition(vec2 P) {\n  // This does not work on older mobile devices???: float dist = globalScale * record.dispMag.z;\n  record.dist = globalScale * sqrt(length2(P));\n  return computeDisc(record.dist) * sin(record.dist - mod(TIME, duration*TWO_PI)); // Mod to prevent drift\n}\n\n/********************* BREAKING_WAVE *********************/\n#elif MODEL == BREAKING_WAVE\n\nvec2 quadratic(float A, float x) {\n  return vec2(x, A * x * x);\n}\n\nfloat yPos;\n\nfloat computePosition(vec2 pos) {\n  float A = steepness * -2e-4;\n  vec2 f = quadratic(A, pos.x);\n  yPos = f.y;\n  record.sign = f.y - pos.y;\n\n  float h = abs(f.y - pos.y);\n  float wS = 200. * waveScale;\n\n  float flare = 1. - smoothstep(0., 100. * waveWidth * waveScale, abs(pos.x));\n  h *= flare;\n\n  float height = 1.6 / dPRScale * flare * flare * waveScale * waveScale * gain(shape, (1. - smoothstep(0., flare * wS, h)));\n  return height;\n}\n\nvec4 computeWave(vec3 baseColour) {\n  return vec4(\n  mix(sandColour+0.1, baseColour, smoothstep(-500., 100., record.sign)),\n  1.0\n  );\n}\n\n#endif\n\n#if defined(MODEL) & MODEL == SINE_WAVE_DM\n\nconst vec3 darkBgColour = vec3(0.12549, 0.14118, 0.1529);\n\nfloat radialTest(vec2 fragCoord) {\n  vec2 coord = fragCoord - screen * .5;\n  float h = length(coord) / (max(screen.x, screen.y) * .5);\n  vec2 st = vec2((atan(coord.y, coord.x) + PI) / TWO_PI, sqrt(h) - .02 * TIME);\n  return bicubicNoise(vec2(3., 6.) * st, ivec2(3, 30));\n}\n\nvec3 computeColourOld() {\n  float l = dot(record.normal, lightDir) * .5 + .5;\n  float v = smoothstep(0., 1., radialTest(record.fragCoord));\n  v *= (snoise(2. * uv) * .5 + .5);\n\n  vec3 field = saturate(mix(colourTable[int(colourID[0])], colourTable[int(colourID[1])], v));\n  vec3 base = mix(darkBgColour, field, bias(.1, l) * clamp(random2(uv - .13), .35, .5));\n  base += 0.4 * mix(vec3(0.), vec3(1.), random2(uv) * saturate(bias(0.4, sqrt(record.height))));\n  base = mix(darkBgColour, base, record.annulus);\n  return base;\n}\n\nvec3 adjustHSV(vec3 colour, vec3 v) {\n  colour = rgb2hsv(colour);\n  colour += v;\n  saturate(colour);\n  return hsv2rgb(colour);\n}\n\nvec4 mixDarkColour(float dst, vec4 colour, vec3 source) {\n  colour.rgb = mix(colour.rgb, mix(source, darkBgColour, 0.2), dst);\n  colour.a = max(colour.a, dst);\n  return colour;\n}\n\nvec4 computeDarkWedge(vec3 source, vec4 colour, float angle, float arc, vec4 ring) {\n  vec2 deriv = vec2(cos(angle), -sin(angle));\n  float f = smoothstep(arc, 1.0, saturate(dot(deriv, record.dir)));\n  f *= computeAnnulus(mod(record.dist - TIME, duration), ring);\n  return mixDarkColour(f, colour, source);\n}\n\nvec3 computeColour() {\n  float l = dot(record.normal, lightDir) * .5 + .5;\n  vec3 c = adjustHSV(colourTable[int(colourID[0])], vec3(0., 0., -.60 + 0.2 * (random2(uv) * 2. - 1.)));\n  vec3 d = adjustHSV(colourTable[int(colourID[1])], vec3(0., 0., -.60 + 0.2 * (random2(uv - .283) * 2. - 1.)));\n\n  vec3 e = mix(c, d, /*(snoise(uv * 2.) * .5 + .5) */ radialTest(record.fragCoord));\n  float a = random2(uv) * 0.15 * smoothstep(-1.0, 1.0, record.height * dot(record.normal, vec3(0., 0., 1.)));\n  e += bias(0.48, a);\n\n  return mix(darkBgColour, e, l * computeAnnulus(mod(record.dist, duration), vec4(0., 0., colourRing0.zw)));\n}\n\n#elif defined(SW_OLD_COLOUR_MODEL) && MODEL == SW_OLD_COLOUR_MODEL\n\nvec4 mixColourOld(float dst, vec4 colour, int idx) {\n  colour.rgb = mix(colour.rgb, colourTable[idx], dst);\n  colour.a = max(colour.a, dst);\n  return colour;\n}\n\nvec4 computeWedgeOld(int idx, vec4 colour, float rad) {\n  vec4 cV1 = colourVector1A; vec4 cV2 = colourVector2A;\n  cV1.z *= 80.; cV1.w *= 20.;\n  vec2 deriv = vec2(cos(angle.x), sin(angle.x));\n  float f = saturate(dot(deriv, record.dir)) + (cV2.z > 0.5 ? saturate(dot(-deriv, record.dir)) : 0.0);\n  f = saturate(smoothstep(cV1.y, 1., f));\n  float v = 0.8 * cV1.z * rad - cV1.w;\n  float p = pulse(v, PI, 3. * PI);\n  float r = cos(v) * .5 + .5;\n  f *= r * 1.; //p;\n  return mixColourOld(f * cV2.y, colour, 2); // int(cV1.x));\n}\n\nvec3 computeColour() {\n  float r1 = random2(uv);\n  float rad = 1e-2 * record.dist / waveScale;\n\n  vec4 colour = vec4(backgroundColour, 0.);\n  for(int i = 0; i < 2; ++i) {\n    colour = computeWedgeOld(i, colour, rad);\n  }\n\n  colour.rgb = mix(backgroundColour, colour.rgb, record.annulus);\n  colour.a = min(colour.a, record.annulus);\n\n  float l = dot(record.normal, lightDir);\n  vec3 col = mix(mix(sandColour, backgroundColour, clamp(l, 0., .8)), colour.rgb, colour.a);\n  float ss = 1. - dot(record.normal, vec3(0., 1., 0.));\n  return mix(col, backgroundColour, fract(saturate(bias(0.521, r1)) + 0.5 * ss) * l);\n}\n\n#else\n\nvec3 computeColour() {\n  const float sandFlicker = 0.1;\n  vec3 fg = mix(backgroundColour - 0.02, backgroundColour + 0.02, random2(uv - .13));\n  float l = dot(record.normal, lightDir) * .5 + .5;\n\n  vec4 kol = vec4(sandColour + 0.15, 0.2);\n  #if defined(SINE_WAVE) && MODEL == 0\n  kol = computeWedge(0, kol, colourRing0);\n  kol = computeWedge(1, kol, colourRing1);\n  kol = mix(vec4(sandColour + 0.15, 1.), kol, record.annulus);\n  #else\n  vec3 baseColour = colourTable[int(colourID[0])];\n  kol = computeWave(baseColour);\n  #endif\n\n  float flicker = 10. * dot(kol.rgb, vec3(.2126, .7152, .0722)) * (1. - dot(vec3(0., 0., 1.), record.normal));\n  vec3 cc = mix(mix(sandColour, kol.rgb, 0.1), kol.rgb, l + 0.4);\n  vec3 c = mix(cc, fg, 0.45 * step(.5, random2(uv + .11)) * fract(random2(uv-.123) + flicker * sin(TWO_PI * random2(uv) + TIME)));\n\n  return mix(c, fg, saturate(l - 0.4));\n}\n\n#endif\n\n/********************************************************************************/\n/* ENTRY                                                                        */\n/********************************************************************************/\n\nmat3 makeTransform(vec2 pos, float rot, float scale) {\n  return mat3(\n  scale * cos(rot),  scale * sin(rot), 0.0,\n  scale * -sin(rot), scale * cos(rot), 0.0,\n  pos.x,             pos.y,            1.0\n  );\n}\n\nvoid initAnimation(vec2 fragCoord) {\n  lightDir = normalize(lDir);\n  record.centre = screen / 2.0 + vec2(globalPos.x, -globalPos.y);\n\n  #if MODEL == BREAKING_WAVE\n  float t = saturate(1. - mod(TIME, duration) / duration);\n  vec2 origin = screen * vec2(floor(waveOrigin / 2.), floor(mod(waveOrigin, 2.)));\n\n  record.centre = mix(screen / 2.0, origin, t * t);\n  vec2 d = normalize(origin - record.centre);\n  record.T = makeTransform(vec2(0.), atan(d.y, d.x)-PI, 3000./(dPRScale * max(screen.x, screen.y)));\n  lightDir.xy = normalize(record.centre);\n  lightDir = normalize(lightDir);\n  #else // SINE_WAVE\n  record.T = makeTransform(vec2(0.), 0.0, 1.0);\n  #endif\n  record.T[2] = record.T * vec3(-record.centre, 0.);\n\n  record.fragCoord = (record.T * vec3(fragCoord, 0.)).xy;\n  record.dispMag.xy = (record.T * vec3(fragCoord, 1.)).xy;\n  record.dispMag.z = length(record.dispMag.xy);\n  record.dir = record.dispMag.xy / record.dispMag.z;\n  record.height = computePosition(record.dispMag.xy);\n  record.normal = computeNormal(record.height, globalScale / normalScale); // This ratio works across resolutions...\n}\n\n#if defined(DRAW_SWATCH)\nvec4 drawSwatch(vec2 fragCoord) {\n  vec2 dims = vec2(50. * dPRScale);\n  vec2 coord = floor(fragCoord / dims);\n  return mix(vec4(colourTable[5 * int(coord.y) + int(coord.x)], 1.), vec4(0.), float(any(greaterThan(coord, vec2(4., 1.)))));\n}\n#endif\n\nvoid renderImage(out vec4 fragColour, vec2 fragCoord) {\n  initAnimation(fragCoord);\n  fragColour = vec4(computeColour(), 1.0);\n  #if defined(DRAW_SWATCH)\n  vec4 swatch = drawSwatch(fragCoord);\n  fragColour = mix(fragColour, swatch, swatch.a);\n  #endif\n}\n';
+var final_default = `#include <commonDefs>
+#include <functions>
+#include <simplex2D>
+#include <simplex3D>
+#include <noises>
+#include <colourTable>
+#include <computeNormal>
+
+#define SINE_WAVE 0
+#define BREAKING_WAVE 1
+#define SINE_WAVE_DM 2
+
+#if defined(ZED)
+#define MODEL 1
+#define DRAW_SWATCH
+#else
+in vec2 uv;
+#endif
+
+/********************************************************************************/
+/* UNIFORMS                                                                     */
+/********************************************************************************/
+
+uniform vec3 lDir;            // { "value": [0.0, -1.0, 1.0], "min": -1.0, "max": 1.0, "step": 0.01 }
+uniform float speed;          // { "value": 1.0, "min": 0.01, "max": 10.0, "step": 0.01 }
+uniform float duration;       // { "value": 20.0, "min": 20.0, "max": 60.0, "step": 1.0 }
+uniform vec2 position;        // { "value": [0.0, 0.0], "min": -1000.0, "max": 1000.0, "step": 1.0 }
+uniform float ringScale;      // { "value": 0.04, "min": 0.01, "max": 0.15, "step": 0.001 }
+uniform vec4 colourScale;     // { "value": [1.4, 1.4, 1.4, 1.4], "min": 0.0, "max": 3.0, "step": 0.001 }
+uniform float normalScale;    // { "value": 1.0, "min": 0.001, "max": 1.0, "step": 0.001 }
+// Sine properties
+uniform vec4 rings;           // { "value": [1.0, 2.0, 6.0, 12.0], "min": 1.0, "max": 40.0, "step": 0.1 }
+uniform vec4 angle;           // { "value": [0.0, 3.14, 1.57, 4.71], "min": 0.0, "max": 6.28319, "step": 0.01 }
+uniform vec4 arc;             // { "value": [0.5, 0.5, 0.5, 0.5], "min": -1.0, "max": 1.0, "step": 0.01 }
+uniform vec4 fade;            // { "value": [1.0, 1.0, 1.0, 1.0], "min": 0.01, "max": 0.99, "step": 0.01 }
+uniform vec4 fadeScale;       // { "value": [1.0, 1.0, 1.0, 1.0], "min": 0.0, "max": 10.0, "step": 1.0 }
+uniform float colourCount;    // { "value": 4.0, "min": 1.0, "max": 4.0, "step": 1.0 }
+uniform vec4 colourID;        // { "value": [1, 7, 4, 9], "min": 0, "max": 9, "step": 1 }
+uniform vec4 colourRing0;     // { "value": [1.0, 2.0, 8.0, 11.0], "min": 1.0, "max": 20.0, "step": 0.1 }
+uniform vec4 colourRing1;     // { "value": [1.0, 2.0, 18.0, 19.0], "min": 1.0, "max": 20.0, "step": 0.1 }
+uniform vec4 colourRing2;     // { "value": [1.0, 2.0, 18.0, 19.0], "min": 1.0, "max": 20.0, "step": 0.1 }
+uniform vec4 colourRing3;     // { "value": [1.0, 2.0, 18.0, 19.0], "min": 1.0, "max": 20.0, "step": 0.1 }
+// Breaking properties
+uniform float steepness;      // { "value": 2.0, "min": 0.1, "max": 10.0, "step": 0.01 }
+uniform float waveScale;      // { "value": 1.6, "min": 0.1, "max": 2.0, "step": 0.01 }
+uniform float waveWidth;      // { "value": 22.0, "min": 1.0, "max": 100.0, "step": 0.1 }
+uniform float waveOrigin;     // { "value": 0, "min": 0.0, "max": 3.0, "step": 1.0 }
+uniform vec4 yAxisMixer;      // { "value": [-6.0, 1.0, 2.0, 30.0], "min": -10.0, "max": 20.0, "step": 0.1 }
+uniform vec4 xAxisMixer;      // { "value": [0.0, 0.0, 0.0, 0.0], "min": -10.0, "max": 20.0, "step": 0.1 }
+uniform float shape;          // { "value": 0.56, "min": 0.01, "max": 1.0, "step": 0.01 }
+
+#if MODEL == SINE_WAVE || MODEL == SINE_WAVE_DM
+#define globalScale (ringScale / dPR)
+#elif MODEL == BREAKING_WAVE
+#define globalScale 0.03 * (dPR * 1500. / max(screen.x, screen.y))
+#endif
+
+#define globalPos (position * dPR)
+#define dPRScale (dPR / 2.0)
+
+#define TIME (speed * time)
+
+vec4 colRing[4];
+
+/********************************************************************************/
+/* GLOBALS                                                                      */
+/********************************************************************************/
+
+vec3 lightDir; // The position of the light (points towards)
+vec2 invRes; // The inverse of the viewport (may be a region of the window)
+
+struct Record {
+  mat3 T; // The world transform
+  vec2 centre; // The current centre of the animation
+  vec2 fragCoord; // Copy of the fragCoord in world space
+  vec3 dispMag; // displacement from centre, mag of distance
+  vec2 dir; // normalised direction from centre
+  float height; // The height of the computed position
+  vec3 normal; // The computed normal from the height
+  float annulus; // The annulus scalar
+  float sign; // Which side of the bezier curve is this?
+  float dist; // The distance of the point from the centre (for rings)
+};
+
+Record record;
+
+/********************************************************************************/
+/* FUNCTIONS                                                                    */
+/********************************************************************************/
+
+#if defined(RAND_TEX)
+
+float random2(vec2 co) {
+  vec2 size = vec2(textureSize(randTex, 0));
+  return texture(randTex, co * screen / size).r;
+}
+
+#else
+
+float random2(vec2 co) {
+  return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+#endif
+
+float length2(vec2 A) { return dot(A, A); }
+
+// Draws the background colour - stippled sand where the annulus is 0
+vec3 drawBackground(float b) {
+  return mix(sandColour, backgroundColour, clamp(bias(b, random2(uv)), 0.01, 0.999));
+}
+
+vec4 mixColour(float dst, vec4 colour, int idx) {
+  colour.rgb = mix(colour.rgb, colourTable[idx], dst);
+  colour.a = max(colour.a, dst);
+  return colour;
+}
+
+/********************************************************************************/
+/* ANIMATIONS                                                                   */
+/********************************************************************************/
+
+/********************* SINE_WAVE *********************/
+#if MODEL == SINE_WAVE || MODEL == SINE_WAVE_DM
+
+float computeAnnulus(float dist, vec4 rings) {
+  return saturate(smoothstep(rings.x * TWO_PI, rings.y * TWO_PI, dist) - smoothstep(rings.z * TWO_PI, rings.w * TWO_PI, dist));
+}
+
+vec4 computeWedge(int id, vec4 colour, vec4 ring) {
+  vec2 deriv = vec2(cos(angle[id]), -sin(angle[id]));
+  float f = saturate(dot(deriv, record.dir));
+
+  float nn = bicubicNoise(vec2(fadeScale[id] * (atan(record.dir.y, record.dir.x)+PI)/TWO_PI, fadeScale[id] * 0.1 *(record.dist - TIME)), ivec2(int(fadeScale[id]), 200.));
+
+  f = smoothstep(arc[id], 1.0, f);
+
+  f *= computeAnnulus(mod(record.dist - TIME, duration * TWO_PI), ring) * colourScale[id] * mix(1.0, nn, fade[id]);
+  return mixColour(f, colour, int(colourID[id]));
+}
+
+// Compute the flat centre, start, and end of the entire disc as scalar
+float computeDisc(float dist) {
+  record.annulus = computeAnnulus(dist, rings);
+  return record.annulus;
+}
+
+float computePosition(vec2 P) {
+  // This does not work on older mobile devices???: float dist = globalScale * record.dispMag.z;
+  record.dist = globalScale * sqrt(length2(P));
+  return computeDisc(record.dist) * sin(record.dist - mod(TIME, duration*TWO_PI)); // Mod to prevent drift
+}
+
+/********************* BREAKING_WAVE *********************/
+#elif MODEL == BREAKING_WAVE
+
+vec2 quadratic(float A, float x) {
+  return vec2(x, A * x * x);
+}
+
+float yPos;
+
+float computePosition(vec2 pos) {
+  float A = steepness * -2e-4;
+  vec2 f = quadratic(A, pos.x);
+  yPos = f.y;
+  record.sign = f.y - pos.y;
+
+  float h = abs(f.y - pos.y);
+  float wS = 200. * waveScale;
+
+  float flare = 1. - smoothstep(0., 100. * waveWidth * waveScale, abs(pos.x));
+  h *= flare;
+
+  float height = 1.6 / dPRScale * flare * flare * waveScale * waveScale * gain(shape, (1. - smoothstep(0., flare * wS, h)));
+  return height;
+}
+
+vec4 computeWave(vec3 fg) {
+  float yAxis = smoothstep(yAxisMixer[0]*100., yAxisMixer[1]*100., record.sign) - smoothstep(yAxisMixer[2]*100., yAxisMixer[3]*100., record.sign);
+
+  float scalar = dot(record.dispMag.xy, vec2(sin(xAxisMixer[0]), cos(xAxisMixer[0])));
+
+  vec3 colour = int(colourCount) > 1
+  ? mix(colourTable[int(colourID[0])], colourTable[int(colourID[1])], smoothstep(-.5, +.5, scalar))
+  : colourTable[int(colourID[0])];
+
+  return vec4(
+  mix(fg, colour, yAxis),
+  1.0
+  );
+}
+
+#endif
+
+#if defined(MODEL) & MODEL == SINE_WAVE_DM
+
+const vec3 darkBgColour = vec3(0.12549, 0.14118, 0.1529);
+
+float radialTest(vec2 fragCoord) {
+  vec2 coord = fragCoord - screen * .5;
+  float h = length(coord) / (max(screen.x, screen.y) * .5);
+  vec2 st = vec2((atan(coord.y, coord.x) + PI) / TWO_PI, sqrt(h) - .02 * TIME);
+  return bicubicNoise(vec2(3., 6.) * st, ivec2(3, 30));
+}
+
+vec3 computeColourOld() {
+  float l = dot(record.normal, lightDir) * .5 + .5;
+  float v = smoothstep(0., 1., radialTest(record.fragCoord));
+  v *= (snoise(2. * uv) * .5 + .5);
+
+  vec3 field = saturate(mix(colourTable[int(colourID[0])], colourTable[int(colourID[1])], v));
+  vec3 base = mix(darkBgColour, field, bias(.1, l) * clamp(random2(uv - .13), .35, .5));
+  base += 0.4 * mix(vec3(0.), vec3(1.), random2(uv) * saturate(bias(0.4, sqrt(record.height))));
+  base = mix(darkBgColour, base, record.annulus);
+  return base;
+}
+
+vec3 adjustHSV(vec3 colour, vec3 v) {
+  colour = rgb2hsv(colour);
+  colour += v;
+  saturate(colour);
+  return hsv2rgb(colour);
+}
+
+vec4 mixDarkColour(float dst, vec4 colour, vec3 source) {
+  colour.rgb = mix(colour.rgb, mix(source, darkBgColour, 0.2), dst);
+  colour.a = max(colour.a, dst);
+  return colour;
+}
+
+vec4 computeDarkWedge(vec3 source, vec4 colour, float angle, float arc, vec4 ring) {
+  vec2 deriv = vec2(cos(angle), -sin(angle));
+  float f = smoothstep(arc, 1.0, saturate(dot(deriv, record.dir)));
+  f *= computeAnnulus(mod(record.dist - TIME, duration), ring);
+  return mixDarkColour(f, colour, source);
+}
+
+vec3 computeColour() {
+  float l = dot(record.normal, lightDir) * .5 + .5;
+  vec3 c = adjustHSV(colourTable[int(colourID[0])], vec3(0., 0., -.60 + 0.2 * (random2(uv) * 2. - 1.)));
+  vec3 d = adjustHSV(colourTable[int(colourID[1])], vec3(0., 0., -.60 + 0.2 * (random2(uv - .283) * 2. - 1.)));
+
+  vec3 e = mix(c, d, radialTest(record.fragCoord));
+  float a = random2(uv) * 0.15 * smoothstep(-1.0, 1.0, record.height * dot(record.normal, vec3(0., 0., 1.)));
+  e += bias(0.48, a);
+
+  return mix(darkBgColour, e, l * computeAnnulus(mod(record.dist, duration), vec4(0., 0., colourRing0.zw)));
+}
+
+#else
+
+vec3 computeColour() {
+  const float sandFlicker = 0.1;
+  vec3 fg = mix(backgroundColour, backgroundColour + 0.04, random2(uv - .13));
+  float l = dot(record.normal, lightDir) * .5 + .5;
+
+  vec4 kol = vec4(backgroundColour, 0.2);
+  #if defined(SINE_WAVE) && MODEL == 0
+  for(int i = 0; i < int(colourCount); ++i) {
+    kol = computeWedge(i, kol, colRing[i]);
+  }
+  kol = mix(vec4(fg, 1.), kol, record.annulus);
+  #else
+  kol = computeWave(fg);
+  #endif
+
+  float flicker = 10. * dot(kol.rgb, vec3(.2126, .7152, .0722)) * (1. - dot(vec3(0., 0., 1.), record.normal));
+  vec3 cc = mix(mix(sandColour, kol.rgb, 0.5), kol.rgb, l);
+  vec3 c = mix(cc, fg, 0.45 * step(.5, random2(uv + .11)) * fract(random2(uv-.123) + flicker * sin(TWO_PI * random2(uv) + TIME)));
+
+  return mix(c, fg, saturate(l - 0.5));
+  // return mix(col, backgroundColour, step(0.5, uv.x));
+}
+
+#endif
+
+/********************************************************************************/
+/* ENTRY                                                                        */
+/********************************************************************************/
+
+mat3 makeTransform(vec2 pos, float rot, float scale) {
+  return mat3(
+  scale * cos(rot),  scale * sin(rot), 0.0,
+  scale * -sin(rot), scale * cos(rot), 0.0,
+  pos.x,             pos.y,            1.0
+  );
+}
+
+void initAnimation(vec2 fragCoord) {
+  lightDir = normalize(lDir);
+  record.centre = screen / 2.0 + vec2(globalPos.x, -globalPos.y);
+
+  #if MODEL == BREAKING_WAVE
+  float t = saturate(1. - mod(TIME, duration) / duration);
+  vec2 origin = screen * vec2(floor(waveOrigin / 2.), floor(mod(waveOrigin, 2.)));
+
+  record.centre = mix(screen / 2.0, origin, t * t);
+  vec2 d = normalize(origin - record.centre);
+  record.T = makeTransform(vec2(0.), atan(d.y, d.x)-PI, 3000./(dPRScale * max(screen.x, screen.y)));
+  lightDir.xy = normalize(record.centre);
+  lightDir = normalize(lightDir);
+  #else // SINE_WAVE
+  record.T = makeTransform(vec2(0.), 0.0, 1.0);
+  #endif
+  record.T[2] = record.T * vec3(-record.centre, 0.);
+
+  record.fragCoord = (record.T * vec3(fragCoord, 0.)).xy;
+  record.dispMag.xy = (record.T * vec3(fragCoord, 1.)).xy;
+  record.dispMag.z = length(record.dispMag.xy);
+  record.dir = record.dispMag.xy / record.dispMag.z;
+  record.height = computePosition(record.dispMag.xy);
+  record.normal = computeNormal(record.height, globalScale / normalScale); // This ratio works across resolutions...
+}
+
+#if defined(DRAW_SWATCH)
+vec4 drawSwatch(vec2 fragCoord) {
+  vec2 dims = vec2(50. * dPRScale);
+  vec2 coord = floor(fragCoord / dims);
+  return mix(vec4(colourTable[5 * int(coord.y) + int(coord.x)], 1.), vec4(0.), float(any(greaterThan(coord, vec2(4., 1.)))));
+}
+#endif
+
+void renderImage(out vec4 fragColour, vec2 fragCoord) {
+  colRing[0] = colourRing0; // Zed doesn't auto-parse arrays yet...
+  colRing[1] = colourRing1;
+  colRing[2] = colourRing2;
+  colRing[3] = colourRing3;
+
+  initAnimation(fragCoord);
+  fragColour = vec4(computeColour(), 1.0);
+  #if defined(DRAW_SWATCH)
+  vec4 swatch = drawSwatch(fragCoord);
+  fragColour = mix(fragColour, swatch, swatch.a);
+  #endif
+}
+`;
 
 // src/lib/zed/injector.ts
 var ICONS = {
@@ -3341,6 +3960,8 @@ var AnimationControlUI = class _AnimationControlUI {
   controlWindow;
   toggleButton;
   static styleInjected = false;
+  textedit;
+  snapshotResolution = 1;
   constructor(containerElement, controls, json, onUpdate, onSnapshot) {
     this.container = containerElement;
     this.controls = controls;
@@ -3370,16 +3991,59 @@ var AnimationControlUI = class _AnimationControlUI {
     });
     this.createControls();
   }
-  createControls() {
-    const header = document.createElement("div");
-    header.style.display = "flex";
-    header.style.alignItems = "center";
-    header.style.justifyContent = "space-between";
+  buildRow1Controls() {
+    const textedit = document.createElement("input");
+    textedit.type = "text";
+    textedit.style.color = "white";
+    textedit.style.width = "100%";
+    textedit.style.backgroundColor = "black";
+    textedit.style.padding = "4px";
+    textedit.style.borderRadius = "4px";
+    textedit.style.border = "1px solid #333";
+    textedit.style.outline = "none";
+    textedit.value = JSON.stringify(this.values).replace(/"/g, "'");
+    textedit.addEventListener("keyup", (ev) => {
+      if (ev.key === "Enter") {
+        let values;
+        try {
+          values = JSON.parse(textedit.value.replace(/'/g, '"'));
+        } catch (e) {
+          console.error("Failed to parse input");
+          return;
+        }
+        for (const key in this.controls) {
+          if (key in values) {
+            this.controls[key].value = values[key];
+            if (Array.isArray(values[key])) {
+              for (let i = 0; i < values[key].length; ++i) {
+                this.controls[key].element[i].value = values[key][i];
+                this.updateValueLabel(this.controls[key].element[i], values[key][i]);
+              }
+            } else {
+              this.controls[key].element.value = values[key];
+              this.updateValueLabel(this.controls[key].element, values[key]);
+            }
+          }
+        }
+        this.values = values;
+        this.onUpdateCallback(textedit.value);
+        textedit.setSelectionRange(0, 0);
+        textedit.scrollLeft = 0;
+      }
+    });
+    this.textedit = textedit;
+    return textedit;
+  }
+  buildRow0Controls() {
+    const row0 = document.createElement("div");
+    row0.style.display = "flex";
+    row0.style.alignItems = "center";
+    row0.style.justifyContent = "space-between";
     const divID = document.createElement("span");
     divID.textContent = "#" + (this.container.id ?? "no_id");
     divID.style.font = "bold 16px Arial, sans-serif";
     divID.style.color = "white";
-    header.appendChild(divID);
+    row0.appendChild(divID);
     const notification = document.createElement("span");
     notification.className = "zed-notification";
     notification.innerHTML = "Copied!";
@@ -3396,9 +4060,7 @@ var AnimationControlUI = class _AnimationControlUI {
     exportButton.style.color = "black";
     exportButton.appendChild(notification);
     exportButton.onclick = async () => {
-      let json = JSON.stringify(this.values);
-      if (typeof Webflow !== "undefined")
-        json = json.replace(/"/g, "'");
+      const json = JSON.stringify(this.values).replace(/"/g, "'");
       try {
         await navigator.clipboard.writeText(json);
       } catch (err) {
@@ -3408,13 +4070,37 @@ var AnimationControlUI = class _AnimationControlUI {
     };
     exportButtonContainer.appendChild(exportButton);
     exportButtonContainer.appendChild(notification);
-    header.appendChild(exportButtonContainer);
+    row0.appendChild(exportButtonContainer);
+    const resSelector = document.createElement("select");
+    const arr = ["1x", "2x", "3x", "4x"];
+    arr.forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = parseInt(v).toString();
+      opt.innerText = v;
+      resSelector.appendChild(opt);
+    });
+    resSelector.onchange = (ev) => {
+      this.snapshotResolution = parseInt(ev.target.value);
+    };
+    row0.appendChild(resSelector);
     const snapshotButton = document.createElement("button");
     snapshotButton.innerHTML = ICONS.camera;
     snapshotButton.onclick = async () => {
-      this.onSnapshot?.();
+      this.onSnapshot?.(this.snapshotResolution);
     };
-    header.appendChild(snapshotButton);
+    row0.appendChild(snapshotButton);
+    return row0;
+  }
+  createControls() {
+    const header = document.createElement("div");
+    header.style.display = "flex";
+    header.style.gap = "6px";
+    header.style.flexDirection = "column";
+    header.style.marginBottom = "6px";
+    const row0 = this.buildRow0Controls();
+    const row1 = this.buildRow1Controls();
+    header.appendChild(row0);
+    header.appendChild(row1);
     this.controlWindow?.appendChild(header);
     Object.entries(this.controls).forEach(([name, control]) => {
       if (this.isNumericType(control.type)) {
@@ -3458,6 +4144,14 @@ var AnimationControlUI = class _AnimationControlUI {
     slider.max = (control.max ?? 1).toString();
     slider.step = (control.step ?? 0.01).toString();
     slider.value = value.toString();
+    if (index != null) {
+      if (Array.isArray(control.element))
+        control.element.push(slider);
+      else if (index === 0)
+        control.element = [slider];
+    } else {
+      control.element = slider;
+    }
     slider.addEventListener("input", (e) => {
       const newValue = parseFloat(e.target.value);
       this.handleSliderChange(name, newValue, index);
@@ -3488,6 +4182,8 @@ var AnimationControlUI = class _AnimationControlUI {
     }
     const newJsonString = JSON.stringify(this.values);
     this.onUpdateCallback(newJsonString);
+    if (this.textedit)
+      this.textedit.value = newJsonString.replace(/"/g, "'");
   }
   isNumericType(type) {
     return ["bool", "int", "float", "vec2", "vec3", "vec4", "ivec2", "ivec3", "ivec4"].includes(type);
@@ -3518,8 +4214,8 @@ var AnimationControlUI = class _AnimationControlUI {
             border-radius: 3px;
             font-family: Arial, sans-serif;
             font-size: 12px;
-            width: 200px;
-            max-height: 300px;
+            width: 260px;
+            max-height: 400px;
             overflow-y: auto;
             display: none;
             z-index: 1001;
@@ -3936,19 +4632,19 @@ var ControlParser = class _ControlParser {
 };
 
 // src/apps/kore/kore2.ts
-var defaultConf = '{"model":0,"randTex":2,"speed":1.0,"duration":20.0,"fade":[0.0, 0.0],"fadeScale":[0.0, 0.0],"lDir":[0,-1,1],"position":[0,0],"ringScale":0.04,"colourScale":[1.0,1.0],"normalScale":1,"rings":[1,2,6,12],"angle":[0,3.14],"arc":[0.5,0.5],"colourID":[9,2],"colourRing0":[1,2,18,19],"colourRing1":[1,2,18,19],"steepness":2,"waveScale":1.6,"waveWidth":22,"waveOrigin":0,"shape":0.56}';
+var defaultConf = '{"model":0,"randTex":2,"lDir":[0,-1,1],"speed":1,"duration":20,"position":[0,0],"ringScale":0.04,"colourScale":[2.553,3,2.363,1.982],"normalScale":1,"rings":[1,1.6,6,12],"angle":[0,3.14,1.57,4.71],"arc":[0.5,0.5,0.5,0.5],"fade":[1,1,1,1],"fadeScale":[1,1,1,1],"colourCount":4,"colourID":[1,7,4,9],"colourRing0":[1,2,8,11],"colourRing1":[1,2,18,19],"colourRing2":[1,2,18,19],"colourRing3":[1,2,18,19],"steepness":2,"waveScale":1.6,"waveWidth":22,"waveOrigin":0,"yAxisMixer":[-6,1,2,30],"xAxisMixer":[0,0,0,0],"shape":0.56}';
 var colourTable = `
   const vec3 colourTable[] = vec3[10](
-    vec3(0.957, 0.298, 0.498), // Magenta
-    vec3(0.957, 0.302, 0.298), // Red
-    vec3(0.996, 0.424, 0.129), // Orange
-    vec3(0.992, 0.722, 0.020), // Yellow
-    vec3(0.231, 0.729, 0.431), // Green
-    vec3(0.361, 0.737, 0.647), // Teal
-    vec3(0.204, 0.600, 0.867), // Blue
-    vec3(0.486, 0.235, 0.686), // Purple
-    vec3(0.518, 0.678, 1.000), // Light Blue
-    vec3(0.000, 0.208, 0.620) // Dark Blue
+    vec3(0.957, 0.298, 0.498), // Magenta = 0
+    vec3(0.957, 0.302, 0.298), // Red = 1
+    vec3(0.996, 0.424, 0.129), // Orange = 2
+    vec3(0.992, 0.722, 0.020), // Yellow = 3
+    vec3(0.231, 0.729, 0.431), // Green = 4
+    vec3(0.361, 0.737, 0.647), // Teal = 5
+    vec3(0.204, 0.600, 0.867), // Blue = 6
+    vec3(0.486, 0.235, 0.686), // Purple 7
+    vec3(0.518, 0.678, 1.000), // Light Blue = 8
+    vec3(0.000, 0.208, 0.620) // Dark Blue = 9
   );
 
   const vec3 backgroundColour = vec3(0.901961, 0.87451, 0.815686);
@@ -4006,7 +4702,8 @@ var Kore = class {
       handlers: {
         onUpdate: this.update.bind(this),
         onResize: this.resize.bind(this),
-        onInitialise: this.onInitialise.bind(this)
+        onInitialise: this.onInitialise.bind(this),
+        onPassPreRender: this.onPassPreRender.bind(this)
       },
       views: Array.from(document.querySelectorAll(".kore")).map((v, i) => {
         if (v.id.length === 0)
@@ -4042,13 +4739,18 @@ var Kore = class {
         controls,
         (view[1].div.getAttribute("data-kore") ?? defaultConf).replace(/'/g, '"'),
         (json) => {
-          view[1].data = JSON.parse(json);
+          view[1].data = JSON.parse(json.replace(/'/g, '"'));
         },
-        () => {
-          this.host.captureView(view[1]);
+        (resScale) => {
+          this.host.captureView(view[1], resScale);
         }
       );
     }
+  }
+  onPassPreRender(pass) {
+    const gl = this.host.context;
+    gl.activeTexture(gl.TEXTURE0 + 2);
+    gl.bindTexture(gl.TEXTURE_2D, this.randomTexture);
   }
   update(time, dt) {
   }
@@ -4067,7 +4769,7 @@ var Kore = class {
       tex = gl.createTexture();
     if (tex == null)
       throw new Error("tex is null");
-    gl.activeTexture(unit);
+    gl.activeTexture(gl.TEXTURE0 + unit);
     gl.bindTexture(gl.TEXTURE_2D, tex);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, w, h, 0, gl.RED, gl.UNSIGNED_BYTE, buffer);
@@ -4083,7 +4785,7 @@ var Kore = class {
     h = Math.round(h);
     if ((w !== this.texWidth || h !== this.texHeight) && this.host.context) {
       console.log("w:", w, "h:", h);
-      this.randomTexture = this.generateRandTexture(w, h, this.host.context.TEXTURE2, this.randomTexture);
+      this.randomTexture = this.generateRandTexture(w, h, 2, this.randomTexture);
       this.texWidth = w;
       this.texHeight = h;
     }
