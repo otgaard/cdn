@@ -4072,6 +4072,7 @@ var AnimationControlUI = class _AnimationControlUI {
     exportButtonContainer.appendChild(notification);
     row0.appendChild(exportButtonContainer);
     const resSelector = document.createElement("select");
+    resSelector.style.color = "black";
     const arr = ["1x", "2x", "3x", "4x"];
     arr.forEach((v) => {
       const opt = document.createElement("option");
