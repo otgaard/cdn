@@ -3289,7 +3289,7 @@ var Host = class {
       } else {
         ctx2.imageSmoothingEnabled = false;
       }
-      ctx2.scale(1 / dPR, 1 / dPR);
+      ctx2.scale(dPR, dPR);
       const data = this.config_.viewDataFnc?.(div) ?? {};
       map.set(div.id, { div, canvas, ctx: ctx2, data });
     }
@@ -3409,17 +3409,16 @@ var Host = class {
       bindContext(this.rndr.context, pass.context);
     }
     this.renderToView(pass, rl, rt, view.canvas.width, view.canvas.height, view.data);
-    view.ctx.clearRect(0, 0, view.canvas.width, view.canvas.height);
     view.ctx.drawImage(
       this.rndr.canvas,
       rl,
       rt,
-      view.canvas.width,
-      view.canvas.height,
-      0,
-      0,
       Math.floor(view.canvas.width * dPR),
-      Math.floor(view.canvas.height * dPR)
+      Math.floor(view.canvas.height * dPR),
+      0,
+      0,
+      view.canvas.width,
+      view.canvas.height
     );
   }
   render() {
@@ -3451,17 +3450,6 @@ var Host = class {
     this.standardBlock.block.resolution.set([width, height, width / height, dPR]);
     this.config_.handlers.onResize?.(width, height);
   }
-  /*
-  public captureView (view: View): void {
-    const url = view.canvas.toDataURL('image/png')
-    const downloadLink = document.createElement('a')
-    downloadLink.href = url
-    downloadLink.download = `${view.div.id}.png`
-    document.body.appendChild(downloadLink)
-    downloadLink.click()
-    document.body.removeChild(downloadLink)
-  }
-  */
   captureView(view, scale) {
     console.log(view.canvas.width, view.canvas.height, scale);
     const W = Math.floor(view.canvas.width * scale);
@@ -3555,7 +3543,6 @@ var final_default = `#include <commonDefs>
 
 #define SINE_WAVE 0
 #define BREAKING_WAVE 1
-#define SINE_WAVE_DM 2
 
 #if defined(ZED)
 #define MODEL 1
@@ -3568,42 +3555,52 @@ in vec2 uv;
 /* UNIFORMS                                                                     */
 /********************************************************************************/
 
-uniform vec3 lDir;            // { "value": [0.0, -1.0, 1.0], "min": -1.0, "max": 1.0, "step": 0.01 }
-uniform float speed;          // { "value": 1.0, "min": 0.01, "max": 10.0, "step": 0.01 }
-uniform float duration;       // { "value": 20.0, "min": 20.0, "max": 60.0, "step": 1.0 }
-uniform vec2 position;        // { "value": [0.0, 0.0], "min": -1000.0, "max": 1000.0, "step": 1.0 }
-uniform float ringScale;      // { "value": 0.04, "min": 0.01, "max": 0.15, "step": 0.001 }
-uniform vec4 colourScale;     // { "value": [1.4, 1.4, 1.4, 1.4], "min": 0.0, "max": 3.0, "step": 0.001 }
-uniform float normalScale;    // { "value": 1.0, "min": 0.001, "max": 1.0, "step": 0.001 }
-// Sine properties
-uniform vec4 rings;           // { "value": [1.0, 2.0, 6.0, 12.0], "min": 1.0, "max": 40.0, "step": 0.1 }
-uniform vec4 angle;           // { "value": [0.0, 3.14, 1.57, 4.71], "min": 0.0, "max": 6.28319, "step": 0.01 }
-uniform vec4 arc;             // { "value": [0.5, 0.5, 0.5, 0.5], "min": -1.0, "max": 1.0, "step": 0.01 }
-uniform vec4 fade;            // { "value": [1.0, 1.0, 1.0, 1.0], "min": 0.01, "max": 0.99, "step": 0.01 }
-uniform vec4 fadeScale;       // { "value": [1.0, 1.0, 1.0, 1.0], "min": 0.0, "max": 10.0, "step": 1.0 }
-uniform float colourCount;    // { "value": 4.0, "min": 1.0, "max": 4.0, "step": 1.0 }
-uniform vec4 colourID;        // { "value": [1, 7, 4, 9], "min": 0, "max": 9, "step": 1 }
-uniform vec4 colourRing0;     // { "value": [1.0, 2.0, 8.0, 11.0], "min": 1.0, "max": 20.0, "step": 0.1 }
-uniform vec4 colourRing1;     // { "value": [1.0, 2.0, 18.0, 19.0], "min": 1.0, "max": 20.0, "step": 0.1 }
-uniform vec4 colourRing2;     // { "value": [1.0, 2.0, 18.0, 19.0], "min": 1.0, "max": 20.0, "step": 0.1 }
-uniform vec4 colourRing3;     // { "value": [1.0, 2.0, 18.0, 19.0], "min": 1.0, "max": 20.0, "step": 0.1 }
-// Breaking properties
-uniform float steepness;      // { "value": 2.0, "min": 0.1, "max": 10.0, "step": 0.01 }
-uniform float waveScale;      // { "value": 1.6, "min": 0.1, "max": 2.0, "step": 0.01 }
-uniform float waveWidth;      // { "value": 22.0, "min": 1.0, "max": 100.0, "step": 0.1 }
-uniform float waveOrigin;     // { "value": 0, "min": 0.0, "max": 3.0, "step": 1.0 }
-uniform vec4 yAxisMixer;      // { "value": [-6.0, 1.0, 2.0, 30.0], "min": -10.0, "max": 20.0, "step": 0.1 }
-uniform vec4 xAxisMixer;      // { "value": [0.0, 0.0, 0.0, 0.0], "min": -10.0, "max": 20.0, "step": 0.1 }
-uniform float shape;          // { "value": 0.56, "min": 0.01, "max": 1.0, "step": 0.01 }
+// default background = [0.901961, 0.87451, 0.815686]
 
-#if MODEL == SINE_WAVE || MODEL == SINE_WAVE_DM
+uniform vec3 backgroundColour; // { "value": [0.901961, 0.87451, 0.815686], "min": 0.0, "max": 1.0, "step": 0.01 }
+
+uniform vec3 lDir;             // { "value": [0.0, -1.0, 1.0], "min": -1.0, "max": 1.0, "step": 0.01 }
+uniform float speed;           // { "value": 1.0, "min": 0.01, "max": 10.0, "step": 0.01 }
+uniform float duration;        // { "value": 20.0, "min": 20.0, "max": 60.0, "step": 1.0 }
+uniform vec2 position;         // { "value": [0.0, 0.0], "min": -1000.0, "max": 1000.0, "step": 1.0 }
+uniform float ringScale;       // { "value": 0.04, "min": 0.01, "max": 0.15, "step": 0.001 }
+uniform vec4 colourScale;      // { "value": [1.4, 1.4, 1.4, 1.4], "min": 0.0, "max": 3.0, "step": 0.001 }
+uniform float normalScale;     // { "value": 1.0, "min": 0.001, "max": 1.0, "step": 0.001 }
+// Sine properties
+uniform vec4 rings;            // { "value": [1.0, 2.0, 6.0, 12.0], "min": 1.0, "max": 40.0, "step": 0.1 }
+uniform vec4 angle;            // { "value": [0.0, 3.14, 1.57, 4.71], "min": 0.0, "max": 6.28319, "step": 0.01 }
+uniform vec4 arc;              // { "value": [0.5, 0.5, 0.5, 0.5], "min": -1.0, "max": 1.0, "step": 0.01 }
+uniform vec4 fade;             // { "value": [1.0, 1.0, 1.0, 1.0], "min": 0.01, "max": 0.99, "step": 0.01 }
+uniform vec4 fadeScale;        // { "value": [1.0, 1.0, 1.0, 1.0], "min": 0.0, "max": 10.0, "step": 1.0 }
+uniform float colourCount;     // { "value": 2.0, "min": 1.0, "max": 4.0, "step": 1.0 }
+uniform vec4 colourID;         // { "value": [0, 7, 4, 9], "min": 0, "max": 9, "step": 1 }
+uniform vec4 colourRing0;      // { "value": [1.0, 2.0, 8.0, 11.0], "min": 1.0, "max": 20.0, "step": 0.1 }
+uniform vec4 colourRing1;      // { "value": [1.0, 2.0, 18.0, 19.0], "min": 1.0, "max": 20.0, "step": 0.1 }
+uniform vec4 colourRing2;      // { "value": [1.0, 2.0, 18.0, 19.0], "min": 1.0, "max": 20.0, "step": 0.1 }
+uniform vec4 colourRing3;      // { "value": [1.0, 2.0, 18.0, 19.0], "min": 1.0, "max": 20.0, "step": 0.1 }
+// Breaking properties
+uniform float steepness;       // { "value": 2.0, "min": 0.1, "max": 10.0, "step": 0.01 }
+uniform float waveScale;       // { "value": 1.6, "min": 0.1, "max": 2.0, "step": 0.01 }
+uniform float waveWidth;       // { "value": 22.0, "min": 1.0, "max": 100.0, "step": 0.1 }
+uniform float waveOrigin;      // { "value": 2, "min": 0.0, "max": 3.0, "step": 1.0 }
+uniform vec4 yAxisMixer;       // { "value": [-6.0, 1.0, 2.0, 30.0], "min": -10.0, "max": 20.0, "step": 0.1 }
+uniform vec4 xAxisMixer;       // { "value": [-1.0, -10.0, -3.20, 8.50], "min": -10.0, "max": 20.0, "step": 0.1 }
+uniform float shape;           // { "value": 0.56, "min": 0.01, "max": 0.99, "step": 0.01 }
+
+uniform float creatorDPR;
+
+#if MODEL == SINE_WAVE
 #define globalScale (ringScale / dPR)
 #elif MODEL == BREAKING_WAVE
 #define globalScale 0.03 * (dPR * 1500. / max(screen.x, screen.y))
 #endif
 
+// NOTE: The dPRScale and dPRInv must be calculated based on whatever the original creator model's dPR is, so that it appears consistent
+// regardless of the dPR on another machine.
+
 #define globalPos (position * dPR)
-#define dPRScale (dPR / 2.0)
+#define dPRScale (dPR / creatorDPR)
+#define dPRInv (creatorDPR / dPR)
 
 #define TIME (speed * time)
 
@@ -3637,6 +3634,8 @@ Record record;
 
 #if defined(RAND_TEX)
 
+// Note: Used a seeded PRNG to ensure consistent generation
+
 float random2(vec2 co) {
   vec2 size = vec2(textureSize(randTex, 0));
   return texture(randTex, co * screen / size).r;
@@ -3646,7 +3645,7 @@ float random2(vec2 co) {
 
 float random2(vec2 co) {
   return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
-}
+}rand
 
 #endif
 
@@ -3668,7 +3667,7 @@ vec4 mixColour(float dst, vec4 colour, int idx) {
 /********************************************************************************/
 
 /********************* SINE_WAVE *********************/
-#if MODEL == SINE_WAVE || MODEL == SINE_WAVE_DM
+#if MODEL == SINE_WAVE
 
 float computeAnnulus(float dist, vec4 rings) {
   return saturate(smoothstep(rings.x * TWO_PI, rings.y * TWO_PI, dist) - smoothstep(rings.z * TWO_PI, rings.w * TWO_PI, dist));
@@ -3708,28 +3707,29 @@ vec2 quadratic(float A, float x) {
 float yPos;
 
 float computePosition(vec2 pos) {
-  float A = steepness * -2e-4;
+  float A = steepness * -2e-4 * dPRScale;
   vec2 f = quadratic(A, pos.x);
   yPos = f.y;
   record.sign = f.y - pos.y;
 
   float h = abs(f.y - pos.y);
-  float wS = 200. * waveScale;
+  float wS = 200. * waveScale * dPRInv;
 
-  float flare = 1. - smoothstep(0., 100. * waveWidth * waveScale, abs(pos.x));
+  float flare = 1. - smoothstep(0., dPRInv * 100. * waveWidth * waveScale, abs(pos.x));
   h *= flare;
 
-  float height = 1.6 / dPRScale * flare * flare * waveScale * waveScale * gain(shape, (1. - smoothstep(0., flare * wS, h)));
+  float height = 1.6 / dPRInv * flare * flare * waveScale * waveScale * gain(shape, (1. - smoothstep(0., flare * wS, h)));
   return height;
 }
 
 vec4 computeWave(vec3 fg) {
-  float yAxis = smoothstep(yAxisMixer[0]*100., yAxisMixer[1]*100., record.sign) - smoothstep(yAxisMixer[2]*100., yAxisMixer[3]*100., record.sign);
+  float sc = 100. * dPRInv;
+  float yAxis = smoothstep(yAxisMixer[0] * sc, yAxisMixer[1] * sc, record.sign) - smoothstep(yAxisMixer[2] * sc, yAxisMixer[3] * sc, record.sign);
 
-  float scalar = dot(record.dispMag.xy, vec2(sin(xAxisMixer[0]), cos(xAxisMixer[0])));
+  float scalar = dot(record.dispMag.xy + dPRInv * 100. * xAxisMixer.yz, vec2(sin(xAxisMixer[0]), cos(xAxisMixer[0])));
 
   vec3 colour = int(colourCount) > 1
-  ? mix(colourTable[int(colourID[0])], colourTable[int(colourID[1])], smoothstep(-.5, +.5, scalar))
+  ? mix(colourTable[int(colourID[0])], colourTable[int(colourID[1])], smoothstep(xAxisMixer.w * -100.0 * dPRInv, xAxisMixer.w * 100. * dPRInv, scalar))
   : colourTable[int(colourID[0])];
 
   return vec4(
@@ -3739,63 +3739,6 @@ vec4 computeWave(vec3 fg) {
 }
 
 #endif
-
-#if defined(MODEL) & MODEL == SINE_WAVE_DM
-
-const vec3 darkBgColour = vec3(0.12549, 0.14118, 0.1529);
-
-float radialTest(vec2 fragCoord) {
-  vec2 coord = fragCoord - screen * .5;
-  float h = length(coord) / (max(screen.x, screen.y) * .5);
-  vec2 st = vec2((atan(coord.y, coord.x) + PI) / TWO_PI, sqrt(h) - .02 * TIME);
-  return bicubicNoise(vec2(3., 6.) * st, ivec2(3, 30));
-}
-
-vec3 computeColourOld() {
-  float l = dot(record.normal, lightDir) * .5 + .5;
-  float v = smoothstep(0., 1., radialTest(record.fragCoord));
-  v *= (snoise(2. * uv) * .5 + .5);
-
-  vec3 field = saturate(mix(colourTable[int(colourID[0])], colourTable[int(colourID[1])], v));
-  vec3 base = mix(darkBgColour, field, bias(.1, l) * clamp(random2(uv - .13), .35, .5));
-  base += 0.4 * mix(vec3(0.), vec3(1.), random2(uv) * saturate(bias(0.4, sqrt(record.height))));
-  base = mix(darkBgColour, base, record.annulus);
-  return base;
-}
-
-vec3 adjustHSV(vec3 colour, vec3 v) {
-  colour = rgb2hsv(colour);
-  colour += v;
-  saturate(colour);
-  return hsv2rgb(colour);
-}
-
-vec4 mixDarkColour(float dst, vec4 colour, vec3 source) {
-  colour.rgb = mix(colour.rgb, mix(source, darkBgColour, 0.2), dst);
-  colour.a = max(colour.a, dst);
-  return colour;
-}
-
-vec4 computeDarkWedge(vec3 source, vec4 colour, float angle, float arc, vec4 ring) {
-  vec2 deriv = vec2(cos(angle), -sin(angle));
-  float f = smoothstep(arc, 1.0, saturate(dot(deriv, record.dir)));
-  f *= computeAnnulus(mod(record.dist - TIME, duration), ring);
-  return mixDarkColour(f, colour, source);
-}
-
-vec3 computeColour() {
-  float l = dot(record.normal, lightDir) * .5 + .5;
-  vec3 c = adjustHSV(colourTable[int(colourID[0])], vec3(0., 0., -.60 + 0.2 * (random2(uv) * 2. - 1.)));
-  vec3 d = adjustHSV(colourTable[int(colourID[1])], vec3(0., 0., -.60 + 0.2 * (random2(uv - .283) * 2. - 1.)));
-
-  vec3 e = mix(c, d, radialTest(record.fragCoord));
-  float a = random2(uv) * 0.15 * smoothstep(-1.0, 1.0, record.height * dot(record.normal, vec3(0., 0., 1.)));
-  e += bias(0.48, a);
-
-  return mix(darkBgColour, e, l * computeAnnulus(mod(record.dist, duration), vec4(0., 0., colourRing0.zw)));
-}
-
-#else
 
 vec3 computeColour() {
   const float sandFlicker = 0.1;
@@ -3817,10 +3760,8 @@ vec3 computeColour() {
   vec3 c = mix(cc, fg, 0.45 * step(.5, random2(uv + .11)) * fract(random2(uv-.123) + flicker * sin(TWO_PI * random2(uv) + TIME)));
 
   return mix(c, fg, saturate(l - 0.5));
-  // return mix(col, backgroundColour, step(0.5, uv.x));
+  //return mix(col, backgroundColour, step(0.5, uv.x));
 }
-
-#endif
 
 /********************************************************************************/
 /* ENTRY                                                                        */
@@ -3834,6 +3775,18 @@ mat3 makeTransform(vec2 pos, float rot, float scale) {
   );
 }
 
+mat3 makeRot2D(float rot) {
+  return mat3(
+  cos(rot), sin(rot), 0.0,
+  -sin(rot), cos(rot), 0.0,
+  0.0, 0.0, 1.0
+  );
+}
+
+const float originRot[4] = float[](
+0.0, PI, 3.*PI/3.0, 0.0
+);
+
 void initAnimation(vec2 fragCoord) {
   lightDir = normalize(lDir);
   record.centre = screen / 2.0 + vec2(globalPos.x, -globalPos.y);
@@ -3844,7 +3797,10 @@ void initAnimation(vec2 fragCoord) {
 
   record.centre = mix(screen / 2.0, origin, t * t);
   vec2 d = normalize(origin - record.centre);
-  record.T = makeTransform(vec2(0.), atan(d.y, d.x)-PI, 3000./(dPRScale * max(screen.x, screen.y)));
+  record.T = makeTransform(vec2(0.), atan(d.y, d.x) - PI, 3000./(dPRScale * max(screen.x, screen.y)));
+
+  record.T *= makeRot2D(originRot[int(waveOrigin)]);
+
   lightDir.xy = normalize(record.centre);
   lightDir = normalize(lightDir);
   #else // SINE_WAVE
@@ -4632,8 +4588,41 @@ var ControlParser = class _ControlParser {
   }
 };
 
+// src/lib/maths/PseudoRNG.ts
+function mulberry32(seed) {
+  return function() {
+    seed = seed + 1831565813;
+    let t = seed;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+var PseudoRNG = class {
+  rngFunction;
+  constructor(seed = Date.now()) {
+    this.rngFunction = mulberry32(seed);
+  }
+  randInt(min, max) {
+    return Math.floor(this.next() * (max - min)) + min;
+  }
+  randIntInclusive(min, max) {
+    return Math.floor(this.next() * (max - min + 1)) + min;
+  }
+  randBoolean(probability = 0.5) {
+    return this.next() < probability;
+  }
+  randChoice(array) {
+    return array[this.randInt(0, array.length)];
+  }
+  next() {
+    return this.rngFunction();
+  }
+};
+
 // src/apps/kore/kore2.ts
-var defaultConf = '{"model":0,"randTex":2,"lDir":[0,-1,1],"speed":1,"duration":20,"position":[0,0],"ringScale":0.04,"colourScale":[2.553,3,2.363,1.982],"normalScale":1,"rings":[1,1.6,6,12],"angle":[0,3.14,1.57,4.71],"arc":[0.5,0.5,0.5,0.5],"fade":[1,1,1,1],"fadeScale":[1,1,1,1],"colourCount":4,"colourID":[1,7,4,9],"colourRing0":[1,2,8,11],"colourRing1":[1,2,18,19],"colourRing2":[1,2,18,19],"colourRing3":[1,2,18,19],"steepness":2,"waveScale":1.6,"waveWidth":22,"waveOrigin":0,"yAxisMixer":[-6,1,2,30],"xAxisMixer":[0,0,0,0],"shape":0.56}';
+var dPR2 = window.devicePixelRatio;
+var defaultConf = `{"model":0,"randTex":2,"creatorDPR":${dPR2},"backgroundColour":[0.901961, 0.87451, 0.815686],"lDir":[0,-1,1],"speed":1,"duration":20,"position":[0,0],"ringScale":0.04,"colourScale":[2.553,3,2.363,1.982],"normalScale":1,"rings":[1,1.6,6,12],"angle":[0,3.14,1.57,4.71],"arc":[0.5,0.5,0.5,0.5],"fade":[1,1,1,1],"fadeScale":[1,1,1,1],"colourCount":4,"colourID":[1,7,4,9],"colourRing0":[1,2,8,11],"colourRing1":[1,2,18,19],"colourRing2":[1,2,18,19],"colourRing3":[1,2,18,19],"steepness":2,"waveScale":1.6,"waveWidth":22,"waveOrigin":0,"yAxisMixer":[-6,1,2,30],"xAxisMixer":[0,0,0,0],"shape":0.56}`;
 var colourTable = `
   const vec3 colourTable[] = vec3[10](
     vec3(0.957, 0.298, 0.498), // Magenta = 0
@@ -4648,7 +4637,7 @@ var colourTable = `
     vec3(0.000, 0.208, 0.620) // Dark Blue = 9
   );
 
-  const vec3 backgroundColour = vec3(0.901961, 0.87451, 0.815686);
+  // const vec3 backgroundColour = vec3(0.901961, 0.87451, 0.815686);
   const vec3 sandColour = vec3(0.654902, 0.588235, 0.501961);
 `;
 var mainDef = `
@@ -4660,6 +4649,7 @@ void main() {
 var Kore = class {
   host;
   randomTexture = null;
+  pseudoRNG;
   constructor() {
     const conf = {
       pipeline: {
@@ -4681,16 +4671,6 @@ var Kore = class {
             isQuad: true,
             defines: /* @__PURE__ */ new Map([
               ["MODEL", "1"],
-              ["RAND_TEX", "1"]
-            ])
-          },
-          {
-            name: "kore-sine-darkMode",
-            shaderDef: [vertex_shader_default, final_default + mainDef],
-            blockDef: [],
-            isQuad: true,
-            defines: /* @__PURE__ */ new Map([
-              ["MODEL", "2"],
               ["RAND_TEX", "1"]
             ])
           }
@@ -4727,7 +4707,9 @@ var Kore = class {
     };
     this.host = new Host(conf);
     this.host.start();
+    this.pseudoRNG = new PseudoRNG(13375);
     this.generateMapTexture(1024, 1024, window.devicePixelRatio);
+    console.log(this.pseudoRNG);
   }
   onInitialise(renderPipeline) {
     for (const view of renderPipeline.multipleViews ?? []) {
@@ -4763,8 +4745,8 @@ var Kore = class {
     w = Math.round(w);
     h = Math.round(h);
     const buffer = new Uint8Array(w * h);
-    for (let i = 0; i < w * h; i++)
-      buffer[i] = Math.random() * 255.999;
+    for (let i = 0; i < buffer.length; i++)
+      buffer[i] = this.pseudoRNG.next() * 255.999;
     const gl = this.host.context;
     if (!tex)
       tex = gl.createTexture();
@@ -4781,7 +4763,7 @@ var Kore = class {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     return tex;
   }
-  generateMapTexture(w, h, dPR2) {
+  generateMapTexture(w, h, dPR3) {
     w = Math.round(w);
     h = Math.round(h);
     if ((w !== this.texWidth || h !== this.texHeight) && this.host.context) {
