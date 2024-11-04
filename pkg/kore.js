@@ -4176,6 +4176,10 @@ var AnimationControlUI = class _AnimationControlUI {
             overflow-y: auto;
             display: none;
             z-index: 1001;
+            > * {
+                margin: 0;
+                padding: 0;
+            }
             &::-webkit-scrollbar {
                 width: 10px;
             }
@@ -4230,12 +4234,15 @@ var AnimationControlUI = class _AnimationControlUI {
             cursor: pointer;
         }
         .zed-value-label {
+            box-sizing: border-box;
             background-color: #000;
             color: #fff;
             padding: 2px 4px;
             border-radius: 3px;
             font-size: 10px;
             min-width: 30px;
+            display: inline-block;
+            line-height: normal;
             text-align: center;
         }
         .zed-notification {
