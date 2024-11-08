@@ -3557,7 +3557,7 @@ in vec2 uv;
 
 // default background = [0.901961, 0.87451, 0.815686]
 
-uniform vec3 backgroundColour; // { "value": [0.901961, 0.87451, 0.815686], "min": 0.0, "max": 1.0, "step": 0.01 }
+uniform vec3 backgroundColour; // { "value": "#E6DFD0", "isColour": true }
 
 uniform vec3 lDir;             // { "value": [0.0, -1.0, 1.0], "min": -1.0, "max": 1.0, "step": 0.01 }
 uniform float speed;           // { "value": 1.0, "min": 0.01, "max": 10.0, "step": 0.01 }
@@ -3977,7 +3977,8 @@ var AnimationControlUI = class _AnimationControlUI {
               }
             } else {
               this.controls[key].element.value = values[key];
-              this.updateValueLabel(this.controls[key].element, values[key]);
+              if (!this.controls[key].isColour)
+                this.updateValueLabel(this.controls[key].element, values[key]);
             }
           }
         }
@@ -4060,7 +4061,10 @@ var AnimationControlUI = class _AnimationControlUI {
     header.appendChild(row1);
     this.controlWindow?.appendChild(header);
     Object.entries(this.controls).forEach(([name, control]) => {
-      if (this.isNumericType(control.type)) {
+      if (control.isColour) {
+        const colourElement = this.createColourElement(name, control);
+        this.controlWindow?.appendChild(colourElement);
+      } else if (this.isNumericType(control.type)) {
         const controlElement = this.createControlElement(name, control);
         this.controlWindow?.appendChild(controlElement);
       }
@@ -4093,6 +4097,26 @@ var AnimationControlUI = class _AnimationControlUI {
       controlElement.appendChild(sliderContainer);
     }
     return controlElement;
+  }
+  createColourElement(name, control) {
+    const colourElement = document.createElement("div");
+    colourElement.className = "zed-animation-control";
+    const label = document.createElement("label");
+    label.textContent = name;
+    colourElement.appendChild(label);
+    const value = this.values[name] !== void 0 ? this.values[name] : "#ffffff";
+    const container = document.createElement("div");
+    container.className = "zed-slider-container";
+    const colour = document.createElement("input");
+    colour.type = "color";
+    colour.value = value.toString();
+    container.appendChild(colour);
+    colourElement.appendChild(container);
+    colour.addEventListener("change", (ev) => {
+      this.handleColourChange(name, ev.target.value);
+    });
+    control.element = colour;
+    return colourElement;
   }
   createSlider(name, control, value, index) {
     const slider = document.createElement("input");
@@ -4137,6 +4161,13 @@ var AnimationControlUI = class _AnimationControlUI {
     } else {
       this.values[name] = value;
     }
+    const newJsonString = JSON.stringify(this.values);
+    this.onUpdateCallback(newJsonString);
+    if (this.textedit)
+      this.textedit.value = newJsonString.replace(/"/g, "'");
+  }
+  handleColourChange(name, value) {
+    this.values[name] = convertColour(value, "RGB_NORMALISED" /* RGB_NORMALISED */);
     const newJsonString = JSON.stringify(this.values);
     this.onUpdateCallback(newJsonString);
     if (this.textedit)
@@ -4454,6 +4485,8 @@ var ControlParser = class _ControlParser {
       const [, type, name, jsonString] = match;
       try {
         const config = JSON.parse(jsonString);
+        if (config.isColour)
+          config.value = convertColour(config.value, "RGB_NORMALISED" /* RGB_NORMALISED */);
         controls[name] = { type, ...config };
       } catch (error) {
         console.error(`Error parsing JSON for uniform ${name}:`, error);
@@ -4495,7 +4528,9 @@ var ControlParser = class _ControlParser {
       html += `<div class="control-group">
                         <label for="${name}">${name}</label>
                         <div class="control-wrapper">`;
-      if (numericTypes.includes(config.type)) {
+      if (config.isColour) {
+        html += this.generateColourControl(name, config);
+      } else if (numericTypes.includes(config.type)) {
         html += this.generateNumericControl(name, config);
       } else if (config.type === "sampler2D") {
         html += this.generateTextureControl(name, config);
@@ -4508,6 +4543,11 @@ var ControlParser = class _ControlParser {
   generateTextureControl(name, config) {
     return `<input type="file" id="${name}" name="${name}" accept="image/*"
                 onchange="window.controlGenerator.updateTexture('${name}', ${config.unit}, this.files[0])">`;
+  }
+  generateColourControl(name, config) {
+    const hex = typeof config.value === "string" ? config.value : convertColour(config.value, "HEX" /* HEX */);
+    return `<input type="color" id="${name}" value="${hex}" 
+                onchange="window.controlGenerator.updateColour('${name}', this.value)">`;
   }
   generateNumericControl(name, config) {
     let isArray = false;
@@ -4572,6 +4612,12 @@ var ControlParser = class _ControlParser {
     this.uniforms[name].value[index] = parsedValue;
     const displayElement = document.querySelector(`#${name}_${index}`).nextElementSibling;
     displayElement.textContent = parsedValue.toFixed(2);
+    if (this.callbacks[name])
+      this.callbacks[name](this.uniforms[name].value);
+  }
+  updateColour(name, value) {
+    const colour = convertColour(value, "RGB_NORMALISED" /* RGB_NORMALISED */);
+    this.uniforms[name].value = colour;
     if (this.callbacks[name])
       this.callbacks[name](this.uniforms[name].value);
   }
