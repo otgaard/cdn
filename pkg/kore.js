@@ -3545,7 +3545,7 @@ var final_default = `#include <commonDefs>
 #define BREAKING_WAVE 1
 
 #if defined(ZED)
-#define MODEL 1
+#define MODEL 0
 #define DRAW_SWATCH
 #else
 in vec2 uv;
@@ -3557,10 +3557,12 @@ in vec2 uv;
 
 // default background = [0.901961, 0.87451, 0.815686]
 
-uniform vec3 backgroundColour; // { "value": "#E6DFD0", "isColour": true }
+uniform vec3 backgroundColour; // { "value": [0.901961, 0.87451, 0.815686], "min": 0.0, "max": 1.0, "step": 0.01 }
 
+uniform float noiseScale;      // { "value": 0.5, "min": 0.0, "max": 1.0, "step": 0.01 }
+uniform float repeat;          // { "value": 1.0, "min": 0.0, "max": 100.0, "step": 1.0 }
 uniform vec3 lDir;             // { "value": [0.0, -1.0, 1.0], "min": -1.0, "max": 1.0, "step": 0.01 }
-uniform float speed;           // { "value": 1.0, "min": 0.01, "max": 10.0, "step": 0.01 }
+uniform float speed;           // { "value": 2.0, "min": 0.01, "max": 10.0, "step": 0.01 }
 uniform float duration;        // { "value": 20.0, "min": 20.0, "max": 60.0, "step": 1.0 }
 uniform vec2 position;         // { "value": [0.0, 0.0], "min": -1000.0, "max": 1000.0, "step": 1.0 }
 uniform float ringScale;       // { "value": 0.04, "min": 0.01, "max": 0.15, "step": 0.001 }
@@ -3602,16 +3604,17 @@ uniform float creatorDPR;
 #define dPRScale (dPR / creatorDPR)
 #define dPRInv (creatorDPR / dPR)
 
-#define TIME (speed * time)
-
-vec4 colRing[4];
-
 /********************************************************************************/
 /* GLOBALS                                                                      */
 /********************************************************************************/
 
 vec3 lightDir; // The position of the light (points towards)
 vec2 invRes; // The inverse of the viewport (may be a region of the window)
+
+// #define TIME (speed * time)
+float TIME;
+
+vec4 colRing[4];
 
 struct Record {
   mat3 T; // The world transform
@@ -3635,7 +3638,6 @@ Record record;
 #if defined(RAND_TEX)
 
 // Note: Used a seeded PRNG to ensure consistent generation
-
 float random2(vec2 co) {
   vec2 size = vec2(textureSize(randTex, 0));
   return texture(randTex, co * screen / size).r;
@@ -3757,10 +3759,9 @@ vec3 computeColour() {
 
   float flicker = 10. * dot(kol.rgb, vec3(.2126, .7152, .0722)) * (1. - dot(vec3(0., 0., 1.), record.normal));
   vec3 cc = mix(mix(sandColour, kol.rgb, 0.5), kol.rgb, l);
-  vec3 c = mix(cc, fg, 0.45 * step(.5, random2(uv + .11)) * fract(random2(uv-.123) + flicker * sin(TWO_PI * random2(uv) + TIME)));
+  vec3 c = mix(cc, fg, 0.45 * step(1. - noiseScale, random2(uv + .11)) * fract(random2(uv-.123) + flicker * sin(TWO_PI * random2(uv) + TIME)));
 
   return mix(c, fg, saturate(l - 0.5));
-  //return mix(col, backgroundColour, step(0.5, uv.x));
 }
 
 /********************************************************************************/
@@ -3824,11 +3825,25 @@ vec4 drawSwatch(vec2 fragCoord) {
 }
 #endif
 
+float smoothStop(float t, float end, float fadeOut) {
+  float startFade = end - fadeOut;
+  if(startFade <= t) {
+    float i = (t - startFade);
+    float r = sqrt(i) - 0.2;
+    return startFade + r;
+  }
+  return t;
+}
+
 void renderImage(out vec4 fragColour, vec2 fragCoord) {
   colRing[0] = colourRing0; // Zed doesn't auto-parse arrays yet...
   colRing[1] = colourRing1;
   colRing[2] = colourRing2;
   colRing[3] = colourRing3;
+
+  // Compute the time value
+  float end = repeat * duration - 0.05;
+  TIME = mix(speed * time, clamp(smoothStop(speed * time, end, 5.0), 0.0, end), step(0.5, repeat));
 
   initAnimation(fragCoord);
   fragColour = vec4(computeColour(), 1.0);
@@ -4524,6 +4539,7 @@ var ControlParser = class _ControlParser {
   generateHTML() {
     let html = '<div class="shader-controls">';
     html += '<button onclick="window.controlGenerator.exportJSON()" style="margin-bottom: 20px; padding: 5px">Export JSON</button>';
+    html += '<button onclick="window.controlGenerator.resetTimer()" style="margin-bottom: 20px; padding: 5px">Reset Timer</button>';
     for (const [name, config] of Object.entries(this.uniforms)) {
       html += `<div class="control-group">
                         <label for="${name}">${name}</label>
